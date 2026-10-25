@@ -1,0 +1,207 @@
+<div class="modal-backdrop" (click)="close.emit()">
+  <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+    
+    @if (!confirmedOrder()) {
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="modal-header-icon">
+            <aser-icon name="lucide:credit-card" [size]="20"></aser-icon>
+          </div>
+          <div>
+            <h3 style="font-size:17px; font-weight:800; color:var(--ink);">{{ 'STOREFRONT.CHECKOUT_TITLE' | translate:'Complete Your Order' }}</h3>
+            <p style="font-size:11px; color:var(--muted); margin:0;">{{ 'STOREFRONT.CHECKOUT_SUBTITLE' | translate:'Review your selected materials and choose delivery or branch pickup.' }}</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" (click)="close.emit()" aria-label="Close modal">
+          <aser-icon name="lucide:x" [size]="16"></aser-icon>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Step 1: Customer Info -->
+        <div style="margin-bottom:24px;">
+          <h4 style="font-size:12px; font-weight:800; color:var(--blue); letter-spacing:0.8px; text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+            <span>01</span> {{ 'ORDERS.CUSTOMER_CONTACT' | translate:'Customer & Business Identification' }}
+          </h4>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">{{ 'STOREFRONT.CUSTOMER_NAME' | translate:'Full Name' }} *</label>
+              <input class="form-input" [(ngModel)]="customerName" placeholder="e.g. Almaz Bekele" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">{{ 'STOREFRONT.PHONE_NUMBER' | translate:'Phone Number' }} *</label>
+              <input class="form-input" [(ngModel)]="customerPhone" placeholder="e.g. +251 91 123 4567" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">{{ 'COMMON.EMAIL' | translate:'Email Address' }} *</label>
+              <input class="form-input" type="email" [(ngModel)]="customerEmail" placeholder="e.g. almaz@company.com" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Company / Organization (Optional)</label>
+              <input class="form-input" [(ngModel)]="companyName" placeholder="e.g. Express Printing PLC">
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Fulfillment Mode -->
+        <div style="margin-bottom:24px;">
+          <h4 style="font-size:12px; font-weight:800; color:var(--blue); letter-spacing:0.8px; text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+            <span>02</span> {{ 'ORDERS.FULFILLMENT' | translate:'Fulfillment Option' }}
+          </h4>
+          <div class="radio-card-group">
+            <div class="radio-card" [class.selected]="fulfillment === 'BRANCH_PICKUP'" (click)="fulfillment = 'BRANCH_PICKUP'">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                <aser-icon name="lucide:building-2" [size]="16" color="var(--blue)"></aser-icon>
+                <strong>{{ 'ORDERS.PICKUP' | translate:'Self-Collection from Branch' }}</strong>
+              </div>
+              <small>Pick up directly from one of our designated branch warehouses (Free)</small>
+            </div>
+
+            <div class="radio-card" [class.selected]="fulfillment === 'DELIVERY'" (click)="fulfillment = 'DELIVERY'">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                <aser-icon name="lucide:truck" [size]="16" color="var(--blue)"></aser-icon>
+                <strong>{{ 'ORDERS.DELIVERY' | translate:'Company Address Delivery' }}</strong>
+              </div>
+              <small>Standard dispatch to your workshop or office (+ETB 250.00)</small>
+            </div>
+          </div>
+
+          @if (fulfillment === 'BRANCH_PICKUP') {
+            <div class="form-group">
+              <label class="form-label">{{ 'STOREFRONT.PICKUP_BRANCH' | translate:'Select Pickup Branch' }} *</label>
+              <select class="form-select" [(ngModel)]="pickupBranchId">
+                @for (branch of state.branches(); track branch.id) {
+                  <option [value]="branch.id">{{ branch.name }} ({{ branch.city }})</option>
+                }
+              </select>
+            </div>
+          } @else {
+            <div class="form-group">
+              <label class="form-label">{{ 'STOREFRONT.DELIVERY_ADDRESS' | translate:'Delivery Address & Landmarks' }} *</label>
+              <input class="form-input" [(ngModel)]="deliveryAddress" placeholder="Subcity, Woreda, Building or Street Name">
+              <div style="display:flex; align-items:center; gap:6px; margin-top:6px; font-size:11px; color:var(--muted);">
+                <aser-icon name="lucide:phone" [size]="12"></aser-icon>
+                <span>Dispatch logistics will confirm coordinates via phone call prior to vehicle departure.</span>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Step 3: Payment Method -->
+        <div style="margin-bottom:24px;">
+          <h4 style="font-size:12px; font-weight:800; color:var(--blue); letter-spacing:0.8px; text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:6px;">
+            <span>03</span> {{ 'STOREFRONT.PAYMENT_METHOD' | translate:'Payment Method' }}
+          </h4>
+          <div class="radio-card-group">
+            <div class="radio-card" [class.selected]="paymentMethod === 'MANUAL_BANK_TRANSFER'" (click)="paymentMethod = 'MANUAL_BANK_TRANSFER'">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                <aser-icon name="lucide:landmark" [size]="16" color="var(--blue)"></aser-icon>
+                <strong>{{ 'ORDERS.BANK_TRANSFER' | translate:'Manual Bank Transfer / Telebirr' }}</strong>
+              </div>
+              <small>Direct transfer to CBE, Awash, BOA, or Telebirr merchant account</small>
+            </div>
+
+            <div class="radio-card" [class.selected]="paymentMethod === 'IN_HAND_CASH'" (click)="paymentMethod = 'IN_HAND_CASH'">
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                <aser-icon name="lucide:banknote" [size]="16" color="var(--blue)"></aser-icon>
+                <strong>{{ 'ORDERS.CASH' | translate:'Cash in Hand / On Collection' }}</strong>
+              </div>
+              <small>Pay at the counter upon warehouse collection or on verified delivery</small>
+            </div>
+          </div>
+
+          @if (paymentMethod === 'MANUAL_BANK_TRANSFER') {
+            <div class="bank-info-box">
+              <div style="font-weight:700; font-size:12px; color:var(--blue-dark); margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+                <aser-icon name="lucide:credit-card" [size]="14"></aser-icon>
+                <span>Official Aser Trading Account Numbers:</span>
+              </div>
+              <div class="bank-row">
+                <span>Commercial Bank of Ethiopia (CBE)</span>
+                <strong>1000 2938 47291</strong>
+              </div>
+              <div class="bank-row">
+                <span>Bank of Abyssinia (BOA)</span>
+                <strong>8392 0194 001</strong>
+              </div>
+              <div class="bank-row">
+                <span>Telebirr SuperApp / Merchant Code</span>
+                <strong>+251 91 123 4567 (Aser Trading)</strong>
+              </div>
+              <small style="font-size:10px; color:var(--muted); display:block; margin-top:8px;">
+                * Reference your Order ID in the transfer narrative and present the transaction slip upon collection.
+              </small>
+            </div>
+          }
+        </div>
+
+        <!-- Order Summary Banner -->
+        <div style="background:var(--bg-soft); border-radius:var(--radius-md); padding:16px; border:1px solid var(--line);">
+          <div style="font-weight:700; font-size:13px; color:var(--ink); margin-bottom:10px;">Order Cost Summary</div>
+          <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px; color:var(--slate);">
+            <span>{{ 'STOREFRONT.SUBTOTAL' | translate:'Materials Subtotal' }} ({{ state.cartCount() }} items)</span>
+            <span>ETB {{ state.cartSubtotal() | number:'1.2-2' }}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px; color:var(--slate);">
+            <span>Fulfillment Fee</span>
+            <span>{{ fulfillment === 'DELIVERY' ? 'ETB 250.00' : 'Free (Pickup)' }}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:16px; font-weight:800; color:var(--ink); padding-top:8px; border-top:1px dashed var(--line);">
+            <span>{{ 'COMMON.TOTAL' | translate:'Total Amount Payable' }}</span>
+            <span style="color:var(--blue);">
+              ETB {{ (state.cartSubtotal() + (fulfillment === 'DELIVERY' ? 250 : 0)) | number:'1.2-2' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="close.emit()">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
+        <button class="btn btn-primary" [disabled]="!isFormValid" (click)="submitOrder()">
+          <span>{{ 'STOREFRONT.SUBMIT_ORDER' | translate:'Place Order Now' }}</span>
+          <aser-icon name="lucide:check" [size]="14"></aser-icon>
+        </button>
+      </div>
+    } @else {
+      <!-- Order Confirmation Screen -->
+      <div class="modal-body" style="text-align:center; padding:45px 30px;">
+        <div style="color:var(--green); margin-bottom:16px;">
+          <aser-icon name="lucide:check-circle" [size]="54"></aser-icon>
+        </div>
+        <span class="badge badge-in-stock" style="font-size:12px; padding:6px 14px; margin-bottom:12px;">
+          ORDER PLACED SUCCESSFULLY
+        </span>
+        <h3 style="font-size:24px; font-weight:800; color:var(--ink); margin-bottom:8px;">
+          Thank You, {{ confirmedOrder()?.customerName }}!
+        </h3>
+        <p style="font-size:14px; color:var(--muted); max-width:480px; margin:0 auto 24px; line-height:1.6;">
+          Your order has been recorded in the centralized Aser Trading inventory ledger with immediate stock reservation.
+        </p>
+
+        <div style="background:var(--blue-soft); border:1px solid var(--blue-border); border-radius:var(--radius-lg); padding:20px; max-width:440px; margin:0 auto 24px; text-align:left;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
+            <span style="color:var(--muted);">Order Reference Number:</span>
+            <strong style="color:var(--blue); font-size:15px;">{{ confirmedOrder()?.orderNumber }}</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
+            <span style="color:var(--muted);">Total Payable:</span>
+            <strong style="color:var(--ink);">ETB {{ confirmedOrder()?.totalAmount | number:'1.2-2' }}</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
+            <span style="color:var(--muted);">Fulfillment:</span>
+            <span>{{ confirmedOrder()?.fulfillment === 'BRANCH_PICKUP' ? ('Pickup at ' + confirmedOrder()?.pickupBranchName) : 'Delivery to Address' }}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:13px;">
+            <span style="color:var(--muted);">Stock Status:</span>
+            <span class="badge badge-in-stock">Stock Reserved ✓</span>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:12px; justify-content:center;">
+          <button class="btn btn-outline" (click)="close.emit()">{{ 'COMMON.CLOSE' | translate:'Close & Continue Browsing' }}</button>
+        </div>
+      </div>
+    }
+
+  </div>
+</div>

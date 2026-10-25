@@ -1,0 +1,72 @@
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a class="brand-lockup" routerLink="/" style="color:#ffffff;">
+        <img src="Aser-trading.png" alt="Aser Trading Logo" class="brand-logo-img footer-logo-img">
+        <div class="brand-text">
+          <span class="brand-name" style="color:#ffffff;">
+            Aser
+            <!-- <span class="amharic-tag">ኣሰር</span> -->
+          </span>
+          <span class="brand-sub" style="color:#94a3b8;">Trading PLC</span>
+        </div>
+      </a>
+      <p class="brand-desc">
+        {{ 'STOREFRONT.FOOTER_DESC' | translate:"Ethiopia's trusted partner for high-volume commercial printing press
+        production, corporate branding, vehicle wraps, garment heat transfer vinyl, and equipment distribution." }}
+      </p>
+      <div class="logo-dots-rainbow">
+        <span class="logo-dot c-blue"></span>
+        <span class="logo-dot c-amber"></span>
+        <span class="logo-dot c-red"></span>
+        <span class="logo-dot c-pink"></span>
+        <span class="logo-dot c-black"></span>
+      </div>
+    </div>
+
+    <div class="footer-col">
+      <h4>{{ 'STOREFRONT.CATALOGS_MATERIALS' | translate:'Catalogs & Materials' }}</h4>
+      <ul class="footer-links">
+        <li><a routerLink="/products" [queryParams]="{category:'GARMENT_MATERIALS'}">Garment Vinyl & DTF Film</a></li>
+        <li><a routerLink="/products" [queryParams]="{category:'PRINTING_SUPPLIES'}">Printing Paper & Sublimation
+            Ink</a></li>
+        <li><a routerLink="/products" [queryParams]="{category:'BRANDING_PROMOTION'}">Roll-Up Banner Hardware</a></li>
+        <li><a routerLink="/products" [queryParams]="{category:'EQUIPMENT'}">Pneumatic Heat Press Machines</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4>{{ 'STOREFRONT.PRINTING_SERVICES' | translate:'Printing Services' }}</h4>
+      <ul class="footer-links">
+        <li><a routerLink="/services">Commercial Book & Magazine Offset</a></li>
+        <li><a routerLink="/services">Fleet Vehicle Branding Wraps</a></li>
+        <li><a routerLink="/services">Custom Packaging & Box Printing</a></li>
+        <li><a href="javascript:void(0)" (click)="requestQuote.emit('PRINTING_PRESS')">{{ 'STOREFRONT.REQUEST_QUOTE' |
+            translate:'Submit Quotation Request' }}</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4>{{ 'STOREFRONT.COMPANY_PORTAL' | translate:'Company & Portal' }}</h4>
+      <ul class="footer-links">
+        <li><a routerLink="/branches">{{ 'STOREFRONT.NAV_BRANCHES' | translate:'Branch & Warehouse Directory' }}</a>
+        </li>
+        <li><a routerLink="/app">{{ 'STOREFRONT.PORTAL' | translate:'Staff Management Login' }}</a></li>
+        <li><a routerLink="/app/inventory">{{ 'NAV.STOCK_INVENTORY' | translate:'Centralized Stock Ledger' }}</a></li>
+        <li><a routerLink="/app/transfers">{{ 'NAV.BRANCH_TRANSFERS' | translate:'Inter-Branch Transfers' }}</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p>© 2026 Aser Trading PLC. {{ 'STOREFRONT.ALL_RIGHTS' | translate:'All rights reserved. Addis Ababa & Hawassa,
+      Ethiopia.' }}</p>
+    <div style="display:flex; gap:16px;">
+      <a routerLink="/app"
+        style="color:var(--blue-soft); font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+        <span>{{ 'STOREFRONT.SIGN_IN' | translate:'Sign in' }}</span>
+        <aser-icon name="lucide:arrow-right" [size]="13"></aser-icon>
+      </a>
+    </div>
+  </div>
+</footer>

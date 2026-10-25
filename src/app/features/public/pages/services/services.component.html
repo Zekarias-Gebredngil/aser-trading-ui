@@ -1,0 +1,106 @@
+<div class="services-page">
+  <aser-public-header 
+    (openCart)="isCartOpen.set(true)"
+    (requestQuote)="openQuote($event)">
+  </aser-public-header>
+
+  <!-- Banner -->
+  <section class="page-banner">
+    <div class="container">
+      <span class="section-tag" style="color:var(--blue-soft);">{{ 'NAV.COMMERCIAL_SERVICES' | translate:'SERVICES & SOLUTIONS' }}</span>
+      <h1 class="page-banner-title">{{ 'STOREFRONT.OUR_SERVICES' | translate:'Commercial Printing & Brand Promotion' }}</h1>
+      <div class="brand-dots-underline">
+        <span class="b-lead-line"></span>
+        <span class="b-dot c-blue"></span>
+        <span class="b-dot c-amber"></span>
+        <span class="b-dot c-red"></span>
+        <span class="b-dot c-pink"></span>
+        <span class="b-dot c-black"></span>
+        <span class="b-trail-line"></span>
+      </div>
+      <p class="page-banner-desc">
+        {{ 'STOREFRONT.SERVICES_DESC' | translate:'Equipped with industrial Heidelberg offset presses and wide-format Roland inkjet lines, Aser Trading delivers precision printing for businesses, institutions, and publishers across Ethiopia.' }}
+      </p>
+    </div>
+  </section>
+
+  <!-- Services Grid -->
+  <section class="section">
+    <div class="container">
+      <div class="services-grid" style="grid-template-columns:repeat(2, 1fr); gap:30px;">
+        @for (svc of state.activeServices(); track svc.id) {
+        <div class="service-card-item">
+          @if (svc.images && svc.images.length > 0) {
+            <div style="margin-bottom: 16px; border-radius: var(--radius-sm); overflow: hidden;">
+              <aser-image-slider 
+                [images]="svc.images" 
+                [fallbackCategory]="svc.category" 
+                [alt]="svc.title"
+                height="190px">
+              </aser-image-slider>
+            </div>
+          }
+          <div class="service-card-icon">
+            <aser-icon [name]="svc.icon || 'lucide:printer'" [size]="32" color="var(--blue)"></aser-icon>
+          </div>
+          <div style="font-size:11px; font-weight:800; color:var(--blue); letter-spacing:0.5px; text-transform:uppercase; margin-bottom:4px;">
+            {{ svc.categoryLabel }}
+          </div>
+          <h2 class="service-card-title">{{ svc.title }}</h2>
+          <p class="service-card-desc">
+            {{ svc.description }}
+          </p>
+          <ul class="service-features-list">
+            @for (f of svc.features; track f) {
+            <li>{{ f }}</li>
+            }
+          </ul>
+          @if (svc.requiresQuotation) {
+          <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;" (click)="openQuote(svc.category)">
+            {{ 'STOREFRONT.REQUEST_QUOTE' | translate:'Request Quote' }} <aser-icon name="lucide:arrow-right" [size]="15"></aser-icon>
+          </button>
+          }
+        </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Band -->
+  <section class="section section-alt">
+    <div class="container" style="text-align:center;">
+      <h2 style="font-size:28px; font-weight:800; color:var(--ink); margin-bottom:12px;">
+        {{ 'STOREFRONT.READY_TO_START' | translate:'Ready to scale your production?' }}
+      </h2>
+      <p style="font-size:15px; color:var(--muted); max-width:600px; margin:0 auto 24px;">
+        {{ 'STOREFRONT.GET_IN_TOUCH' | translate:'Get in touch with our team for bulk pricing, enterprise contracts, or technical consultations.' }}
+      </p>
+      <button class="btn btn-primary btn-lg" style="display:inline-flex; align-items:center; gap:8px;" (click)="openQuote('PRINTING_PRESS')">
+        {{ 'STOREFRONT.REQUEST_CUSTOM_QUOTE' | translate:'Submit Your Project Specifications' }} <aser-icon name="lucide:clipboard-list" [size]="18"></aser-icon>
+      </button>
+    </div>
+  </section>
+
+  <aser-public-footer (requestQuote)="openQuote($event)"></aser-public-footer>
+
+  <!-- Modals -->
+  @if (isCartOpen()) {
+    <aser-cart-drawer 
+      (close)="isCartOpen.set(false)"
+      (checkout)="isCartOpen.set(false); isCheckoutOpen.set(true)">
+    </aser-cart-drawer>
+  }
+
+  @if (isCheckoutOpen()) {
+    <aser-checkout-modal 
+      (close)="isCheckoutOpen.set(false)">
+    </aser-checkout-modal>
+  }
+
+  @if (isQuoteOpen()) {
+    <aser-quote-modal 
+      [initialCategory]="selectedCategory"
+      (close)="isQuoteOpen.set(false)">
+    </aser-quote-modal>
+  }
+</div>

@@ -1,0 +1,38 @@
+.branches-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-top: 74px;
+}
+
+@media (max-width: 480px) {
+  .branches-page {
+    padding-top: 64px;
+  }
+}
+
+.page-banner {
+  background: linear-gradient(135deg, #1e30c4 0%, #0e185c 100%);
+  color: #ffffff;
+  padding: 60px 24px;
+}
+
+.page-banner-title {
+  font-size: clamp(26px, 3.5vw, 40px);
+  font-weight: 800;
+  margin: 10px 0 16px;
+  line-height: 1.2;
+}
+
+.page-banner-desc {
+  font-size: 15px;
+  color: #dbeafe;
+  max-width: 680px;
+  line-height: 1.6;
+}
+
+@media (max-width: 800px) {
+  .branch-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

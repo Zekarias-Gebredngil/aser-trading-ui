@@ -1,0 +1,88 @@
+<div class="drawer-backdrop" (click)="close.emit()">
+  <div class="drawer-panel" (click)="$event.stopPropagation()">
+    <div class="drawer-header">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span class="drawer-icon-badge">
+          <aser-icon name="lucide:shopping-cart" [size]="18"></aser-icon>
+        </span>
+        <h3 style="font-size:16px; font-weight:800; color:var(--ink);">{{ 'STOREFRONT.CART_TITLE' | translate:'Your Shopping Cart' }}</h3>
+        <span class="badge badge-in-stock">{{ state.cartCount() }} {{ 'COMMON.ITEMS' | translate:'items' }}</span>
+      </div>
+      <button class="modal-close-btn" (click)="close.emit()" aria-label="Close cart">
+        <aser-icon name="lucide:x" [size]="16"></aser-icon>
+      </button>
+    </div>
+
+    <div class="drawer-body">
+      @if (state.cart().length === 0) {
+        <div style="text-align:center; padding:60px 20px; color:var(--muted);">
+          <div style="color:var(--blue-border); margin-bottom:16px;">
+            <aser-icon name="lucide:shopping-cart" [size]="48"></aser-icon>
+          </div>
+          <h4 style="font-size:16px; font-weight:700; color:var(--ink); margin-bottom:6px;">{{ 'STOREFRONT.CART_EMPTY' | translate:'Your cart is empty' }}</h4>
+          <p style="font-size:13px; line-height:1.5; margin-bottom:20px;">{{ 'STOREFRONT.CART_EMPTY_SUB' | translate:'Browse our materials and printing supplies catalog to add products.' }}</p>
+          <button class="btn btn-secondary btn-sm" (click)="close.emit()">{{ 'STOREFRONT.EXPLORE_SHOP' | translate:'Explore Catalog' }}</button>
+        </div>
+      } @else {
+        @for (item of state.cart(); track item.product.id) {
+          <div class="cart-item-row">
+            <div class="cart-item-info">
+              <div style="display:flex; align-items:center; gap:6px; margin-bottom:2px;">
+                <span class="category-tag" style="font-size:9px; padding:2px 5px;">{{ item.product.categoryLabel }}</span>
+              </div>
+              <h4 class="cart-item-title">{{ item.product.name }}</h4>
+              <div class="cart-item-price">
+                ETB {{ item.product.unitPrice | number:'1.2-2' }} / {{ item.product.unit }}
+              </div>
+              <div class="cart-qty-control">
+                <button class="cart-qty-btn" (click)="state.updateCartQuantity(item.product.id, item.quantity - 1)" aria-label="Decrease quantity">
+                  <aser-icon name="lucide:minus" [size]="12"></aser-icon>
+                </button>
+                <span class="cart-qty-val">{{ item.quantity }}</span>
+                <button class="cart-qty-btn" (click)="state.updateCartQuantity(item.product.id, item.quantity + 1)" aria-label="Increase quantity">
+                  <aser-icon name="lucide:plus" [size]="12"></aser-icon>
+                </button>
+              </div>
+            </div>
+            <div class="cart-item-total">
+              <button (click)="state.removeFromCart(item.product.id)" class="cart-remove-btn" title="Remove item">
+                <aser-icon name="lucide:x" [size]="14"></aser-icon>
+              </button>
+              <strong style="font-size:14px; font-weight:800; color:var(--ink);">
+                ETB {{ item.lineTotal | number:'1.2-2' }}
+              </strong>
+            </div>
+          </div>
+        }
+      }
+    </div>
+
+    @if (state.cart().length > 0) {
+      <div class="drawer-footer">
+        <div class="cart-subtotal-row">
+          <span>{{ 'STOREFRONT.SUBTOTAL' | translate:'Subtotal' }}</span>
+          <strong>ETB {{ state.cartSubtotal() | number:'1.2-2' }}</strong>
+        </div>
+        <div class="cart-subtotal-row" style="font-size:12px; color:var(--muted);">
+          <span>{{ 'ORDERS.FULFILLMENT' | translate:'Fulfillment' }}</span>
+          <span>Pickup or Delivery</span>
+        </div>
+        <div class="cart-grand-total">
+          <span>{{ 'COMMON.TOTAL' | translate:'Total Estimated' }}</span>
+          <span style="color:var(--blue);">ETB {{ state.cartSubtotal() | number:'1.2-2' }}</span>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-outline" style="flex:1;" (click)="state.clearCart()">{{ 'STOREFRONT.CLEAR_CART' | translate:'Clear' }}</button>
+          <button class="btn btn-primary" style="flex:2;" (click)="checkout.emit()">
+            <span>{{ 'STOREFRONT.CHECKOUT' | translate:'Proceed to Checkout' }}</span>
+            <aser-icon name="lucide:arrow-right" [size]="14"></aser-icon>
+          </button>
+        </div>
+        <div class="cart-security-note">
+          <aser-icon name="lucide:shield-check" [size]="14" color="var(--blue)"></aser-icon>
+          <span>Immediate inventory reservation across Aser Trading branch warehouses.</span>
+        </div>
+      </div>
+    }
+  </div>
+</div>

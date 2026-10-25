@@ -1,0 +1,196 @@
+<div class="catalog-page">
+  <aser-public-header 
+    (openCart)="isCartOpen.set(true)"
+    (requestQuote)="openQuoteModal($event)">
+  </aser-public-header>
+
+  <!-- Banner -->
+  <section class="page-banner">
+    <div class="container">
+      <span class="section-tag" style="color:var(--blue-soft);">{{ 'NAV.STOCK_INVENTORY' | translate:'STOCK INVENTORY & STORE' }}</span>
+      <h1 class="page-banner-title">{{ 'STOREFRONT.CATALOG_TITLE' | translate:'Raw Materials, Consumables & Equipment' }}</h1>
+      <div class="brand-dots-underline">
+        <span class="b-lead-line"></span>
+        <span class="b-dot c-blue"></span>
+        <span class="b-dot c-amber"></span>
+        <span class="b-dot c-red"></span>
+        <span class="b-dot c-pink"></span>
+        <span class="b-dot c-black"></span>
+        <span class="b-trail-line"></span>
+      </div>
+      <p class="page-banner-desc">
+        {{ 'STOREFRONT.CATALOG_SUBTITLE' | translate:'Direct imported supplies for commercial offset printers, garment decorators, sign shops, and advertising agencies.' }}
+      </p>
+    </div>
+  </section>
+
+  <section class="section section-alt">
+    <div class="container">
+      
+      <!-- Filters and Search Bar -->
+      <div class="catalog-toolbar">
+        <div class="filter-tabs">
+          <button class="filter-tab" [class.active]="selectedCategory === 'ALL'" (click)="selectedCategory = 'ALL'; onFilterChange()">
+            {{ 'PRODUCTS.ALL_CATEGORIES' | translate:'All Products' }} ({{ state.products().length }})
+          </button>
+          <button class="filter-tab" [class.active]="selectedCategory === 'GARMENT_MATERIALS'" (click)="selectedCategory = 'GARMENT_MATERIALS'; onFilterChange()">
+            {{ 'PRODUCTS.CAT_GARMENT' | translate:'Garment Materials' }}
+          </button>
+          <button class="filter-tab" [class.active]="selectedCategory === 'PRINTING_SUPPLIES'" (click)="selectedCategory = 'PRINTING_SUPPLIES'; onFilterChange()">
+            {{ 'PRODUCTS.CAT_PRINTING' | translate:'Printing Supplies' }}
+          </button>
+          <button class="filter-tab" [class.active]="selectedCategory === 'BRANDING_PROMOTION'" (click)="selectedCategory = 'BRANDING_PROMOTION'; onFilterChange()">
+            {{ 'PRODUCTS.CAT_BRANDING' | translate:'Branding & Promotion' }}
+          </button>
+          <button class="filter-tab" [class.active]="selectedCategory === 'EQUIPMENT'" (click)="selectedCategory = 'EQUIPMENT'; onFilterChange()">
+            {{ 'PRODUCTS.CAT_EQUIPMENT' | translate:'Machinery & Equipment' }}
+          </button>
+        </div>
+
+        <div class="search-filter-row">
+          <div class="search-input-wrapper">
+            <span class="search-icon">
+              <aser-icon name="lucide:search" [size]="16" color="var(--muted)"></aser-icon>
+            </span>
+            <input class="search-input" [ngModel]="searchQuery" (ngModelChange)="searchQuery = $event; onFilterChange()" [placeholder]="'STOREFRONT.SEARCH_CATALOG' | translate:'Search materials by title or SKU...'">
+          </div>
+
+          <div style="display:flex; align-items:center; gap:8px;">
+            <label style="font-size:12px; font-weight:700; color:var(--muted); white-space:nowrap;">{{ 'COMMON.STATUS' | translate:'Availability' }}:</label>
+            <select class="form-select" style="width:160px; padding:10px;" [ngModel]="availabilityFilter" (ngModelChange)="availabilityFilter = $event; onFilterChange()">
+              <option value="ALL">{{ 'COMMON.ALL' | translate:'All Stock Statuses' }}</option>
+              <option value="IN_STOCK">{{ 'STOREFRONT.IN_STOCK' | translate:'In Stock Only' }}</option>
+              <option value="LIMITED">{{ 'PRODUCT_DETAIL.LIMITED_STOCK' | translate:'Limited Stock' }}</option>
+              <option value="ON_REQUEST">{{ 'PRODUCTS.QUOTATION_ONLY' | translate:'Quotation Only' }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Products Grid -->
+      <div class="product-grid">
+        @for (product of pagedProducts; track product.id) {
+          <div class="product-card">
+            <div class="product-card-top">
+              <div class="product-card-badges">
+                <span class="category-tag">{{ product.categoryLabel }}</span>
+                @if (product.badge) {
+                  <span class="badge badge-transit">{{ product.badge }}</span>
+                }
+              </div>
+              <div class="product-slider-wrapper" style="width: 100%; border-radius: var(--radius-sm); overflow: hidden; margin-top: 8px;">
+                <aser-image-slider 
+                  [images]="product.images || (product.imageUrl ? [product.imageUrl] : [])" 
+                  [fallbackCategory]="product.category" 
+                  [alt]="product.name"
+                  height="170px">
+                </aser-image-slider>
+              </div>
+            </div>
+
+            <div class="product-card-body">
+              <div class="product-sku">{{ product.sku }}</div>
+              <h3 class="product-title">{{ product.name }}</h3>
+              @if (product.amharicName) {
+                <div class="product-amharic">{{ product.amharicName }}</div>
+              }
+              <p class="product-desc">{{ product.description }}</p>
+
+              <div class="product-spec-mini">
+                <span class="badge" [class.badge-in-stock]="product.availability === 'IN_STOCK'"
+                  [class.badge-limited]="product.availability === 'LIMITED'"
+                  [class.badge-quote-only]="product.pricingType === 'QUOTATION'">
+                  ● {{ product.availability === 'IN_STOCK' ? ('STOREFRONT.IN_STOCK' | translate:'In Stock') : product.availability === 'LIMITED' ? 'Limited' : ('PRODUCTS.QUOTATION_ONLY' | translate:'Quotation') }}
+                </span>
+                <span style="margin-left:auto;">Unit: {{ product.unit }}</span>
+              </div>
+            </div>
+
+            <div class="product-card-footer">
+              <div class="product-price-box">
+                <span class="product-price-label">{{ 'PRODUCTS.PUBLIC_PRICE' | translate:'Price' }} (ETB)</span>
+                @if (product.pricingType === 'FIXED') {
+                  <span class="product-price-amount">
+                    ETB {{ product.unitPrice | number:'1.2-2' }}
+                    <small class="product-unit-text">/ {{ product.unit }}</small>
+                  </span>
+                } @else {
+                  <span class="product-price-amount" style="font-size:14px; color:var(--blue);">
+                    {{ 'PRODUCTS.QUOTATION_ONLY' | translate:'Custom Quote' }}
+                  </span>
+                }
+              </div>
+
+              <div style="display:flex; gap:6px;">
+                <button class="btn btn-outline btn-sm" (click)="selectedModalProduct.set(product)">
+                  {{ 'COMMON.VIEW' | translate:'Details' }}
+                </button>
+                @if (product.pricingType === 'FIXED') {
+                  <button class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;" (click)="addToCart(product)">
+                    {{ 'STOREFRONT.ADD_TO_CART' | translate:'Add' }} <aser-icon name="lucide:shopping-cart" [size]="13"></aser-icon>
+                  </button>
+                } @else {
+                  <button class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:5px;" (click)="openQuoteModal('EQUIPMENT_DISTRIBUTION')">
+                    {{ 'STOREFRONT.REQUEST_QUOTE_BTN' | translate:'Quote' }} <aser-icon name="lucide:clipboard-list" [size]="13"></aser-icon>
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (filteredProducts.length === 0) {
+        <div style="text-align:center; padding:60px 20px; color:var(--muted);">
+          <p style="font-size:16px;">No products match your current filters.</p>
+          <button class="btn btn-outline btn-sm" style="margin-top:12px;" (click)="searchQuery = ''; selectedCategory = 'ALL'; availabilityFilter = 'ALL'">
+            Reset All Filters
+          </button>
+        </div>
+      } @else {
+        <div style="margin-top: 24px;">
+          <aser-paginator
+            [totalItems]="filteredProducts.length"
+            [pageSize]="pageSize"
+            [currentPage]="currentPage"
+            [pageSizeOptions]="[6, 12, 24, 48]"
+            (pageChange)="currentPage = $event"
+            (pageSizeChange)="pageSize = $event; currentPage = 1">
+          </aser-paginator>
+        </div>
+      }
+
+    </div>
+  </section>
+
+  <aser-public-footer (requestQuote)="openQuoteModal($event)"></aser-public-footer>
+
+  <!-- Modals -->
+  @if (isCartOpen()) {
+    <aser-cart-drawer 
+      (close)="isCartOpen.set(false)"
+      (checkout)="isCartOpen.set(false); isCheckoutOpen.set(true)">
+    </aser-cart-drawer>
+  }
+
+  @if (isCheckoutOpen()) {
+    <aser-checkout-modal 
+      (close)="isCheckoutOpen.set(false)">
+    </aser-checkout-modal>
+  }
+
+  @if (isQuoteOpen()) {
+    <aser-quote-modal 
+      [initialCategory]="activeQuoteCategory"
+      (close)="isQuoteOpen.set(false)">
+    </aser-quote-modal>
+  }
+
+  @if (selectedModalProduct()) {
+    <aser-product-detail-modal 
+      [product]="selectedModalProduct()"
+      (close)="selectedModalProduct.set(null)"
+      (requestQuote)="onProductQuoteRequest($event)">
+    </aser-product-detail-modal>
+  }
+</div>

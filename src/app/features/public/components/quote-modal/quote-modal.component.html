@@ -1,0 +1,150 @@
+<div class="modal-backdrop" (click)="close.emit()">
+  <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+    
+    @if (!confirmedQuote()) {
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <aser-icon name="lucide:clipboard-list" [size]="24" color="var(--blue)"></aser-icon>
+          <div>
+            <h3 style="font-size:17px; font-weight:800; color:var(--ink);">{{ 'QUOTE_MODAL.REQUEST_QUOTE_TITLE' | translate:'Request a Custom Quotation' }}</h3>
+            <p style="font-size:11px; color:var(--muted); margin:0;">
+              {{ 'QUOTE_MODAL.REQUEST_QUOTE_SUBTITLE' | translate:'Commercial Printing Press, Branding & Promotion, Garment Supplies & Equipment' }}
+            </p>
+          </div>
+        </div>
+        <button class="modal-close-btn" (click)="close.emit()" aria-label="Close modal">
+          <aser-icon name="lucide:x" [size]="18"></aser-icon>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Contact Details -->
+        <div style="margin-bottom:20px;">
+          <h4 style="font-size:13px; font-weight:800; color:var(--blue); letter-spacing:0.5px; text-transform:uppercase; margin-bottom:12px;">
+            {{ 'QUOTE_MODAL.STEP_1_CONTACT' | translate:'1. Customer Contact Information' }}
+          </h4>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">{{ 'QUOTE_MODAL.FULL_NAME' | translate:'Full Name' }} *</label>
+              <input class="form-input" [(ngModel)]="customerName" placeholder="e.g. Dawit Tadesse" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">{{ 'QUOTE_MODAL.PHONE_NUMBER' | translate:'Phone Number' }} *</label>
+              <input class="form-input" [(ngModel)]="customerPhone" placeholder="e.g. +251 91 234 5678" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">{{ 'QUOTE_MODAL.EMAIL_ADDRESS' | translate:'Email Address' }} *</label>
+              <input class="form-input" type="email" [(ngModel)]="customerEmail" placeholder="e.g. info@company.et" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">{{ 'QUOTE_MODAL.COMPANY_ORG' | translate:'Company / Organization' }}</label>
+              <input class="form-input" [(ngModel)]="companyName" placeholder="e.g. Abyssinia Media PLC">
+            </div>
+          </div>
+        </div>
+
+        <!-- Service Details -->
+        <div style="margin-bottom:20px;">
+          <h4 style="font-size:13px; font-weight:800; color:var(--blue); letter-spacing:0.5px; text-transform:uppercase; margin-bottom:12px;">
+            {{ 'QUOTE_MODAL.STEP_2_PROJECT' | translate:'2. Project & Service Scope' }}
+          </h4>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">{{ 'QUOTE_MODAL.SERVICE_CATEGORY' | translate:'Service Category' }} *</label>
+              <select class="form-select" [(ngModel)]="serviceCategory">
+                <option value="PRINTING_PRESS">{{ 'SERVICES.TAB_PRINTING' | translate:'Printing Press Services (Offset / Digital)' }}</option>
+                <option value="BRANDING_PROMOTION">{{ 'SERVICES.TAB_BRANDING' | translate:'Branding, Signage & Vehicle Wrap' }}</option>
+                <option value="GARMENT_MATERIALS">{{ 'SERVICES.TAB_GARMENT' | translate:'Garment Materials (HTV / DTF / Fabric)' }}</option>
+                <option value="PRINTING_SUPPLIES">{{ 'SERVICES.TAB_SUPPLIES' | translate:'Printing Materials & Consumables' }}</option>
+                <option value="EQUIPMENT_DISTRIBUTION">{{ 'SERVICES.TAB_EQUIPMENT' | translate:'Industrial Machinery & Heat Presses' }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">{{ 'QUOTE_MODAL.PROJECT_TITLE' | translate:'Project Title' }} *</label>
+              <input class="form-input" [(ngModel)]="projectTitle" placeholder="e.g. Annual Company Report Printing" required>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">{{ 'QUOTE_MODAL.ESTIMATED_QUANTITY' | translate:'Estimated Quantity' }} *</label>
+              <input class="form-input" type="number" [(ngModel)]="quantity" min="1" placeholder="e.g. 500" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">{{ 'QUOTE_MODAL.UNIT_OF_MEASURE' | translate:'Unit of Measure' }} *</label>
+              <input class="form-input" [(ngModel)]="unit" placeholder="e.g. copies, pieces, meters, rolls" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ 'QUOTE_MODAL.DETAILED_SPECS' | translate:'Detailed Specifications & Requirements' }} *</label>
+            <textarea class="form-textarea" rows="3" [(ngModel)]="specifications" 
+              placeholder="Specify paper weight (e.g. 150gsm art paper), color count (4C / full color), dimensions, binding style, lamination, or target vehicle model." required></textarea>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">{{ 'QUOTE_MODAL.TARGET_DATE' | translate:'Target Completion Date' }}</label>
+              <input class="form-input" type="date" [(ngModel)]="targetTimeline">
+            </div>
+            <div class="form-group">
+              <label class="form-label">{{ 'QUOTE_MODAL.PREFERRED_BRANCH' | translate:'Preferred Branch for Coordination' }}</label>
+              <select class="form-select" [(ngModel)]="branchPreference">
+                @for (b of state.branches(); track b.id) {
+                  <option [value]="b.name">{{ b.name }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="close.emit()">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
+        <button class="btn btn-primary" [disabled]="!isFormValid" (click)="submitQuote()">
+          {{ 'QUOTE_MODAL.SUBMIT_QUOTE_BTN' | translate:'Submit Quotation Request' }} <aser-icon name="lucide:arrow-right" [size]="16"></aser-icon>
+        </button>
+      </div>
+    } @else {
+      <!-- Confirmation Screen -->
+      <div class="modal-body" style="text-align:center; padding:45px 30px;">
+        <div style="margin-bottom:16px;">
+          <aser-icon name="lucide:check-circle" [size]="52" color="var(--blue)"></aser-icon>
+        </div>
+        <span class="badge badge-in-stock" style="font-size:12px; padding:6px 14px; margin-bottom:12px;">
+          {{ 'QUOTE_MODAL.QUOTE_SUBMITTED_TITLE' | translate:'QUOTATION REQUEST SUBMITTED' }}
+        </span>
+        <h3 style="font-size:22px; font-weight:800; color:var(--ink); margin-bottom:8px;">
+          {{ 'QUOTE_MODAL.REFERENCE' | translate:'Reference' }}: {{ confirmedQuote()?.quoteNumber }}
+        </h3>
+        <p style="font-size:14px; color:var(--muted); max-width:480px; margin:0 auto 24px; line-height:1.6;">
+          {{ 'QUOTE_MODAL.THANK_YOU_PREFIX' | translate:'Thank you' }}, {{ confirmedQuote()?.customerName }}. {{ 'QUOTE_MODAL.THANK_YOU_BODY' | translate:'Our printing estimators will review your requirements and provide an official quotation within 4 business hours.' }}
+        </p>
+
+        <div style="background:var(--bg-soft); border:1px solid var(--line); border-radius:var(--radius-lg); padding:20px; max-width:440px; margin:0 auto 24px; text-align:left;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
+            <span style="color:var(--muted);">{{ 'QUOTE_MODAL.SERVICE_LABEL' | translate:'Service' }}:</span>
+            <strong style="color:var(--ink);">{{ confirmedQuote()?.serviceCategoryLabel }}</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
+            <span style="color:var(--muted);">{{ 'QUOTE_MODAL.PROJECT_LABEL' | translate:'Project' }}:</span>
+            <span style="color:var(--ink); font-weight:600;">{{ confirmedQuote()?.projectTitle }}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
+            <span style="color:var(--muted);">{{ 'QUOTE_MODAL.VOLUME_LABEL' | translate:'Volume' }}:</span>
+            <span>{{ confirmedQuote()?.quantity }} {{ confirmedQuote()?.unit }}</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:13px;">
+            <span style="color:var(--muted);">{{ 'QUOTE_MODAL.BRANCH_LABEL' | translate:'Branch' }}:</span>
+            <span>{{ confirmedQuote()?.branchPreference }}</span>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:12px; justify-content:center;">
+          <button class="btn btn-outline" (click)="close.emit()">{{ 'QUOTE_MODAL.DONE' | translate:'Done' }}</button>
+        </div>
+      </div>
+    }
+
+  </div>
+</div>

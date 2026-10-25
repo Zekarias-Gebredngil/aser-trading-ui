@@ -1,0 +1,412 @@
+<div class="home-page">
+  <aser-public-header (openCart)="isCartOpen.set(true)" (requestQuote)="openQuoteModal($event)">
+  </aser-public-header>
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-grid">
+      <div class="hero-content">
+        <div class="hero-eyebrow">
+          <span class="logo-dots-rainbow">
+            <span class="logo-dot c-blue"></span>
+            <span class="logo-dot c-amber"></span>
+            <span class="logo-dot c-red"></span>
+            <span class="logo-dot c-pink"></span>
+            <span class="logo-dot c-black"></span>
+          </span>
+          {{ 'STOREFRONT.HERO_EYEBROW' | translate:'PRINTING PRESS · BRANDING · GARMENT MATERIALS · SUPPLIES' }}
+        </div>
+
+        <h1 class="hero-title">
+          {{ 'STOREFRONT.HERO_TITLE' | translate:'Ideas made visible.' }}<br>
+          <em>{{ 'STOREFRONT.HERO_TITLE_SUB' | translate:'Business made easier.' }}</em>
+        </h1>
+
+        <p class="hero-desc">
+          {{ 'STOREFRONT.HERO_DESC' | translate:"Aser Trading is Ethiopia's premier integrated printing, promotional branding, and raw material distribution partner. Supplying high-speed commercial offset printing, premium garment vinyls, DTF films, and equipment across multi-branch hubs in Shire and Surroundings" }}
+        </p>
+
+        <div class="hero-actions">
+          <a routerLink="/products" class="btn btn-primary btn-lg"
+            style="display:inline-flex; align-items:center; gap:8px;">
+            {{ 'STOREFRONT.EXPLORE_SHOP' | translate:'Explore Materials & Shop' }} <aser-icon name="lucide:arrow-right" [size]="16"></aser-icon>
+          </a>
+          <button class="btn btn-outline btn-lg" (click)="openQuoteModal('PRINTING_PRESS')">
+            {{ 'STOREFRONT.REQUEST_CUSTOM_QUOTE' | translate:'Request Custom Quotation' }}
+          </button>
+        </div>
+
+        <div class="hero-trust-bar">
+          <div class="trust-item">
+            <span class="trust-val">{{ state.branches().length }} {{ 'STOREFRONT.BRANCHES_COUNT' | translate:'Branches' }}</span>
+            <span class="trust-label">{{ 'STOREFRONT.NETWORK_HUBS' | translate:'Network Hubs & Warehouses' }}</span>
+          </div>
+          <div style="width:1px; height:32px; background:var(--line);"></div>
+          <div class="trust-item">
+            <span class="trust-val">{{ 'STOREFRONT.QUALITY_VAL' | translate:'100% Quality' }}</span>
+            <span class="trust-label">{{ 'STOREFRONT.QUALITY_LABEL' | translate:'ISO-standard ink & paper supplies' }}</span>
+          </div>
+          <div style="width:1px; height:32px; background:var(--line);"></div>
+          <div class="trust-item">
+            <span class="trust-val">{{ 'STOREFRONT.FULFILLMENT_VAL' | translate:'Fast Fulfillment' }}</span>
+            <span class="trust-label">{{ 'STOREFRONT.FULFILLMENT_LABEL' | translate:'Branch pickup & address dispatch' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero Visual with Official Aser Trading Logo -->
+      <div class="hero-visual-card">
+        <div class="visual-logo-wrapper">
+          <img src="Aser-trading.png" alt="Aser Trading Logo" class="hero-logo-display">
+          <div class="visual-badges">
+            <span class="visual-feature-pill">✦ {{ 'HOME.COMMERCIAL_PRINTING' | translate:'Commercial Printing' }}</span>
+            <span class="visual-feature-pill">✦ {{ 'HOME.FLEET_BRANDING' | translate:'Fleet Branding' }}</span>
+            <span class="visual-feature-pill">✦ {{ 'HOME.GARMENT_VINYL' | translate:'Garment Vinyl & DTF' }}</span>
+          </div>
+        </div>
+
+        <div class="hero-fast-facts">
+          <div class="fact-box">
+            <strong>{{ 'HOME.MULTI_BRANCH_INV' | translate:'Multi-Branch Inventory' }}</strong>
+            <small>{{ 'HOME.MULTI_BRANCH_INV_DESC' | translate:'Real-time stock reservation for online customer orders' }}</small>
+          </div>
+          <div class="fact-box">
+            <strong>{{ 'HOME.FLEXIBLE_SETTLEMENT' | translate:'Flexible Settlement' }}</strong>
+            <small>{{ 'HOME.FLEXIBLE_SETTLEMENT_DESC' | translate:'Manual bank transfer (CBE/BOA/Telebirr) & cash payment' }}</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Four Pillars Strip -->
+  <section class="pillar-strip">
+    <div class="pillar-grid">
+      <div class="pillar-item">
+        <div class="pillar-icon-box icon-blue">
+          <aser-icon name="lucide:printer" [size]="28" color="var(--blue)"></aser-icon>
+        </div>
+        <div class="pillar-text">
+          <strong>01 / {{ 'HOME.PILLAR_1_TITLE' | translate:'Commercial Printing' }}</strong>
+          <p>{{ 'HOME.PILLAR_1_DESC' | translate:'Books, magazines, packaging, marketing flyers & business cards.' }}</p>
+        </div>
+      </div>
+
+      <div class="pillar-item">
+        <div class="pillar-icon-box icon-magenta">
+          <aser-icon name="lucide:sparkles" [size]="28" color="var(--magenta)"></aser-icon>
+        </div>
+        <div class="pillar-text">
+          <strong>02 / {{ 'HOME.PILLAR_2_TITLE' | translate:'Branding & Promotion' }}</strong>
+          <p>{{ 'HOME.PILLAR_2_DESC' | translate:'Vehicle wraps, luxury roll-up banners & 3D acrylic signs.' }}</p>
+        </div>
+      </div>
+
+      <div class="pillar-item">
+        <div class="pillar-icon-box icon-amber">
+          <aser-icon name="lucide:scissors" [size]="28" color="var(--amber)"></aser-icon>
+        </div>
+        <div class="pillar-text">
+          <strong>03 / {{ 'HOME.PILLAR_3_TITLE' | translate:'Garment Materials' }}</strong>
+          <p>{{ 'HOME.PILLAR_3_DESC' | translate:'Korean PU heat transfer vinyl, DTF film & textile accessories.' }}</p>
+        </div>
+      </div>
+
+      <div class="pillar-item">
+        <div class="pillar-icon-box icon-dark">
+          <aser-icon name="lucide:cog" [size]="28" color="var(--ink)"></aser-icon>
+        </div>
+        <div class="pillar-text">
+          <strong>04 / {{ 'HOME.PILLAR_4_TITLE' | translate:'Printing Supplies & Machinery' }}</strong>
+          <p>{{ 'HOME.PILLAR_4_DESC' | translate:'Sublimation inks, copier papers & auto pneumatic heat presses.' }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Materials Catalog Preview -->
+  <section class="section section-alt" id="catalog">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <span class="section-tag">{{ 'HOME.DIRECT_FROM_STOCK' | translate:'Direct From Stock' }}</span>
+          <h2 class="section-title">{{ 'STOREFRONT.FEATURED_MATERIALS' | translate:'Commercial Raw Materials & Equipment' }}</h2>
+        </div>
+        <p class="section-subtitle">
+          {{ 'STOREFRONT.FEATURED_DESC' | translate:'Certified materials directly imported and stocked across our Ethiopian branch network.' }}
+        </p>
+      </div>
+
+      <!-- Category Filter Tabs -->
+      <div class="filter-tabs">
+        <button class="filter-tab" [class.active]="selectedCategory === 'ALL'" (click)="selectedCategory = 'ALL'">
+          {{ 'PRODUCTS.ALL_CATEGORIES' | translate:'All Products' }} ({{ state.products().length }})
+        </button>
+        <button class="filter-tab" [class.active]="selectedCategory === 'GARMENT_MATERIALS'"
+          (click)="selectedCategory = 'GARMENT_MATERIALS'">
+          {{ 'PRODUCTS.CAT_GARMENT' | translate:'Garment Materials' }}
+        </button>
+        <button class="filter-tab" [class.active]="selectedCategory === 'PRINTING_SUPPLIES'"
+          (click)="selectedCategory = 'PRINTING_SUPPLIES'">
+          {{ 'PRODUCTS.CAT_PRINTING' | translate:'Printing Supplies' }}
+        </button>
+        <button class="filter-tab" [class.active]="selectedCategory === 'BRANDING_PROMOTION'"
+          (click)="selectedCategory = 'BRANDING_PROMOTION'">
+          {{ 'PRODUCTS.CAT_BRANDING' | translate:'Branding & Promotion' }}
+        </button>
+        <button class="filter-tab" [class.active]="selectedCategory === 'EQUIPMENT'"
+          (click)="selectedCategory = 'EQUIPMENT'">
+          {{ 'PRODUCTS.CAT_EQUIPMENT' | translate:'Machinery & Equipment' }}
+        </button>
+      </div>
+
+      <!-- Search Row -->
+      <div class="catalog-search-row">
+        <div class="search-input-wrapper">
+          <span class="search-icon">
+            <aser-icon name="lucide:search" [size]="16" color="var(--muted)"></aser-icon>
+          </span>
+          <input class="search-input" [(ngModel)]="searchQuery"
+            [placeholder]="'STOREFRONT.SEARCH_CATALOG' | translate:'Search materials by title or SKU...'">
+        </div>
+      </div>
+
+      <!-- Products Grid -->
+      <div class="product-grid">
+        @for (product of filteredProducts; track product.id) {
+        <div class="product-card">
+          <div class="product-card-top">
+            <div class="product-card-badges">
+              <span class="category-tag">{{ product.categoryLabel }}</span>
+              @if (product.badge) {
+              <span class="badge badge-transit">{{ product.badge }}</span>
+              }
+            </div>
+            <div class="product-slider-wrapper" style="width: 100%; border-radius: var(--radius-sm); overflow: hidden; margin-top: 8px;">
+              <aser-image-slider 
+                [images]="product.images || (product.imageUrl ? [product.imageUrl] : [])" 
+                [fallbackCategory]="product.category" 
+                [alt]="product.name"
+                height="170px">
+              </aser-image-slider>
+            </div>
+          </div>
+
+          <div class="product-card-body">
+            <div class="product-sku">{{ product.sku }}</div>
+            <h3 class="product-title">{{ product.name }}</h3>
+            @if (product.amharicName) {
+            <div class="product-amharic">{{ product.amharicName }}</div>
+            }
+            <p class="product-desc">{{ product.description }}</p>
+
+            <div class="product-spec-mini">
+              <span class="badge" [class.badge-in-stock]="product.availability === 'IN_STOCK'"
+                [class.badge-limited]="product.availability === 'LIMITED'"
+                [class.badge-quote-only]="product.pricingType === 'QUOTATION'">
+                ● {{ product.availability === 'IN_STOCK' ? ('STOREFRONT.IN_STOCK' | translate:'In Stock') : product.availability === 'LIMITED' ? ('PRODUCT_DETAIL.LIMITED_STOCK' | translate:'Limited') :
+                ('PRODUCTS.QUOTATION_ONLY' | translate:'Quotation') }}
+              </span>
+              <span style="margin-left:auto;">Unit: {{ product.unit }}</span>
+            </div>
+          </div>
+
+          <div class="product-card-footer">
+            <div class="product-price-box">
+              <span class="product-price-label">{{ 'PRODUCTS.PUBLIC_PRICE' | translate:'Price' }} (ETB)</span>
+              @if (product.pricingType === 'FIXED') {
+              <span class="product-price-amount">
+                ETB {{ product.unitPrice | number:'1.2-2' }}
+                <small class="product-unit-text">/ {{ product.unit }}</small>
+              </span>
+              } @else {
+              <span class="product-price-amount" style="font-size:14px; color:var(--blue);">
+                {{ 'PRODUCTS.QUOTATION_ONLY' | translate:'Custom Quote' }}
+              </span>
+              }
+            </div>
+
+            <div style="display:flex; gap:6px;">
+              <button class="btn btn-outline btn-sm" (click)="selectedModalProduct.set(product)" title="View Details">
+                {{ 'COMMON.VIEW' | translate:'Details' }}
+              </button>
+              @if (product.pricingType === 'FIXED') {
+              <button class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;"
+                (click)="addToCart(product)">
+                {{ 'STOREFRONT.ADD_TO_CART' | translate:'Add' }} <aser-icon name="lucide:shopping-cart" [size]="13"></aser-icon>
+              </button>
+              } @else {
+              <button class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:5px;"
+                (click)="openQuoteModal('EQUIPMENT_DISTRIBUTION')">
+                {{ 'STOREFRONT.REQUEST_QUOTE_BTN' | translate:'Quote' }} <aser-icon name="lucide:clipboard-list" [size]="13"></aser-icon>
+              </button>
+              }
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+
+      <div style="text-align:center; margin-top:36px;">
+        <a routerLink="/products" class="btn btn-primary btn-lg"
+          style="display:inline-flex; align-items:center; gap:8px;">
+          {{ 'STOREFRONT.VIEW_ALL_PRODUCTS' | translate:'View All Products →' }}
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services Showcase Section -->
+  <section class="section" id="services">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <span class="section-tag">{{ 'HOME.CRAFTSMANSHIP' | translate:'Craftsmanship & Production' }}</span>
+          <h2 class="section-title">{{ 'STOREFRONT.OUR_SERVICES' | translate:'Commercial Services & Capabilities' }}</h2>
+        </div>
+        <p class="section-subtitle">
+          {{ 'STOREFRONT.SERVICES_DESC' | translate:'End-to-end industrial solutions for publishers, enterprises, garment factories, and advertising agencies.' }}
+        </p>
+      </div>
+
+      <div class="services-grid">
+        <div class="service-card-item">
+          <div class="service-card-icon">
+            <aser-icon name="lucide:printer" [size]="32" color="var(--blue)"></aser-icon>
+          </div>
+          <h3 class="service-card-title">{{ 'HOME.SVC_1_TITLE' | translate:'Commercial Book & Magazine Printing' }}</h3>
+          <p class="service-card-desc">
+            {{ 'HOME.SVC_1_DESC' | translate:'High-volume offset press runs for school textbooks, corporate annual reports, luxury catalogs, and magazines with custom PUR binding.' }}
+          </p>
+          <ul class="service-features-list">
+            <li>{{ 'HOME.SVC_1_F1' | translate:'Heidelberg 4-color offset press runs' }}</li>
+            <li>{{ 'HOME.SVC_1_F2' | translate:'Matte/gloss film lamination & spot UV' }}</li>
+            <li>{{ 'HOME.SVC_1_F3' | translate:'Perfect binding, saddle-stitching & hardcover' }}</li>
+          </ul>
+          <button class="btn btn-secondary"
+            style="margin-top:auto; display:inline-flex; align-items:center; justify-content:center; gap:8px;"
+            (click)="openQuoteModal('PRINTING_PRESS')">
+            {{ 'HOME.SVC_1_BTN' | translate:'Request Printing Quote' }} <aser-icon name="lucide:arrow-right" [size]="14"></aser-icon>
+          </button>
+        </div>
+
+        <div class="service-card-item">
+          <div class="service-card-icon">
+            <aser-icon name="lucide:truck" [size]="32" color="var(--magenta)"></aser-icon>
+          </div>
+          <h3 class="service-card-title">{{ 'HOME.SVC_2_TITLE' | translate:'Fleet & Vehicle Branding Wraps' }}</h3>
+          <p class="service-card-desc">
+            {{ 'HOME.SVC_2_DESC' | translate:'Turn your commercial delivery vans, trucks, and company cars into mobile billboards with weather-resistant outdoor vinyl wraps.' }}
+          </p>
+          <ul class="service-features-list">
+            <li>{{ 'HOME.SVC_2_F1' | translate:'Cast polymeric wrap vinyl with UV laminate' }}</li>
+            <li>{{ 'HOME.SVC_2_F2' | translate:'Full wrap, half wrap, and contour decals' }}</li>
+            <li>{{ 'HOME.SVC_2_F3' | translate:'In-house certified application technicians' }}</li>
+          </ul>
+          <button class="btn btn-secondary"
+            style="margin-top:auto; display:inline-flex; align-items:center; justify-content:center; gap:8px;"
+            (click)="openQuoteModal('BRANDING_PROMOTION')">
+            {{ 'HOME.SVC_2_BTN' | translate:'Request Vehicle Quote' }} <aser-icon name="lucide:arrow-right" [size]="14"></aser-icon>
+          </button>
+        </div>
+
+        <div class="service-card-item">
+          <div class="service-card-icon">
+            <aser-icon name="lucide:package" [size]="32" color="var(--amber)"></aser-icon>
+          </div>
+          <h3 class="service-card-title">{{ 'HOME.SVC_3_TITLE' | translate:'Custom Packaging & Box Printing' }}</h3>
+          <p class="service-card-desc">
+            {{ 'HOME.SVC_3_DESC' | translate:'Rigid luxury boxes, corrugated shippers, pharmaceutical cartons, and food packaging designed with tamper-evident precision.' }}
+          </p>
+          <ul class="service-features-list">
+            <li>{{ 'HOME.SVC_3_F1' | translate:'Duplex board, kraft, and ivory cardstocks' }}</li>
+            <li>{{ 'HOME.SVC_3_F2' | translate:'Custom die-cutting and embossing' }}</li>
+            <li>{{ 'HOME.SVC_3_F3' | translate:'Food-grade certified inks available' }}</li>
+          </ul>
+          <button class="btn btn-secondary"
+            style="margin-top:auto; display:inline-flex; align-items:center; justify-content:center; gap:8px;"
+            (click)="openQuoteModal('PRINTING_PRESS')">
+            {{ 'HOME.SVC_3_BTN' | translate:'Request Packaging Quote' }} <aser-icon name="lucide:arrow-right" [size]="14"></aser-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Multi-Branch Directory -->
+  <section class="section section-alt" id="branches">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <span class="section-tag">{{ 'HOME.PHYSICAL_NETWORK' | translate:'Our Physical Network' }}</span>
+          <h2 class="section-title">{{ 'STOREFRONT.BRANCH_LOCATIONS' | translate:'Aser Trading Branches & Warehouses' }}</h2>
+        </div>
+        <p class="section-subtitle">
+          Visit any of our {{ state.branches().length }} registered branch locations for material inspections, order
+          collections, and project consultations.
+        </p>
+      </div>
+
+      <div class="branch-grid">
+        @for (branch of state.branches(); track branch.id) {
+        <div class="branch-card">
+          <div class="branch-card-header">
+            <h3 class="branch-title">{{ branch.name }}</h3>
+            @if (branch.isHeadOffice) {
+            <span class="branch-hq-tag">{{ 'BRANCHES.HQ_PLANT' | translate:'HEADQUARTERS' }}</span>
+            }
+          </div>
+
+          <div class="branch-detail-row">
+            <aser-icon name="lucide:map-pin" [size]="16" color="var(--blue)"></aser-icon>
+            <span>{{ branch.address }}, {{ branch.city }}</span>
+          </div>
+
+          <div class="branch-detail-row">
+            <aser-icon name="lucide:phone" [size]="16" color="var(--blue)"></aser-icon>
+            <span>{{ branch.phone }}</span>
+          </div>
+
+          <div class="branch-detail-row">
+            <aser-icon name="lucide:mail" [size]="16" color="var(--blue)"></aser-icon>
+            <span>{{ branch.email }}</span>
+          </div>
+
+          <div
+            style="margin-top:auto; padding-top:14px; border-top:1px solid var(--line); font-size:11px; color:var(--muted);">
+            <strong>{{ 'BRANCHES.WAREHOUSES' | translate:'On-Site Warehouses:' }}</strong>
+            @for (w of branch.warehouses; track w.id) {
+            <span style="display:block; margin-top:2px;">• {{ w.name }}</span>
+            }
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Public Footer -->
+  <aser-public-footer (requestQuote)="openQuoteModal($event)"></aser-public-footer>
+
+  <!-- Modals & Drawers -->
+  @if (isCartOpen()) {
+  <aser-cart-drawer (close)="isCartOpen.set(false)" (checkout)="isCartOpen.set(false); isCheckoutOpen.set(true)">
+  </aser-cart-drawer>
+  }
+
+  @if (isCheckoutOpen()) {
+  <aser-checkout-modal (close)="isCheckoutOpen.set(false)">
+  </aser-checkout-modal>
+  }
+
+  @if (isQuoteOpen()) {
+  <aser-quote-modal [initialCategory]="activeQuoteCategory" (close)="isQuoteOpen.set(false)">
+  </aser-quote-modal>
+  }
+
+  @if (selectedModalProduct()) {
+  <aser-product-detail-modal [product]="selectedModalProduct()" (close)="selectedModalProduct.set(null)"
+    (requestQuote)="onProductQuoteRequest($event)">
+  </aser-product-detail-modal>
+  }
+</div>
