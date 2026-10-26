@@ -1,0 +1,311 @@
+<aser-admin-shell section="Product Catalog">
+  <div class="page-header-row">
+    <div>
+      <div style="font-size:11px; font-weight:800; color:var(--blue); letter-spacing:1px; margin-bottom:4px;">
+        {{ 'PRODUCTS.CATEGORY_HEADER' | translate:'CATALOG & PUBLICATION MANAGEMENT' }}
+      </div>
+      <h1>{{ 'PRODUCTS.TITLE' | translate:'Product Catalog' }}</h1>
+      <p>
+        {{ 'PRODUCTS.SUBTITLE' | translate:'Manage standard SKUs, units of measure, pricing models, and Website
+        availability.' }}
+      </p>
+    </div>
+
+    <div style="display:flex; gap:10px;">
+      <button class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;"
+        (click)="exportCatalogToExcel()" [title]="'COMMON.EXPORT_EXCEL' | translate:'Export to Excel'">
+        <aser-icon name="lucide:file-spreadsheet" [size]="16"></aser-icon>
+        {{ 'COMMON.EXPORT_EXCEL' | translate:'Export to Excel' }}
+      </button>
+
+      @if (state.hasPermission('MANAGE_PRODUCTS')) {
+      <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;"
+        (click)="isAddModalOpen.set(true)">
+        <aser-icon name="lucide:plus" [size]="16"></aser-icon> {{ 'PRODUCTS.ADD_PRODUCT' | translate:'Add New Product' }}
+      </button>
+      }
+    </div>
+  </div>
+
+  <!-- Search & Category Filters -->
+  <div
+    style="background:#ffffff; border:1px solid var(--line); border-radius:var(--radius-lg); padding:16px 20px; margin-bottom:20px; display:flex; gap:16px; align-items:center;">
+    <div class="search-input-wrapper" style="flex:1;">
+      <span class="search-icon">
+        <aser-icon name="lucide:search" [size]="16" color="var(--muted)"></aser-icon>
+      </span>
+      <input class="search-input" [ngModel]="searchQuery" (ngModelChange)="searchQuery = $event; onFilterChange()"
+        [placeholder]="'PRODUCTS.SEARCH_PLACEHOLDER' | translate:'Search by SKU, product name, or Amharic title...'">
+    </div>
+
+    <div style="display:flex; align-items:center; gap:8px;">
+      <label style="font-size:12px; font-weight:700; color:var(--muted);">{{ 'PRODUCTS.CATEGORY' | translate:'Category:'
+        }}</label>
+      <select class="form-select" style="width:180px;" [ngModel]="selectedCategory"
+        (ngModelChange)="selectedCategory = $event; onFilterChange()">
+        <option value="ALL">{{ 'PRODUCTS.ALL_CATEGORIES' | translate:'All Categories' }}</option>
+        <option value="PRINTING_SUPPLIES">Printing Supplies</option>
+        <option value="GARMENT_MATERIALS">Garment Materials</option>
+        <option value="BRANDING_PROMOTION">Branding & Promotion</option>
+        <option value="EQUIPMENT">Equipment Distribution</option>
+        <option value="PRINTING_SERVICES">Printing Services</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Products Table -->
+  <div class="panel-card">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ 'PRODUCTS.PRODUCT_NAME' | translate:'Product Name & Amharic' }}</th>
+            <th>{{ 'INVENTORY.SKU' | translate:'SKU' }}</th>
+            <th>{{ 'PRODUCTS.CATEGORY' | translate:'Category' }}</th>
+            <th>{{ 'PRODUCTS.BASE_UNIT' | translate:'Base Unit' }}</th>
+            <th>{{ 'PRODUCTS.PRICING_MODEL' | translate:'Pricing Model' }}</th>
+            <th>{{ 'PRODUCTS.PUBLIC_PRICE' | translate:'Public Price' }}</th>
+            <th>{{ 'PRODUCTS.REORDER_ALERT' | translate:'Reorder Alert' }}</th>
+            <th>{{ 'PRODUCTS.STOREFRONT_STATUS' | translate:'Storefront Status' }}</th>
+            @if (state.hasPermission('MANAGE_PRODUCTS')) {
+            <th style="text-align:right;">{{ 'COMMON.ACTIONS' | translate:'Actions' }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of pagedProducts; track p.id) {
+          <tr>
+            <td>
+              <strong style="color:var(--ink); display:block; font-size:13px;">{{ p.name }}</strong>
+              @if (p.amharicName) {
+              <span style="font-size:11px; color:var(--blue); font-weight:600;">{{ p.amharicName }}</span>
+              }
+            </td>
+            <td style="font-family:monospace; font-weight:700; color:var(--slate);">
+              {{ p.sku }}
+            </td>
+            <td>
+              <span class="category-tag">{{ p.categoryLabel }}</span>
+            </td>
+            <td style="text-transform:capitalize;">{{ p.unit }}</td>
+            <td>
+              <span class="badge" [class.badge-in-stock]="p.pricingType === 'FIXED'"
+                [class.badge-quote-only]="p.pricingType === 'QUOTATION'">
+                {{ p.pricingType === 'FIXED' ? ('PRODUCTS.FIXED_PRICE' | translate:'Fixed Price') :
+                ('PRODUCTS.QUOTATION_ONLY' | translate:'Quotation Only') }}
+              </span>
+            </td>
+            <td>
+              @if (p.pricingType === 'FIXED') {
+              <strong style="color:var(--ink);">ETB {{ p.unitPrice | number:'1.2-2' }}</strong>
+              } @else {
+              <span style="color:var(--muted); font-size:12px;">{{ 'PRODUCTS.QUOTATION_ONLY' | translate:'By Project
+                Quote' }}</span>
+              }
+            </td>
+            <td>{{ p.reorderThreshold }} {{ p.unit }}</td>
+            <td>
+              <span class="badge" [class.badge-in-stock]="p.isPublished" [class.badge-limited]="!p.isPublished">
+                {{ p.isPublished ? ('PRODUCTS.PUBLISHED' | translate:'Published') : ('PRODUCTS.HIDDEN' |
+                translate:'Hidden (Draft)') }}
+              </span>
+            </td>
+            @if (state.hasPermission('MANAGE_PRODUCTS')) {
+            <td style="text-align:right;">
+              <div style="display:inline-flex; align-items:center; gap:6px;">
+                <button class="btn btn-outline btn-sm" (click)="togglePublish(p)" title="Toggle storefront visibility">
+                  {{ p.isPublished ? ('COMMON.CLOSE' | translate:'Hide') : ('PRODUCTS.PUBLISHED' | translate:'Publish')
+                  }}
+                </button>
+                <button class="btn btn-outline btn-sm" (click)="openEditModal(p)" title="Edit product details">
+                  <aser-icon name="lucide:pencil" [size]="13"></aser-icon>
+                </button>
+                <button class="btn btn-outline btn-sm" style="color:#dc2626; border-color:#fecaca;"
+                  (click)="deleteProduct(p)" title="Archive product">
+                  <aser-icon name="lucide:trash-2" [size]="13"></aser-icon>
+                </button>
+              </div>
+            </td>
+            }
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (filteredProducts.length === 0) {
+    <div style="text-align:center; padding:40px; color:var(--muted);">
+      No products match your search.
+    </div>
+    } @else {
+    <aser-paginator [totalItems]="filteredProducts.length" [pageSize]="pageSize" [currentPage]="currentPage"
+      (pageChange)="currentPage = $event" (pageSizeChange)="pageSize = $event; currentPage = 1">
+    </aser-paginator>
+    }
+  </div>
+
+  <!-- Add Product Modal -->
+  @if (isAddModalOpen()) {
+  <aser-add-product-modal (close)="isAddModalOpen.set(false)"></aser-add-product-modal>
+  }
+
+  <!-- Edit Product Modal (Aser Brand UI) -->
+  @if (isEditModalOpen()) {
+  <div class="modal-backdrop" (click)="isEditModalOpen.set(false)">
+    <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div
+            style="width:38px; height:38px; border-radius:10px; background:var(--blue-soft); display:flex; align-items:center; justify-content:center;">
+            <aser-icon name="lucide:pencil" [size]="20" color="var(--blue)"></aser-icon>
+          </div>
+          <div>
+            <h3 style="font-size:17px; font-weight:800; color:var(--ink); margin:0;">Edit Catalog Product</h3>
+            <p style="font-size:11px; color:var(--muted); margin:0;">
+              Modify commercial pricing, inventory thresholds, and showcase slides for <strong>{{ selectedProduct()?.sku
+                }}</strong>
+            </p>
+          </div>
+        </div>
+        <button class="modal-close-btn" (click)="isEditModalOpen.set(false)" aria-label="Close dialog">
+          <aser-icon name="lucide:x" [size]="18"></aser-icon>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Readonly Reference & Category Ribbon -->
+        <div
+          style="background:var(--bg-soft); border-radius:var(--radius-md); padding:12px 16px; margin-bottom:18px; border:1px solid var(--line); display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">SKU
+              Code:</span>
+            <strong style="font-family:monospace; font-size:13px; color:var(--blue);">{{ selectedProduct()?.sku
+              }}</strong>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span class="category-tag">{{ selectedProduct()?.categoryLabel }}</span>
+            <span class="badge" [class.badge-in-stock]="selectedProduct()?.pricingType === 'FIXED'"
+              [class.badge-quote-only]="selectedProduct()?.pricingType === 'QUOTATION'">
+              {{ selectedProduct()?.pricingType === 'FIXED' ? ('PRODUCTS.FIXED_PRICE' | translate:'Fixed Price') :
+              ('PRODUCTS.QUOTATION_ONLY' | translate:'Quotation Only') }}
+            </span>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Product Name *</label>
+            <input class="form-input" [(ngModel)]="editForm.name" placeholder="Official product name">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Localized Name</label>
+            <input class="form-input" [(ngModel)]="editForm.amharicName" placeholder="Product name in local language">
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">{{ 'PRODUCTS.PUBLIC_PRICE' | translate:'Public Selling Price (ETB)' }} *</label>
+            <input class="form-input" type="number" [(ngModel)]="editForm.unitPrice" min="0" step="0.5">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Standard Base Cost (ETB)</label>
+            <input class="form-input" type="number" [(ngModel)]="editForm.baseCost" min="0" step="0.5">
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">{{ 'PRODUCTS.REORDER_ALERT' | translate:'Reorder Point Threshold (Units)'
+              }}</label>
+            <input class="form-input" type="number" [(ngModel)]="editForm.reorderThreshold" min="1">
+          </div>
+
+          <div class="form-group" style="display:flex; align-items:center; gap:10px; padding-top:24px;">
+            <input type="checkbox" id="editPubCheck" [(ngModel)]="editForm.isPublished"
+              style="width:18px; height:18px; accent-color:var(--blue); cursor:pointer;">
+            <label for="editPubCheck" style="font-size:13px; font-weight:700; color:var(--ink); cursor:pointer;">
+              {{ 'PRODUCTS.STOREFRONT_STATUS' | translate:'Visible on Public Customer Storefront' }}
+            </label>
+          </div>
+        </div>
+
+        <!-- Product Image Slides Upload -->
+        <div class="form-group"
+          style="background:#f8fafc; border:1px dashed var(--line); border-radius:var(--radius-md); padding:16px; margin-top:10px;">
+          <label class="form-label"
+            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <span style="font-weight:700; color:var(--ink); display:flex; align-items:center; gap:6px;">
+              <aser-icon name="lucide:image" [size]="16" color="var(--blue)"></aser-icon>
+              Product Images & Showcase Slides
+            </span>
+            <span class="badge badge-quote-only" style="font-size:10px;">
+              {{ editForm.images.length }} Slide(s) Active
+            </span>
+          </label>
+
+          <p style="font-size:12px; color:var(--muted); margin:0 0 12px;">
+            Upload product images or paste web links. These slides will render inside the Website slide carousel.
+          </p>
+
+          <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:14px;">
+            <input type="file" #editFileInput multiple accept="image/*" (change)="onEditFilesSelected($event)"
+              style="display:none">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="editFileInput.click()"
+              style="display:inline-flex; align-items:center; gap:6px;">
+              <aser-icon name="lucide:upload-cloud" [size]="15"></aser-icon> Upload Image File(s)
+            </button>
+
+            <span style="font-size:12px; color:var(--muted);">or paste image URL:</span>
+
+            <div style="display:flex; gap:6px; flex:1; min-width:240px;">
+              <input class="form-input" [(ngModel)]="editImageUrlInput" placeholder="https://example.com/photo.jpg"
+                style="font-size:12px; padding:6px 10px;">
+              <button type="button" class="btn btn-outline btn-sm" (click)="addEditImageUrl()"
+                [disabled]="!editImageUrlInput.trim()">
+                Add URL
+              </button>
+            </div>
+          </div>
+
+          @if (editForm.images.length > 0) {
+          <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:8px;">
+            @for (img of editForm.images; track $index) {
+            <div
+              style="position:relative; width:80px; height:80px; border-radius:var(--radius-sm); border:1px solid var(--line); overflow:hidden; background:#ffffff; box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+              <img [src]="img" alt="Slide preview" style="width:100%; height:100%; object-fit:cover;">
+              <span
+                style="position:absolute; bottom:2px; left:2px; background:rgba(0,0,0,0.75); color:#fff; font-size:9px; font-weight:800; padding:1px 5px; border-radius:3px;">
+                Slide {{ $index + 1 }}
+              </span>
+              <button type="button" (click)="removeEditImage($index)" title="Remove slide"
+                style="position:absolute; top:3px; right:3px; background:rgba(239,68,68,0.9); color:#fff; border:none; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;">
+                <aser-icon name="lucide:x" [size]="10"></aser-icon>
+              </button>
+            </div>
+            }
+          </div>
+          }
+        </div>
+
+        <div class="form-group" style="margin-top:14px;">
+          <label class="form-label">Product Description & Technical Specifications</label>
+          <textarea class="form-textarea" rows="3" [(ngModel)]="editForm.description"
+            placeholder="Technical specifications, materials, dimensions, and usage guidelines..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
+        <button class="btn btn-outline" (click)="isEditModalOpen.set(false)">{{ 'COMMON.CANCEL' | translate:'Cancel'
+          }}</button>
+        <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;" (click)="saveEdit()"
+          [disabled]="!editForm.name">
+          <aser-icon name="lucide:check" [size]="14"></aser-icon> {{ 'COMMON.SAVE' | translate:'Save Changes' }}
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+</aser-admin-shell>

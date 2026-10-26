@@ -1,0 +1,180 @@
+<div class="modal-backdrop" (click)="close.emit()">
+  <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <aser-icon name="lucide:package" [size]="22" color="var(--blue)"></aser-icon>
+        <div>
+          <h3 style="font-size:17px; font-weight:800; color:var(--ink);">{{ 'MODALS.ADD_PRODUCT_TITLE' | translate:'Add
+            New Product to Catalog' }}</h3>
+          <p style="font-size:11px; color:var(--muted); margin:0;">
+            {{ 'MODALS.ADD_PRODUCT_SUBTITLE' | translate:'Define product specifications, units of measure, and pricing
+            policy' }}
+          </p>
+        </div>
+      </div>
+      <button class="modal-close-btn" (click)="close.emit()" aria-label="Close dialog">
+        <aser-icon name="lucide:x" [size]="18"></aser-icon>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">{{ 'MODALS.UNIQUE_SKU' | translate:'Unique SKU' }} *</label>
+          <input class="form-input" [(ngModel)]="sku" placeholder="e.g. PRT-GLOSS-150">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ 'MODALS.CATEGORY' | translate:'Category' }} *</label>
+          <select class="form-select" [(ngModel)]="category">
+            <option value="PRINTING_SUPPLIES">{{ 'PRODUCTS.CAT_PRINTING' | translate:'Printing Supplies' }}</option>
+            <option value="GARMENT_MATERIALS">{{ 'PRODUCTS.CAT_GARMENT' | translate:'Garment Materials' }}</option>
+            <option value="BRANDING_PROMOTION">{{ 'PRODUCTS.CAT_BRANDING' | translate:'Branding & Promotion' }}</option>
+            <option value="EQUIPMENT">{{ 'PRODUCTS.CAT_EQUIPMENT' | translate:'Equipment Distribution' }}</option>
+            <option value="PRINTING_SERVICES">{{ 'PRODUCTS.CAT_SERVICES' | translate:'Printing Services' }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">{{ 'MODALS.PRODUCT_NAME' | translate:'Product Name' }} *</label>
+          <input class="form-input" [(ngModel)]="name" placeholder="e.g. 150gsm Gloss Art Paper Ream">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ 'MODALS.AMHARIC_NAME' | translate:'Amharic Name (Optional)' }}</label>
+          <input class="form-input" [(ngModel)]="amharicName" placeholder="e.g. 150 ግራም ግሎስ አርት ፔፐር">
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">{{ 'MODALS.BASE_UNIT' | translate:'Base Unit of Measure' }} *</label>
+          <select class="form-select" [(ngModel)]="unit">
+            <option value="piece">Piece (pc)</option>
+            <option value="ream">Ream (500 sheets)</option>
+            <option value="roll">Roll</option>
+            <option value="meter">Meter (m)</option>
+            <option value="set">Set</option>
+            <option value="kg">Kilogram (kg)</option>
+            <option value="box">Box</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ 'MODALS.PRICING_POLICY' | translate:'Pricing Policy' }} *</label>
+          <select class="form-select" [(ngModel)]="pricingType">
+            <option value="FIXED">{{ 'MODALS.FIXED_PRICE_OPT' | translate:'Fixed Price (Add to Cart)' }}</option>
+            <option value="QUOTATION">{{ 'MODALS.QUOTATION_OPT' | translate:'Quotation-Based (Request Quote)' }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      @if (pricingType === 'FIXED') {
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">{{ 'MODALS.PUBLIC_PRICE' | translate:'Public Selling Price (ETB)' }} *</label>
+          <input class="form-input" type="number" [(ngModel)]="unitPrice" min="0">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ 'MODALS.STANDARD_COST' | translate:'Standard Base Cost (ETB)' }}</label>
+          <input class="form-input" type="number" [(ngModel)]="baseCost" min="0">
+        </div>
+      </div>
+      }
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">{{ 'MODALS.REORDER_ALERT' | translate:'Reorder Alert Threshold' }}</label>
+          <input class="form-input" type="number" [(ngModel)]="reorderThreshold" min="1">
+        </div>
+
+        <div class="form-group" style="display:flex; align-items:center; gap:10px; padding-top:24px;">
+          <input type="checkbox" id="pubCheck" [(ngModel)]="isPublished" style="width:18px; height:18px;">
+          <label for="pubCheck" style="font-size:13px; font-weight:700; cursor:pointer;">
+            {{ 'MODALS.PUBLISH_STOREFRONT' | translate:'Publish in Website' }}
+          </label>
+        </div>
+      </div>
+
+      <!-- Product Image Slides Upload -->
+      <div class="form-group"
+        style="background:#f8fafc; border:1px dashed var(--line); border-radius:var(--radius-md); padding:16px;">
+        <label class="form-label"
+          style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <span style="font-weight:700; color:var(--ink); display:flex; align-items:center; gap:6px;">
+            <aser-icon name="lucide:image" [size]="16" color="var(--blue)"></aser-icon>
+            {{ 'MODALS.PRODUCT_IMAGES' | translate:'Product Images & Showcase Slides' }}
+          </span>
+          <span style="font-size:11px; font-weight:700; color:var(--blue);">
+            {{ uploadedImages.length }} {{ 'MODALS.SLIDES_READY' | translate:'slide(s) ready' }}
+          </span>
+        </label>
+
+        <p style="font-size:12px; color:var(--muted); margin:0 0 12px;">
+          {{ 'MODALS.PRODUCT_IMAGES_DESC' | translate:'Upload high-resolution product photos. When multiple images are
+          added, they will show as an interactive slide carousel on the Website.' }}
+        </p>
+
+        <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:14px;">
+          <input type="file" #fileInput multiple accept="image/*" (change)="onFilesSelected($event)"
+            style="display:none">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="fileInput.click()"
+            style="display:inline-flex; align-items:center; gap:6px;">
+            <aser-icon name="lucide:upload-cloud" [size]="15"></aser-icon> {{ 'MODALS.UPLOAD_FILES' | translate:'Upload
+            Image File(s)' }}
+          </button>
+
+          <span style="font-size:12px; color:var(--muted);">{{ 'MODALS.OR_PASTE_URL' | translate:'or paste image URL:'
+            }}</span>
+
+          <div style="display:flex; gap:6px; flex:1; min-width:240px;">
+            <input class="form-input" [(ngModel)]="imageUrlInput" placeholder="https://example.com/photo.jpg"
+              style="font-size:12px; padding:6px 10px;">
+            <button type="button" class="btn btn-outline btn-sm" (click)="addImageUrl()"
+              [disabled]="!imageUrlInput.trim()">
+              {{ 'MODALS.ADD_URL_BTN' | translate:'Add URL' }}
+            </button>
+          </div>
+        </div>
+
+        @if (uploadedImages.length > 0) {
+        <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:8px;">
+          @for (img of uploadedImages; track $index) {
+          <div
+            style="position:relative; width:80px; height:80px; border-radius:var(--radius-sm); border:1px solid var(--line); overflow:hidden; background:#ffffff; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <img [src]="img" alt="Slide preview" style="width:100%; height:100%; object-fit:cover;">
+            <span
+              style="position:absolute; bottom:2px; left:2px; background:rgba(0,0,0,0.7); color:#fff; font-size:9px; font-weight:800; padding:1px 4px; border-radius:3px;">
+              Slide {{ $index + 1 }}
+            </span>
+            <button type="button" (click)="removeImage($index)" title="Remove slide"
+              style="position:absolute; top:2px; right:2px; background:rgba(239,68,68,0.9); color:#fff; border:none; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;">
+              <aser-icon name="lucide:x" [size]="10"></aser-icon>
+            </button>
+          </div>
+          }
+        </div>
+        }
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ 'MODALS.SPECS_DESC' | translate:'Product Description & Specs' }} *</label>
+        <textarea class="form-textarea" rows="2" [(ngModel)]="description"
+          placeholder="Technical dimensions, material composition, or usage guidelines."></textarea>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="close.emit()">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
+      <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;" [disabled]="!isValid"
+        (click)="submitProduct()">
+        {{ 'MODALS.CREATE_PRODUCT' | translate:'Create Product' }} <aser-icon name="lucide:check"
+          [size]="14"></aser-icon>
+      </button>
+    </div>
+  </div>
+</div>
