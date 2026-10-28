@@ -1,0 +1,125 @@
+<div class="modal-backdrop" (click)="close.emit()">
+  <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <aser-icon name="lucide:arrow-down" [size]="22" color="var(--blue)"></aser-icon>
+        <div>
+          <h3 style="font-size:17px; font-weight:800; color:var(--ink);">{{ 'MODALS.RECEIVE_TITLE' | translate:'Record Stock Receipt' }}</h3>
+          <p style="font-size:11px; color:var(--muted); margin:0;">
+            {{ 'MODALS.RECEIVE_SUBTITLE' | translate:'Updates inventory ledger and recalculates weighted-average inventory cost (SRS Section 7)' }}
+          </p>
+        </div>
+      </div>
+      <button class="modal-close-btn" (click)="close.emit()" aria-label="Close dialog">
+        <aser-icon name="lucide:x" [size]="18"></aser-icon>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">{{ 'MODALS.SELECT_PRODUCT' | translate:'Select Product' }} *</label>
+          <select class="form-select" [(ngModel)]="selectedProductId" (change)="onProductChange()">
+            @for (prod of state.products(); track prod.id) {
+              <option [value]="prod.id">{{ prod.name }} ({{ prod.sku }})</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ 'MODALS.DEST_BRANCH' | translate:'Destination Branch' }} *</label>
+          <select class="form-select" [(ngModel)]="selectedBranchId" (change)="onBranchChange()">
+            @for (branch of state.branches(); track branch.id) {
+              <option [value]="branch.id">{{ branch.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ 'MODALS.DEST_WAREHOUSE' | translate:'Destination Warehouse / Depot' }} *</label>
+          <select class="form-select" [(ngModel)]="selectedWarehouseId" (change)="onProductChange()">
+            @for (wh of availableWarehouses; track wh.id) {
+              <option [value]="wh.id">{{ wh.name }} ({{ wh.code }})</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">{{ 'MODALS.RECEIPT_QTY' | translate:'Receipt Quantity' }} * ({{ selectedProduct?.unit }})</label>
+          <input class="form-input" type="number" [(ngModel)]="quantity" min="1" (input)="recalculatePreview()">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ 'MODALS.PURCHASE_COST' | translate:'Supplier Unit Purchase Cost (ETB)' }} *</label>
+          <input class="form-input" type="number" [(ngModel)]="unitCost" min="1" (input)="recalculatePreview()">
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">{{ 'MODALS.SUPPLIER_VENDOR' | translate:'Supplier Name / Vendor' }} *</label>
+          @if (state.suppliers().length > 0) {
+            <select class="form-select" [(ngModel)]="supplierName">
+              @for (s of state.suppliers(); track s.id) {
+                <option [value]="s.name">{{ s.name }} ({{ s.contactPerson || 'Vendor' }})</option>
+              }
+            </select>
+          } @else {
+            <input class="form-input" [(ngModel)]="supplierName" placeholder="e.g. Asia Paper Mill Ltd.">
+          }
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ 'MODALS.DELIVERY_REF' | translate:'Purchase Order / Delivery Ref' }} *</label>
+          <input class="form-input" [(ngModel)]="referenceNumber" placeholder="e.g. PO-2026-105">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ 'MODALS.INSPECTION_NOTES' | translate:'Inspection & Receiving Notes' }}</label>
+        <input class="form-input" [(ngModel)]="notes" placeholder="Batch number, container number, or quality remarks">
+      </div>
+
+      <!-- Weighted-Average Costing Preview (SRS Section 7) -->
+      <div style="background:linear-gradient(135deg, #eff2ff 0%, #f4f6fe 100%); border:1px solid var(--blue-border); border-radius:var(--radius-lg); padding:18px; margin-top:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <strong style="font-size:13px; color:var(--blue-dark); display:flex; align-items:center; gap:6px;">
+            <aser-icon name="lucide:layers" [size]="16" color="var(--blue)"></aser-icon> {{ 'MODALS.WEIGHTED_AVG_PREVIEW' | translate:'Weighted-Average Cost Calculation Preview' }}
+          </strong>
+          <span class="badge badge-quote-only" style="font-size:10px;">SRS Formula 7.1</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-bottom:12px;">
+          <div style="background:#ffffff; padding:10px; border-radius:8px; border:1px solid var(--line);">
+            <small style="color:var(--muted); display:block; font-size:10px;">{{ 'MODALS.CURRENT_STOCK_COST' | translate:'Current Stock & Cost' }}</small>
+            <strong style="font-size:13px; color:var(--ink);">{{ currentQty }} {{ selectedProduct?.unit }}</strong>
+            <span style="display:block; font-size:11px; color:var(--slate);">@ ETB {{ currentAvgCost | number:'1.2-2' }}</span>
+          </div>
+          <div style="background:#ffffff; padding:10px; border-radius:8px; border:1px solid var(--line);">
+            <small style="color:var(--muted); display:block; font-size:10px;">{{ 'MODALS.INBOUND_DELIVERY' | translate:'Inbound Delivery' }}</small>
+            <strong style="font-size:13px; color:var(--blue);">+{{ quantity }} {{ selectedProduct?.unit }}</strong>
+            <span style="display:block; font-size:11px; color:var(--slate);">@ ETB {{ unitCost | number:'1.2-2' }}</span>
+          </div>
+          <div style="background:#ffffff; padding:10px; border-radius:8px; border:1px solid var(--blue); box-shadow:0 2px 8px rgb(30 48 196 / 0.1);">
+            <small style="color:var(--blue); display:block; font-size:10px; font-weight:700;">{{ 'MODALS.NEW_AVG_COST' | translate:'New Avg Cost' }}</small>
+            <strong style="font-size:15px; color:var(--blue);">ETB {{ newAvgCost | number:'1.2-2' }}</strong>
+            <span style="display:block; font-size:11px; color:var(--muted);">{{ 'MODALS.TOTAL_QTY' | translate:'Total Qty' }}: {{ totalStockAfter }}</span>
+          </div>
+        </div>
+
+        <p style="font-size:11px; color:var(--muted); margin:0;">
+          Formula: (({{ currentQty }} × {{ currentAvgCost }}) + ({{ quantity }} × {{ unitCost }})) ÷ {{ totalStockAfter }} = ETB {{ newAvgCost | number:'1.2-2' }}
+        </p>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="close.emit()">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
+      <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;" [disabled]="!isValid" (click)="commitReceipt()">
+        {{ 'MODALS.POST_RECEIPT' | translate:'Post Stock Receipt' }} <aser-icon name="lucide:check" [size]="14"></aser-icon>
+      </button>
+    </div>
+  </div>
+</div>
