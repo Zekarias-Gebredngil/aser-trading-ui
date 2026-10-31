@@ -1,0 +1,75 @@
+<div class="modal-backdrop" (click)="close.emit()">
+  <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <aser-icon name="lucide:arrow-left-right-arrows" [size]="22" color="var(--blue)"></aser-icon>
+        <div>
+          <h3 style="font-size:17px; font-weight:800; color:var(--ink);">{{ 'MODALS.TRANSFER_TITLE' | translate:'Request Branch Transfer' }}</h3>
+          <p style="font-size:11px; color:var(--muted); margin:0;">
+            {{ 'MODALS.TRANSFER_SUBTITLE' | translate:'Inter-branch stock rebalancing workflow (SRS Section 6.6)' }}
+          </p>
+        </div>
+      </div>
+      <button class="modal-close-btn" (click)="close.emit()" aria-label="Close dialog">
+        <aser-icon name="lucide:x" [size]="18"></aser-icon>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">{{ 'MODALS.SOURCE_BRANCH' | translate:'Source Branch (From)' }} *</label>
+          <select class="form-select" [(ngModel)]="fromBranchId">
+            @for (b of state.branches(); track b.id) {
+              <option [value]="b.id">{{ b.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ 'MODALS.DEST_BRANCH_LABEL' | translate:'Destination Branch (To)' }} *</label>
+          <select class="form-select" [(ngModel)]="toBranchId">
+            @for (b of state.branches(); track b.id) {
+              <option [value]="b.id" [disabled]="b.id === fromBranchId">
+                {{ b.name }} {{ b.id === fromBranchId ? '(Cannot be same location)' : '' }}
+              </option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">{{ 'MODALS.PRODUCT_TO_RELOCATE' | translate:'Product to Relocate' }} *</label>
+          <select class="form-select" [(ngModel)]="productId">
+            @for (p of state.products(); track p.id) {
+              <option [value]="p.id">{{ p.name }} ({{ p.sku }})</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ 'MODALS.REQUESTED_QTY' | translate:'Requested Quantity' }} *</label>
+          <input class="form-input" type="number" [(ngModel)]="requestedQty" min="1">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ 'MODALS.JUSTIFICATION_NOTES' | translate:'Operational Justification / Notes' }}</label>
+        <textarea class="form-textarea" rows="2" [(ngModel)]="notes" 
+          placeholder="e.g. Urgent customer order fulfillment at Bole showroom."></textarea>
+      </div>
+
+      <div style="background:var(--bg-soft); border:1px solid var(--line); border-radius:var(--radius-md); padding:12px; font-size:11px; color:var(--slate);">
+        <strong>{{ 'MODALS.WORKFLOW_RULES' | translate:'Workflow Rules' }}:</strong> {{ 'MODALS.WORKFLOW_RULES_DESC' | translate:'Transfer will enter PENDING_APPROVAL. Per SRS decision #21, branch managers request the transfer, and the system admin or owner approves it.' }}
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-outline" (click)="close.emit()">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
+      <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;" [disabled]="!isValid" (click)="submitTransfer()">
+        {{ 'MODALS.SUBMIT_APPROVAL' | translate:'Submit for Approval' }} <aser-icon name="lucide:arrow-right" [size]="14"></aser-icon>
+      </button>
+    </div>
+  </div>
+</div>

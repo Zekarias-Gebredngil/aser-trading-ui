@@ -1,0 +1,189 @@
+<aser-admin-shell section="Branch Transfers">
+  <div class="page-header-row">
+    <div>
+      <div style="font-size:11px; font-weight:800; color:var(--blue); letter-spacing:1px; margin-bottom:4px;">
+        {{ 'TRANSFERS.CATEGORY_HEADER' | translate:'LOGISTICS & INTER-BRANCH RELOCATION' }}
+      </div>
+      <h1>{{ 'TRANSFERS.TITLE' | translate:'Controlled Branch Transfers' }}</h1>
+      <p>
+        {{ 'TRANSFERS.SUBTITLE' | translate:'Enforces separation of duties: Request → System Admin Approval → Dispatch → Destination Receipt.' }}
+      </p>
+    </div>
+
+    <div style="display:flex; gap:10px;">
+      <button class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;" (click)="exportTransfersToExcel()" [title]="'COMMON.EXPORT_EXCEL' | translate:'Export to Excel'">
+        <aser-icon name="lucide:file-spreadsheet" [size]="16"></aser-icon> {{ 'COMMON.EXPORT_EXCEL' | translate:'Export to Excel' }}
+      </button>
+      <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;" (click)="isNewTransferModalOpen.set(true)">
+        <aser-icon name="lucide:plus" [size]="16"></aser-icon> {{ 'TRANSFERS.REQUEST_TRANSFER' | translate:'Request New Transfer' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Status Filter Toolbar -->
+  <div style="background:#ffffff; border:1px solid var(--line); border-radius:var(--radius-lg); padding:16px 20px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
+    <div style="display:flex; gap:10px; align-items:center;">
+      <span style="font-size:12px; font-weight:700; color:var(--muted);">{{ 'TRANSFERS.FILTER_STATUS' | translate:'Filter by Status:' }}</span>
+      <select class="form-select" style="width:200px;" [ngModel]="statusFilter" (ngModelChange)="statusFilter = $event; onFilterChange()">
+        <option value="ALL">{{ 'COMMON.ALL' | translate:'All Transfer Statuses' }}</option>
+        <option value="PENDING_APPROVAL">Pending Approval</option>
+        <option value="APPROVED">Approved</option>
+        <option value="IN_TRANSIT">In Transit</option>
+        <option value="RECEIVED">Received & Verified</option>
+        <option value="DISCREPANCY_REVIEW">Discrepancy Review</option>
+      </select>
+    </div>
+
+    <div style="font-size:12px; color:var(--muted);">
+      {{ 'TRANSFERS.ACTIVE_ROLE' | translate:'Active Role:' }} <strong>{{ state.currentRole() }}</strong>
+    </div>
+  </div>
+
+  <!-- Transfers Table -->
+  <div class="panel-card">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ 'TRANSFERS.REF_NUMBER' | translate:'Reference Number' }}</th>
+            <th>{{ 'TRANSFERS.DATE' | translate:'Date' }}</th>
+            <th>{{ 'TRANSFERS.ROUTE' | translate:'Route (Source → Destination)' }}</th>
+            <th>{{ 'TRANSFERS.ITEMS_INCLUDED' | translate:'Items Included' }}</th>
+            <th>{{ 'TRANSFERS.REQUESTED_BY' | translate:'Requested By' }}</th>
+            <th>{{ 'TRANSFERS.CURRENT_STATUS' | translate:'Current Status' }}</th>
+            <th>{{ 'TRANSFERS.WORKFLOW_ACTION' | translate:'Workflow Action' }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of pagedTransfers; track t.id) {
+            <tr>
+              <td>
+                <strong style="color:var(--blue); font-family:monospace; font-size:13px;">{{ t.referenceNumber }}</strong>
+              </td>
+              <td>{{ t.date }}</td>
+              <td>
+                <span style="font-weight:600; color:var(--ink);">{{ getBranchDisplayName(t.fromBranchName, t.fromWarehouseName) }}</span>
+                <span style="display:inline-flex; align-items:center; padding:0 6px;">
+                  <aser-icon name="lucide:arrow-right" [size]="14" color="var(--blue)"></aser-icon>
+                </span>
+                <span style="font-weight:600; color:var(--ink);">{{ getBranchDisplayName(t.toBranchName, t.toWarehouseName) }}</span>
+              </td>
+              <td>
+                @for (item of t.items || []; track item.productId) {
+                  <div>{{ item.requestedQty }} {{ item.unit }} of {{ item.productName }}</div>
+                }
+              </td>
+              <td>{{ t.requestedBy }}</td>
+              <td>
+                <span class="badge" 
+                  [class.badge-pending]="t.status === 'PENDING_APPROVAL'"
+                  [class.badge-in-stock]="t.status === 'APPROVED' || t.status === 'RECEIVED'"
+                  [class.badge-transit]="t.status === 'IN_TRANSIT'"
+                  [class.badge-out-of-stock]="t.status === 'DISCREPANCY_REVIEW'">
+                  {{ t.status }}
+                </span>
+              </td>
+              <td>
+                <div style="display:flex; gap:6px;">
+                  <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:4px;" (click)="openTimeline($event, t)">
+                    Timeline <aser-icon name="lucide:clock" [size]="13"></aser-icon>
+                  </button>
+
+                  @if (t.status === 'PENDING_APPROVAL') {
+                    <button type="button" class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:4px;" (click)="approveTransfer($event, t)" title="Authorized by Admin/Manager">
+                      {{ 'TRANSFERS.APPROVE' | translate:'Approve' }} <aser-icon name="lucide:check" [size]="13"></aser-icon>
+                    </button>
+                    <button type="button" class="btn btn-outline btn-sm" style="color:var(--red); border-color:#fca5a5; display:inline-flex; align-items:center; gap:4px;" (click)="rejectTransfer($event, t)" title="Reject transfer requisition">
+                      {{ 'COMMON.CANCEL' | translate:'Reject' }} <aser-icon name="lucide:x" [size]="13"></aser-icon>
+                    </button>
+                  } @else if (t.status === 'APPROVED') {
+                    <button type="button" class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:4px;" (click)="dispatchTransfer($event, t)" title="Deduct source stock & dispatch">
+                      {{ 'TRANSFERS.DISPATCH' | translate:'Dispatch' }} <aser-icon name="lucide:truck" [size]="13"></aser-icon>
+                    </button>
+                  } @else if (t.status === 'IN_TRANSIT') {
+                    <button type="button" class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:4px;" (click)="receiveTransfer($event, t)" title="Confirm destination warehouse receipt">
+                      {{ 'TRANSFERS.CONFIRM_RECEIPT' | translate:'Receive' }} <aser-icon name="lucide:arrow-down" [size]="13"></aser-icon>
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (filteredTransfers.length === 0) {
+      <div style="text-align:center; padding:40px; color:var(--muted);">
+        No stock transfer records match your current filter.
+      </div>
+    } @else {
+      <aser-paginator
+        [totalItems]="filteredTransfers.length"
+        [pageSize]="pageSize"
+        [currentPage]="currentPage"
+        (pageChange)="currentPage = $event"
+        (pageSizeChange)="pageSize = $event; currentPage = 1">
+      </aser-paginator>
+    }
+  </div>
+
+  <!-- Transfer Detail & Timeline Modal -->
+  @if (selectedTransfer()) {
+    <div class="modal-backdrop" (click)="selectedTransfer.set(null)">
+      <div class="modal-dialog" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div>
+            <h3 style="font-size:17px; font-weight:800; color:var(--ink);">Transfer {{ selectedTransfer()?.referenceNumber }}</h3>
+            <span class="badge" [class.badge-transit]="selectedTransfer()?.status === 'IN_TRANSIT'" [class.badge-in-stock]="selectedTransfer()?.status === 'RECEIVED'">
+              Status: {{ selectedTransfer()?.status }}
+            </span>
+          </div>
+          <button class="modal-close-btn" (click)="selectedTransfer.set(null)">
+            <aser-icon name="lucide:x" [size]="18"></aser-icon>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div style="background:var(--bg-soft); border-radius:var(--radius-md); padding:16px; margin-bottom:20px; border:1px solid var(--line);">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
+              <span style="color:var(--muted);">From:</span>
+              <strong>{{ selectedTransfer()?.fromBranchName || selectedTransfer()?.fromWarehouseName || '—' }}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
+              <span style="color:var(--muted);">To:</span>
+              <strong>{{ selectedTransfer()?.toBranchName || selectedTransfer()?.toWarehouseName || '—' }}</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:13px;">
+              <span style="color:var(--muted);">Requested By:</span>
+              <span>{{ selectedTransfer()?.requestedBy || '—' }}</span>
+            </div>
+          </div>
+
+          <h4 style="font-size:13px; font-weight:800; color:var(--ink); margin-bottom:12px;">Auditable Event History</h4>
+          <div class="timeline-list">
+            @for (ev of selectedTransfer()?.timeline || []; track ev.id) {
+              <div class="timeline-step">
+                <span class="timeline-time">{{ ev.timestamp }}</span>
+                <div class="timeline-title">{{ ev.action }}</div>
+                <div class="timeline-desc">{{ ev.actor }} ({{ ev.role }})</div>
+                @if (ev.notes) {
+                  <small style="color:var(--slate); display:block; margin-top:2px;">"{{ ev.notes }}"</small>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-outline" (click)="selectedTransfer.set(null)">{{ 'COMMON.CLOSE' | translate:'Close' }}</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- New Transfer Modal -->
+  @if (isNewTransferModalOpen()) {
+    <aser-new-transfer-modal (close)="isNewTransferModalOpen.set(false)"></aser-new-transfer-modal>
+  }
+</aser-admin-shell>
