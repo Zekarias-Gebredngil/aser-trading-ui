@@ -1,0 +1,211 @@
+<aser-admin-shell section="System Settings">
+  <div class="page-header">
+    <div>
+      <div class="header-badge-row">
+        <h1 class="page-title">{{ 'SETTINGS.TITLE' | translate:'Enterprise System Administration & Settings' }}</h1>
+        <span class="admin-only-badge">{{ 'SETTINGS.ADMIN_ONLY' | translate:'System Administrator Only' }}</span>
+      </div>
+      <p class="page-subtitle">
+        {{ 'SETTINGS.SUBTITLE' | translate:'Configure corporate organizational parameters, default inventory thresholds, security safeguards, and system database maintenance.' }}
+      </p>
+      @if (lastUpdatedMeta().at) {
+      <div class="last-sync-tag" style="margin-top: 6px; font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 6px;">
+        <aser-icon name="lucide:clock" [size]="12"></aser-icon>
+        <span>Database state: Last updated <strong>{{ lastUpdatedMeta().at | date:'MMM d, y, HH:mm:ss' }}</strong> by <strong>{{ lastUpdatedMeta().by || 'System' }}</strong></span>
+      </div>
+      }
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-outline" (click)="resyncSystem()">
+        <aser-icon name="lucide:refresh-cw" [size]="15"></aser-icon>
+        <span>{{ 'SETTINGS.RESYNC_DATA' | translate:'Re-Sync Master Data' }}</span>
+      </button>
+      <button class="btn btn-primary" (click)="saveSettings()" [disabled]="isSaving()">
+        <aser-icon name="lucide:check" [size]="15"></aser-icon>
+        <span>{{ isSaving() ? ('COMMON.SAVING' | translate:'Saving Changes...') : ('SETTINGS.SAVE_CONFIGURATION' | translate:'Save Configuration') }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Settings Tabs -->
+  <div class="tab-bar">
+    <button class="tab-item" [class.active]="activeTab() === 'general'" (click)="activeTab.set('general')">
+      <aser-icon name="lucide:building-2" [size]="15"></aser-icon>
+      <span>{{ 'SETTINGS.COMPANY_PROFILE' | translate:'Company Profile' }}</span>
+    </button>
+    <button class="tab-item" [class.active]="activeTab() === 'inventory'" (click)="activeTab.set('inventory')">
+      <aser-icon name="lucide:boxes" [size]="15"></aser-icon>
+      <span>{{ 'SETTINGS.INVENTORY_POLICIES' | translate:'Inventory & Orders' }}</span>
+    </button>
+    <button class="tab-item" [class.active]="activeTab() === 'security'" (click)="activeTab.set('security')">
+      <aser-icon name="lucide:shield-check" [size]="15"></aser-icon>
+      <span>{{ 'SETTINGS.SECURITY_CONTROLS' | translate:'Security & Access Control' }}</span>
+    </button>
+    <button class="tab-item" [class.active]="activeTab() === 'system'" (click)="activeTab.set('system')">
+      <aser-icon name="lucide:cog" [size]="15"></aser-icon>
+      <span>{{ 'SETTINGS.DATABASE_MAINTENANCE' | translate:'Database & Maintenance' }}</span>
+    </button>
+  </div>
+
+  <!-- Tab 1: General Company Profile -->
+  @if (activeTab() === 'general') {
+  <div class="settings-card">
+    <div class="card-header">
+      <h2 class="card-title">{{ 'SETTINGS.LEGAL_PROFILE' | translate:'Corporate Organization & Legal Profile' }}</h2>
+      <p class="card-desc">{{ 'SETTINGS.LEGAL_DESC' | translate:'Information displayed on generated invoices, delivery slips, and customer public portal.' }}</p>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>{{ 'SETTINGS.COMPANY_NAME' | translate:'Corporate Entity Name' }}</label>
+        <input type="text" [(ngModel)]="companySettings.companyName" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>Legal Name (Amharic)</label>
+        <input type="text" [(ngModel)]="companySettings.amharicName" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>{{ 'SETTINGS.TIN_NUMBER' | translate:'Taxpayer Identification Number (TIN)' }}</label>
+        <input type="text" [(ngModel)]="companySettings.tinNumber" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>{{ 'SETTINGS.BASE_CURRENCY' | translate:'Primary System Currency' }}</label>
+        <input type="text" [value]="companySettings.currency" disabled class="form-control disabled-input">
+      </div>
+      <div class="form-group full-width">
+        <label>{{ 'SETTINGS.HEADQUARTERS' | translate:'Headquarters Physical Address' }}</label>
+        <input type="text" [(ngModel)]="companySettings.address" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>{{ 'SETTINGS.SUPPORT_PHONE' | translate:'Central Customer Support Phone' }}</label>
+        <input type="text" [(ngModel)]="companySettings.phone" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>{{ 'SETTINGS.OFFICIAL_EMAIL' | translate:'Official Correspondence Email' }}</label>
+        <input type="email" [(ngModel)]="companySettings.email" class="form-control">
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Tab 2: Inventory & Orders -->
+  @if (activeTab() === 'inventory') {
+  <div class="settings-card">
+    <div class="card-header">
+      <h2 class="card-title">{{ 'SETTINGS.INVENTORY_TITLE' | translate:'Multi-Branch Inventory & Stocking Policies' }}</h2>
+      <p class="card-desc">{{ 'SETTINGS.INVENTORY_DESC' | translate:'Configure stock thresholds, costing models, and e-commerce cart behavior.' }}</p>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>{{ 'SETTINGS.DEFAULT_REORDER' | translate:'Global Reorder Alert Threshold (Units)' }}</label>
+        <input type="number" [(ngModel)]="policySettings.lowStockThreshold" class="form-control">
+        <span class="form-help">Items falling below this physical balance will trigger a warning on the dashboard.</span>
+      </div>
+      <div class="form-group">
+        <label>Unpaid Order Cancellation Window (Hours)</label>
+        <input type="number" [(ngModel)]="policySettings.orderTimeoutHours" class="form-control">
+        <span class="form-help">Automatically releases reserved inventory if checkout is abandoned.</span>
+      </div>
+      <div class="form-group full-width">
+        <label>{{ 'SETTINGS.COSTING_METHOD' | translate:'Inventory Valuation & Costing Method' }}</label>
+        <input type="text" value="Weighted Average Cost (WAC) strictly persisted in database" disabled class="form-control disabled-input">
+      </div>
+    </div>
+
+    <div class="checkbox-row" style="margin-top: 16px;">
+      <label class="toggle-label">
+        <input type="checkbox" [(ngModel)]="policySettings.autoFulfillReservations">
+        <span>{{ 'SETTINGS.DISPATCH_RESERVATION' | translate:'Reserve Stock on Order Placement' }}</span>
+      </label>
+    </div>
+
+    <div class="checkbox-row">
+      <label class="toggle-label">
+        <input type="checkbox" [(ngModel)]="policySettings.enforceStrictBranchLockdown">
+        <span>Enforce strict branch scope lockdown for storekeepers and branch staff</span>
+      </label>
+    </div>
+  </div>
+  }
+
+  <!-- Tab 3: Security & Access Control -->
+  @if (activeTab() === 'security') {
+  <div class="settings-card">
+    <div class="card-header">
+      <h2 class="card-title">{{ 'SETTINGS.SECURITY_TITLE' | translate:'Security Policies, Roles & Session Safeguards' }}</h2>
+      <p class="card-desc">{{ 'SETTINGS.SECURITY_DESC' | translate:'Enforce strict organizational access control and password policies.' }}</p>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>{{ 'SETTINGS.SESSION_TIMEOUT' | translate:'Inactivity Session Timeout (Minutes)' }}</label>
+        <input type="number" [(ngModel)]="securitySettings.sessionTimeoutHours" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>{{ 'SETTINGS.PASSWORD_POLICY' | translate:'Minimum Password Length (Chars)' }}</label>
+        <input type="number" [(ngModel)]="securitySettings.minPasswordLength" class="form-control">
+      </div>
+      <div class="form-group full-width">
+        <label>Allowed Web Origins (CORS)</label>
+        <input type="text" [(ngModel)]="securitySettings.allowedOrigins" class="form-control">
+      </div>
+    </div>
+
+    <div class="checkbox-row" style="margin-top: 16px;">
+      <label class="toggle-label">
+        <input type="checkbox" [(ngModel)]="securitySettings.requireAuditLogging">
+        <span>Record immutable audit logs for all authentication events, orders, and transfers</span>
+      </label>
+    </div>
+  </div>
+  }
+
+  <!-- Tab 4: Database & Maintenance -->
+  @if (activeTab() === 'system') {
+  <div class="settings-card">
+    <div class="card-header">
+      <h2 class="card-title">{{ 'SETTINGS.MAINTENANCE_TITLE' | translate:'System Health, Backups & Maintenance Mode' }}</h2>
+      <p class="card-desc">{{ 'SETTINGS.MAINTENANCE_DESC' | translate:'Manage backup snapshots, operational status, and background tasks.' }}</p>
+    </div>
+
+    <div class="diagnostic-grid">
+      <div class="diagnostic-card">
+        <span class="diagnostic-label">Database Engine</span>
+        <div class="diagnostic-val">PostgreSQL 16</div>
+        <span class="status-badge-ok">Connected @ localhost:5439</span>
+      </div>
+      <div class="diagnostic-card">
+        <span class="diagnostic-label">Connection Pool</span>
+        <div class="diagnostic-val">HikariCP</div>
+        <span class="status-badge-ok">Pool Health Normal</span>
+      </div>
+      <div class="diagnostic-card">
+        <span class="diagnostic-label">Backend Service</span>
+        <div class="diagnostic-val">Spring Boot 4.1.2</div>
+        <span class="status-badge-ok">Active Port 8085</span>
+      </div>
+      <div class="diagnostic-card">
+        <span class="diagnostic-label">Single Source of Truth</span>
+        <div class="diagnostic-val">Authoritative DB</div>
+        <span class="status-badge-ok">Strict Integrity</span>
+      </div>
+    </div>
+
+    <div class="maintenance-actions-wrap" style="margin-top: 24px;">
+      <h3 class="maintenance-title">Maintenance Actions</h3>
+      <div class="action-buttons-row">
+        <button class="btn btn-outline" (click)="resyncSystem()">
+          <aser-icon name="lucide:refresh-cw" [size]="15"></aser-icon>
+          <span>Purge and Refresh Catalog Cache</span>
+        </button>
+        <button class="btn btn-outline" (click)="clearBrowserStorage()">
+          <aser-icon name="lucide:trash-2" [size]="15"></aser-icon>
+          <span>Clear Local UI Preferences</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+</aser-admin-shell>

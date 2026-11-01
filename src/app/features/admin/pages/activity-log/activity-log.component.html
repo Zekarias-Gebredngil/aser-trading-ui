@@ -1,0 +1,135 @@
+<aser-admin-shell section="Activity Log">
+  <div class="page-header">
+    <div>
+      <div class="header-badge-row">
+        <h1 class="page-title">{{ 'ACTIVITY.TITLE' | translate:'Enterprise System Activity & Audit Trail' }}</h1>
+        <span class="live-pill">
+          <span class="live-dot"></span> {{ 'ACTIVITY.REALTIME_AUDIT' | translate:'Real-time Audit' }}
+        </span>
+      </div>
+      <p class="page-subtitle">
+        {{ 'ACTIVITY.SUBTITLE' | translate:'Immutable forensic audit logs documenting employee authentications, order transitions, stock changes, and system administrative actions.' }}
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-outline" (click)="exportLogsToExcel()" [title]="'COMMON.EXPORT_EXCEL' | translate:'Export to Excel'">
+        <aser-icon name="lucide:file-spreadsheet" [size]="15"></aser-icon>
+        <span>{{ 'COMMON.EXPORT_EXCEL' | translate:'Export to Excel' }}</span>
+      </button>
+      <button class="btn btn-outline" (click)="loadLogs()" [disabled]="isLoading()">
+        <aser-icon name="lucide:refresh-cw" [size]="15"></aser-icon>
+        <span>{{ isLoading() ? ('COMMON.SAVING' | translate:'Refreshing...') : ('ACTIVITY.REFRESH_RECORDS' | translate:'Refresh Records') }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters & Search Toolbar -->
+  <div class="toolbar-card">
+    <div class="search-input-wrap">
+      <aser-icon name="lucide:search" [size]="15" color="var(--muted)"></aser-icon>
+      <input 
+        type="text" 
+        [ngModel]="searchQuery()" 
+        (ngModelChange)="searchQuery.set($event)"
+        (keyup.enter)="onFilterChange()"
+        [placeholder]="'ACTIVITY.FILTER_PLACEHOLDER' | translate:'Filter by actor username or email...'" 
+        class="search-input" />
+    </div>
+
+    <div class="filter-wrap">
+      <label>{{ 'ACTIVITY.MODULE_FILTER' | translate:'Entity Module:' }}</label>
+      <select [ngModel]="selectedEntityType()" (ngModelChange)="selectedEntityType.set($event); onFilterChange()" class="entity-select">
+        @for (e of entityTypes; track e) {
+        <option [value]="e">{{ e === 'ALL' ? ('COMMON.ALL' | translate:'All Modules') : e }}</option>
+        }
+      </select>
+    </div>
+
+    <button class="btn btn-primary btn-sm" (click)="onFilterChange()">
+      {{ 'ACTIVITY.APPLY_FILTER' | translate:'Apply Filter' }}
+    </button>
+  </div>
+
+  <!-- Audit Table Card -->
+  <div class="table-card">
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 170px;">{{ 'ACTIVITY.TIMESTAMP' | translate:'Timestamp' }}</th>
+            <th style="width: 150px;">{{ 'ACTIVITY.ACTOR' | translate:'Actor / User' }}</th>
+            <th style="width: 160px;">{{ 'ACTIVITY.ACTION' | translate:'Action' }}</th>
+            <th style="width: 150px;">{{ 'ACTIVITY.TARGET_ENTITY' | translate:'Target Entity' }}</th>
+            <th>{{ 'ACTIVITY.DETAILS' | translate:'Details & Parameters' }}</th>
+            <th style="width: 130px;">{{ 'ACTIVITY.CLIENT_IP' | translate:'Client IP' }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (isLoading()) {
+          <tr>
+            <td colspan="6" class="empty-state">
+              <div class="loading-spinner"></div>
+              <p>{{ 'COMMON.LOADING' | translate:'Loading enterprise activity trail from database...' }}</p>
+            </td>
+          </tr>
+          } @else if (logs().length === 0) {
+          <tr>
+            <td colspan="6" class="empty-state">
+              <aser-icon name="lucide:clock" [size]="36" color="var(--muted)"></aser-icon>
+              <h3>No Activity Logs Found</h3>
+              <p>There are no audit events recorded matching your current query parameters.</p>
+            </td>
+          </tr>
+          } @else {
+          @for (log of logs(); track log.id) {
+          <tr class="log-row">
+            <td class="timestamp-cell">
+              <div class="timestamp-date">{{ log.createdAt | date:'MMM d, y' }}</div>
+              <div class="timestamp-time">{{ log.createdAt | date:'HH:mm:ss' }} UTC</div>
+            </td>
+            <td>
+              <div class="actor-wrap">
+                <div class="actor-avatar">
+                  <aser-icon name="lucide:user" [size]="12"></aser-icon>
+                </div>
+                <span class="actor-name">{{ log.actor || 'System' }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="getActionBadgeClass(log.action)">
+                {{ log.action }}
+              </span>
+            </td>
+            <td>
+              <div class="entity-badge">
+                <span class="entity-type">{{ log.entityType || 'General' }}</span>
+                @if (log.entityId) {
+                <span class="entity-id">#{{ log.entityId }}</span>
+                }
+              </div>
+            </td>
+            <td class="details-cell">
+              <span class="details-text" [title]="log.details">{{ log.details || '-' }}</span>
+            </td>
+            <td>
+              <code class="ip-code">{{ log.ipAddress || '127.0.0.1' }}</code>
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginator -->
+    <aser-paginator
+      [currentPage]="page() + 1"
+      [pageSize]="pageSize()"
+      [totalItems]="totalElements()"
+      [pageSizeOptions]="[10, 20, 50, 100]"
+      (pageChange)="onPageChange($event - 1)"
+      (pageSizeChange)="onPageSizeChange($event)">
+    </aser-paginator>
+  </div>
+</aser-admin-shell>
