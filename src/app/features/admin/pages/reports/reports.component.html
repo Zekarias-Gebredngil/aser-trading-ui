@@ -1,0 +1,266 @@
+<aser-admin-shell section="Reports & Analytics">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">{{ 'REPORTS.TITLE' | translate:'Executive Reports & Commercial Analytics' }}</h1>
+      <p class="page-subtitle">
+        {{ 'REPORTS.SUBTITLE' | translate:'System Administrator decision-support intelligence: Real-time sales revenue, inventory valuation, cross-branch balance aggregations, and transfer logistics.' }}
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-outline" (click)="loadAllReports()" [disabled]="isLoading()">
+        <aser-icon name="lucide:refresh-cw" [size]="15"></aser-icon>
+        <span>{{ 'REPORTS.REFRESH' | translate:'Refresh' }}</span>
+      </button>
+      <button class="btn btn-outline" (click)="exportAllReportsToExcel()" [title]="'REPORTS.EXPORT_FULL_EXCEL' | translate:'Download Excel Report'">
+        <aser-icon name="lucide:file-spreadsheet" [size]="15"></aser-icon>
+        <span>{{ 'REPORTS.EXPORT_FULL_EXCEL' | translate:'Download Excel Report' }}</span>
+      </button>
+      <button class="btn btn-primary" (click)="printReport()">
+        <aser-icon name="lucide:printer" [size]="15"></aser-icon>
+        <span>{{ 'REPORTS.PRINT_REPORT' | translate:'Print Report' }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Key Metrics Summary Row -->
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-icon-wrap" style="background:#eff2ff; color:#1e30c4;">
+        <aser-icon name="lucide:banknote" [size]="22"></aser-icon>
+      </div>
+      <div class="metric-content">
+        <span class="metric-label">{{ 'REPORTS.TOTAL_REVENUE' | translate:'Total Realized Revenue' }}</span>
+        <div class="metric-value">ETB {{ (salesData()?.totalRevenueEtb || 0) | number:'1.2-2' }}</div>
+        <span class="metric-sub">{{ salesData()?.completedOrdersCount || 0 }} completed orders</span>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon-wrap" style="background:#ecfdf5; color:#059669;">
+        <aser-icon name="lucide:shopping-cart" [size]="22"></aser-icon>
+      </div>
+      <div class="metric-content">
+        <span class="metric-label">{{ 'REPORTS.AVG_ORDER_VALUE' | translate:'Average Order Value' }}</span>
+        <div class="metric-value">ETB {{ (salesData()?.averageOrderValueEtb || 0) | number:'1.2-2' }}</div>
+        <span class="metric-sub">{{ salesData()?.totalOrders || 0 }} total orders processed</span>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon-wrap" style="background:#fffbeb; color:#d97706;">
+        <aser-icon name="lucide:boxes" [size]="22"></aser-icon>
+      </div>
+      <div class="metric-content">
+        <span class="metric-label">{{ 'REPORTS.STOCK_VALUATION' | translate:'Total Stock Valuation' }}</span>
+        <div class="metric-value">ETB {{ (valuationData()?.totalValuationEtb || 0) | number:'1.2-2' }}</div>
+        <span class="metric-sub">{{ valuationData()?.productCount || stockSummary()?.totalProducts || 0 }} catalog products</span>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon-wrap" style="background:#fdf2f8; color:#db2777;">
+        <aser-icon name="lucide:arrow-left-right-arrows" [size]="22"></aser-icon>
+      </div>
+      <div class="metric-content">
+        <span class="metric-label">{{ 'REPORTS.INVENTORY_UNITS' | translate:'Network Inventory Units' }}</span>
+        <div class="metric-value">{{ (stockSummary()?.totalUnitsOnHand || 0) | number:'1.0-0' }} Units</div>
+        <span class="metric-sub">{{ stockSummary()?.branchSummaries?.length || 0 }} operating branches</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Tab Bar -->
+  <div class="tab-bar">
+    <button class="tab-item" [class.active]="activeTab() === 'sales'" (click)="activeTab.set('sales')">
+      <aser-icon name="lucide:shopping-cart" [size]="15"></aser-icon>
+      <span>{{ 'REPORTS.SALES_TAB' | translate:'Sales & Order Revenue' }}</span>
+    </button>
+    <button class="tab-item" [class.active]="activeTab() === 'valuation'" (click)="activeTab.set('valuation')">
+      <aser-icon name="lucide:landmark" [size]="15"></aser-icon>
+      <span>{{ 'REPORTS.VALUATION_TAB' | translate:'Inventory Valuation (WAC)' }}</span>
+    </button>
+    <button class="tab-item" [class.active]="activeTab() === 'stock'" (click)="activeTab.set('stock')">
+      <aser-icon name="lucide:layers" [size]="15"></aser-icon>
+      <span>{{ 'REPORTS.STOCK_TAB' | translate:'Cross-Branch Stock Summary' }}</span>
+    </button>
+    <button class="tab-item" [class.active]="activeTab() === 'transfers'" (click)="activeTab.set('transfers')">
+      <aser-icon name="lucide:truck" [size]="15"></aser-icon>
+      <span>{{ 'REPORTS.TRANSFERS_TAB' | translate:'Logistics & Transfers' }}</span>
+    </button>
+  </div>
+
+  <!-- Tab 1: Sales & Orders -->
+  @if (activeTab() === 'sales') {
+  <div class="report-section-card">
+    <div class="section-title-wrap">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <h2 class="section-title">{{ 'REPORTS.TAB_SALES_TITLE' | translate:'Sales Fulfillment & Channel Breakdown' }}</h2>
+        <span class="section-badge">Live Financials</span>
+      </div>
+      <button class="btn btn-sm btn-outline" (click)="exportCurrentTabToExcel()" style="display:inline-flex; align-items:center; gap:6px;">
+        <aser-icon name="lucide:download" [size]="14"></aser-icon>
+        <span>{{ 'COMMON.EXPORT_EXCEL' | translate:'Export to Excel' }}</span>
+      </button>
+    </div>
+
+    <div class="stats-overview-grid">
+      <div class="stat-box">
+        <span class="stat-box-num">{{ salesData()?.totalOrders || 0 }}</span>
+        <span class="stat-box-label">All Orders</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-box-num" style="color:#059669;">{{ salesData()?.completedOrdersCount || 0 }}</span>
+        <span class="stat-box-label">Delivered & Closed</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-box-num" style="color:#2563eb;">{{ salesData()?.pendingFulfillmentCount || 0 }}</span>
+        <span class="stat-box-label">In Progress / Pending</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-box-num" style="color:#dc2626;">{{ salesData()?.cancelledOrdersCount || 0 }}</span>
+        <span class="stat-box-label">Cancelled / Rejected</span>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Tab 2: Valuation Breakdown -->
+  @if (activeTab() === 'valuation') {
+  <div class="report-section-card">
+    <div class="section-title-wrap">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <h2 class="section-title">{{ 'REPORTS.TAB_VALUATION_TITLE' | translate:'Product Inventory Valuation Audit (WAC)' }}</h2>
+        <span class="section-badge">Weighted Average Costing</span>
+      </div>
+      <button class="btn btn-sm btn-outline" (click)="exportCurrentTabToExcel()" style="display:inline-flex; align-items:center; gap:6px;">
+        <aser-icon name="lucide:download" [size]="14"></aser-icon>
+        <span>{{ 'COMMON.EXPORT_EXCEL' | translate:'Export to Excel' }}</span>
+      </button>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Product Name</th>
+            <th>Category</th>
+            <th style="text-align:right;">Physical Units</th>
+            <th style="text-align:right;">Unit Cost (ETB)</th>
+            <th style="text-align:right;">Total Valuation (ETB)</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (!valuationData() || (valuationData()?.items?.length || 0) === 0) {
+          <tr>
+            <td colspan="6" class="empty-state">
+              <p>No inventory valuation items found.</p>
+            </td>
+          </tr>
+          } @else {
+          @for (item of valuationData()?.items; track item.productId) {
+          <tr>
+            <td><code class="sku-tag">{{ item.productSku || 'SKU' }}</code></td>
+            <td class="font-bold">{{ item.productName }}</td>
+            <td><span class="category-pill">{{ item.categoryName || 'General' }}</span></td>
+            <td style="text-align:right; font-weight:700;">{{ item.totalUnitsOnHand | number:'1.0-0' }}</td>
+            <td style="text-align:right;">ETB {{ item.weightedAverageCost | number:'1.2-2' }}</td>
+            <td style="text-align:right; font-weight:800; color:var(--blue);">
+              ETB {{ item.totalValuationEtb | number:'1.2-2' }}
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+
+  <!-- Tab 3: Cross-Branch Stock -->
+  @if (activeTab() === 'stock') {
+  <div class="report-section-card">
+    <div class="section-title-wrap">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <h2 class="section-title">{{ 'REPORTS.TAB_STOCK_TITLE' | translate:'Branch Operating Stock Comparison' }}</h2>
+        <span class="section-badge">Consolidated Network</span>
+      </div>
+      <button class="btn btn-sm btn-outline" (click)="exportCurrentTabToExcel()" style="display:inline-flex; align-items:center; gap:6px;">
+        <aser-icon name="lucide:download" [size]="14"></aser-icon>
+        <span>{{ 'COMMON.EXPORT_EXCEL' | translate:'Export to Excel' }}</span>
+      </button>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Branch Name</th>
+            <th>Code</th>
+            <th style="text-align:center;">Warehouses</th>
+            <th style="text-align:right;">Physical Units</th>
+            <th style="text-align:right;">Branch Valuation (ETB)</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (!stockSummary() || (stockSummary()?.branchSummaries?.length || 0) === 0) {
+          <tr>
+            <td colspan="5" class="empty-state">
+              <p>No branch stock summaries available.</p>
+            </td>
+          </tr>
+          } @else {
+          @for (b of stockSummary()?.branchSummaries; track b.branchId) {
+          <tr>
+            <td class="font-bold">{{ b.branchName }}</td>
+            <td><span class="sku-tag">{{ b.branchCode }}</span></td>
+            <td style="text-align:center;"><span class="badge badge-info">{{ b.warehouseCount }} Facilities</span></td>
+            <td style="text-align:right; font-weight:700;">{{ b.totalUnitsOnHand | number:'1.0-0' }} pcs</td>
+            <td style="text-align:right; font-weight:800; color:var(--blue);">
+              ETB {{ b.totalValuationEtb | number:'1.2-2' }}
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+
+  <!-- Tab 4: Logistics & Transfers -->
+  @if (activeTab() === 'transfers') {
+  <div class="report-section-card">
+    <div class="section-title-wrap">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <h2 class="section-title">{{ 'REPORTS.TAB_TRANSFERS_TITLE' | translate:'Inter-Branch Transfer Logistics Performance' }}</h2>
+        <span class="section-badge">Supply Chain Integrity</span>
+      </div>
+      <button class="btn btn-sm btn-outline" (click)="exportCurrentTabToExcel()" style="display:inline-flex; align-items:center; gap:6px;">
+        <aser-icon name="lucide:download" [size]="14"></aser-icon>
+        <span>{{ 'COMMON.EXPORT_EXCEL' | translate:'Export to Excel' }}</span>
+      </button>
+    </div>
+
+    <div class="stats-overview-grid">
+      <div class="stat-box">
+        <span class="stat-box-num">{{ transferData()?.totalTransfers || 0 }}</span>
+        <span class="stat-box-label">Total Transfer Shipments</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-box-num" style="color:#d97706;">{{ transferData()?.inTransitCount || 0 }}</span>
+        <span class="stat-box-label">In-Transit / En Route</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-box-num" style="color:#059669;">{{ transferData()?.receivedCount || 0 }}</span>
+        <span class="stat-box-label">Safely Received</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-box-num" style="color:#dc2626;">{{ transferData()?.discrepancyCount || 0 }}</span>
+        <span class="stat-box-label">Discrepancy Reported</span>
+      </div>
+    </div>
+  </div>
+  }
+</aser-admin-shell>

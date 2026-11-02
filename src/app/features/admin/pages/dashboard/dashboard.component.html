@@ -1,0 +1,227 @@
+<aser-admin-shell section="Executive Overview">
+  <!-- Title & Greeting -->
+  <div class="page-header-row">
+    <div>
+      <div style="font-size:11px; font-weight:800; color:var(--blue); letter-spacing:1px; margin-bottom:4px;">
+        {{ 'DASHBOARD.SUBHEADER' | translate:'CENTRALIZED MULTI-BRANCH OPERATIONS' }}
+      </div>
+      <h1>
+        {{ greetingKey | translate:greetingDefault }}, {{ state.currentUser()?.fullName || state.currentRole() }}
+      </h1>
+      <p>
+        {{ 'DASHBOARD.DESCRIPTION' | translate:'Real-time branch inventory, weighted-average valuation, logistics transfers, and online sales.' }}
+      </p>
+    </div>
+
+    <div style="display:flex; gap:10px;">
+      <button class="btn btn-secondary" style="display:inline-flex; align-items:center; gap:8px;" (click)="isReceiveModalOpen.set(true)">
+        <aser-icon name="lucide:arrow-down" [size]="16"></aser-icon> {{ 'DASHBOARD.RECEIVE_STOCK' | translate:'Receive Inbound Stock' }}
+      </button>
+      <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;" (click)="isTransferModalOpen.set(true)">
+        <aser-icon name="lucide:arrow-left-right-arrows" [size]="16"></aser-icon> {{ 'DASHBOARD.NEW_TRANSFER' | translate:'New Branch Transfer' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Scope Indicator Banner -->
+  <div style="background:#ffffff; border:1px solid var(--line); border-radius:var(--radius-md); padding:12px 18px; margin-bottom:24px; display:flex; align-items:center; justify-content:space-between;">
+    <div style="display:flex; align-items:center; gap:10px; font-size:13px;">
+      <aser-icon name="lucide:building-2" [size]="20" color="var(--blue)"></aser-icon>
+      <span>
+        {{ 'DASHBOARD.ACTIVE_SCOPE' | translate:'Active Scope' }}: 
+        <strong>
+          {{ state.selectedBranchFilter() === 'ALL' ? ('DASHBOARD.ALL_BRANCHES' | translate:'All Branches (Consolidated System View)') : getBranchName(state.selectedBranchFilter()) }}
+        </strong>
+      </span>
+    </div>
+    <span class="badge badge-in-stock">{{ state.branches().length }} {{ 'DASHBOARD.BRANCHES_CONNECTED' | translate:'Branches Connected' }}</span>
+  </div>
+
+  <!-- Key Performance Metrics (KPIs) -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-top">
+        <span class="kpi-label">{{ 'DASHBOARD.TOTAL_VALUATION' | translate:'Total Inventory Valuation' }}</span>
+        <div class="kpi-icon" style="background:var(--blue-soft); color:var(--blue); font-weight:800;">ETB</div>
+      </div>
+      <div class="kpi-value" style="color:var(--blue);">
+        ETB {{ state.totalValuation() | number:'1.2-2' }}
+      </div>
+      <span class="kpi-sub">{{ 'DASHBOARD.VALUATION_SUB' | translate:'Weighted-Average Cost Valuation (SRS 7)' }}</span>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-top">
+        <span class="kpi-label">{{ 'DASHBOARD.ACTIVE_LOCATIONS' | translate:'Active Stock Locations' }}</span>
+        <div class="kpi-icon" style="background:var(--green-soft); color:var(--green);">
+          <aser-icon name="lucide:map-pin" [size]="16" color="var(--green)"></aser-icon>
+        </div>
+      </div>
+      <div class="kpi-value">
+        {{ state.filteredInventory().length }} {{ 'COMMON.ITEMS' | translate:'Items' }}
+      </div>
+      <span class="kpi-sub">{{ 'DASHBOARD.LOCATIONS_SUB' | translate:'Across branch warehouses' }}</span>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-top">
+        <span class="kpi-label">{{ 'DASHBOARD.LOW_STOCK_ALERTS' | translate:'Low Stock Alerts' }}</span>
+        <div class="kpi-icon" style="background:var(--amber-soft); color:var(--amber);">
+          <aser-icon name="lucide:alert-triangle" [size]="16" color="var(--amber)"></aser-icon>
+        </div>
+      </div>
+      <div class="kpi-value" [style.color]="state.lowStockCount() > 0 ? 'var(--red)' : 'var(--ink)'">
+        {{ state.lowStockCount() }}
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span class="kpi-sub">{{ 'DASHBOARD.LOW_STOCK_SUB' | translate:'Below reorder threshold' }}</span>
+        <a routerLink="/app/inventory" style="color:var(--blue); font-size:11px; font-weight:700;">{{ 'DASHBOARD.REVIEW_LINK' | translate:'Review →' }}</a>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-top">
+        <span class="kpi-label">{{ 'DASHBOARD.PENDING_TRANSFERS' | translate:'Pending Transfers' }}</span>
+        <div class="kpi-icon" style="background:var(--magenta-soft); color:var(--magenta);">
+          <aser-icon name="lucide:arrow-left-right-arrows" [size]="16" color="var(--magenta)"></aser-icon>
+        </div>
+      </div>
+      <div class="kpi-value">
+        {{ state.pendingTransfersCount() }}
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span class="kpi-sub">{{ 'DASHBOARD.PENDING_TRANSFERS_SUB' | translate:'Awaiting approval / in transit' }}</span>
+        <a routerLink="/app/transfers" style="color:var(--blue); font-size:11px; font-weight:700;">{{ 'DASHBOARD.VIEW_LINK' | translate:'View →' }}</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Dashboard Grid -->
+  <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:24px;">
+    <!-- Left: Recent Stock Movements & Activity -->
+    <div class="panel-card">
+      <div class="panel-card-header">
+        <div>
+          <h2>{{ 'DASHBOARD.RECENT_LEDGER' | translate:'Recent Stock Ledger & Activity' }}</h2>
+          <p>{{ 'DASHBOARD.RECENT_LEDGER_SUB' | translate:'Auditable inventory movements, deliveries & orders' }}</p>
+        </div>
+        <a routerLink="/app/inventory" class="btn btn-outline btn-sm">{{ 'DASHBOARD.FULL_LEDGER' | translate:'Full Ledger ↗' }}</a>
+      </div>
+
+      <div style="padding:10px 20px;">
+        @for (mov of state.stockMovements(); track mov.id) {
+          <div style="display:flex; align-items:flex-start; gap:14px; padding:14px 0; border-bottom:1px solid var(--line);">
+            <div style="width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0;"
+              [style.background]="mov.type === 'RECEIPT' ? 'var(--green-soft)' : mov.type === 'TRANSFER_OUT' ? 'var(--blue-soft)' : 'var(--amber-soft)'"
+              [style.color]="mov.type === 'RECEIPT' ? 'var(--green)' : mov.type === 'TRANSFER_OUT' ? 'var(--blue)' : 'var(--amber)'">
+              <aser-icon [name]="mov.type === 'RECEIPT' ? 'lucide:arrow-down' : mov.type === 'TRANSFER_OUT' ? 'lucide:arrow-left-right-arrows' : 'lucide:arrow-up'" [size]="18"></aser-icon>
+            </div>
+
+            <div style="flex:1;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                <strong style="font-size:13px; color:var(--ink);">{{ mov.productName }}</strong>
+                <strong style="font-size:13px;" [style.color]="mov.quantityDelta > 0 ? 'var(--green)' : 'var(--red)'">
+                  {{ mov.quantityDelta > 0 ? '+' : '' }}{{ mov.quantityDelta }} {{ mov.unit }}
+                </strong>
+              </div>
+              <div style="font-size:11px; color:var(--muted); margin-bottom:4px;">
+                {{ mov.branchName }} · {{ mov.warehouseName }}
+              </div>
+              <div style="font-size:11px; color:var(--slate);">
+                {{ mov.notes || 'Routine transaction' }} · <em>By {{ mov.actor }}</em>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Right: Pending Customer Orders & Fast Actions -->
+    <div>
+      <!-- Pending Orders Widget -->
+      <div class="panel-card" style="margin-bottom:20px;">
+        <div class="panel-card-header">
+          <div>
+            <h2>{{ 'DASHBOARD.TODAY_ORDERS' | translate:"Today's Online Orders" }}</h2>
+            <p>{{ 'DASHBOARD.TODAY_ORDERS_SUB' | translate:'E-commerce fulfillment queue' }}</p>
+          </div>
+          <a routerLink="/app/orders" class="btn btn-outline btn-sm">{{ 'DASHBOARD.ALL_ORDERS' | translate:'All Orders ↗' }}</a>
+        </div>
+
+        <div style="padding:10px 20px;">
+          @for (order of state.orders().slice(0, 3); track order.id) {
+            <div style="padding:12px 0; border-bottom:1px solid var(--line);">
+              <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                <strong style="font-size:12px; color:var(--blue);">{{ order.orderNumber }}</strong>
+                <span class="badge" [class.badge-paid]="order.paymentStatus === 'PAID'" [class.badge-pending]="order.paymentStatus === 'PENDING'">
+                  {{ order.paymentStatus === 'PAID' ? ('ORDERS.PAID' | translate:'Paid ✓') : ('ORDERS.PENDING' | translate:'Payment Pending') }}
+                </span>
+              </div>
+              <div style="font-size:12px; font-weight:700; color:var(--ink);">{{ order.customerName }}</div>
+              <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:4px;">
+                <span>{{ order.items.length }} {{ 'COMMON.ITEMS' | translate:'items' }}</span>
+                <strong>ETB {{ order.totalAmount | number:'1.2-2' }}</strong>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Branch Valuation Breakdown -->
+      @if (state.stockSummaryReport()?.branchSummaries?.length) {
+        <div class="panel-card" style="margin-bottom:20px;">
+          <div class="panel-card-header">
+            <div>
+              <h2>{{ 'DASHBOARD.BRANCH_VALUATION_BREAKDOWN' | translate:'Branch Valuation Breakdown' }}</h2>
+              <p>{{ 'DASHBOARD.BRANCH_VALUATION_SUB' | translate:'Live inventory value distributed across warehouses' }}</p>
+            </div>
+            <span class="badge badge-in-stock">ETB {{ state.totalValuation() | number:'1.2-2' }}</span>
+          </div>
+          <div style="padding:12px 20px;">
+            @for (br of state.stockSummaryReport()?.branchSummaries; track br.branchId) {
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line);">
+                <div>
+                  <strong style="font-size:13px; color:var(--ink);">{{ br.branchName }}</strong>
+                  <div style="font-size:11px; color:var(--muted);">{{ br.warehouseCount }} Warehouse(s) · {{ br.totalProducts }} SKU(s)</div>
+                </div>
+                <div style="text-align:right;">
+                  <strong style="font-size:13px; color:var(--blue);">ETB {{ br.totalValuationEtb | number:'1.2-2' }}</strong>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Quick Action Buttons -->
+      <div class="panel-card">
+        <div class="panel-card-header">
+          <h2>{{ 'DASHBOARD.SHORTCUTS' | translate:'Operational Shortcuts' }}</h2>
+        </div>
+        <div style="padding:16px; display:flex; flex-direction:column; gap:10px;">
+          <button class="btn btn-secondary" style="justify-content:flex-start; width:100%; display:inline-flex; align-items:center; gap:10px;" (click)="isReceiveModalOpen.set(true)">
+            <aser-icon name="lucide:arrow-down" [size]="16"></aser-icon> {{ 'DASHBOARD.RECEIVE_DELIVERY' | translate:'Receive Inbound Supplier Delivery' }}
+          </button>
+          <button class="btn btn-secondary" style="justify-content:flex-start; width:100%; display:inline-flex; align-items:center; gap:10px;" (click)="isTransferModalOpen.set(true)">
+            <aser-icon name="lucide:arrow-left-right-arrows" [size]="16"></aser-icon> {{ 'DASHBOARD.REQUEST_TRANSFER' | translate:'Request Inter-Branch Transfer' }}
+          </button>
+          <a class="btn btn-outline" style="justify-content:flex-start; width:100%; text-decoration:none; display:inline-flex; align-items:center; gap:10px;" routerLink="/app/inventory">
+            <aser-icon name="lucide:layers" [size]="16"></aser-icon> {{ 'DASHBOARD.REVIEW_LOW_STOCK' | translate:'Review Low-Stock Products' }}
+          </a>
+          <a class="btn btn-outline" style="justify-content:flex-start; width:100%; text-decoration:none; display:inline-flex; align-items:center; gap:10px;" routerLink="/app/products">
+            <aser-icon name="lucide:package" [size]="16"></aser-icon> {{ 'DASHBOARD.MANAGE_CATALOG' | translate:'Manage Catalog & Pricing' }}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modals -->
+  @if (isReceiveModalOpen()) {
+    <aser-receive-stock-modal (close)="isReceiveModalOpen.set(false)"></aser-receive-stock-modal>
+  }
+
+  @if (isTransferModalOpen()) {
+    <aser-new-transfer-modal (close)="isTransferModalOpen.set(false)"></aser-new-transfer-modal>
+  }
+</aser-admin-shell>
