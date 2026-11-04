@@ -60,6 +60,65 @@ export class OrdersComponent {
     this.ordersPage = 1;
   }
 
+  setActiveTab(tab: 'orders' | 'quotes'): void {
+    this.activeTab = tab;
+  }
+
+  onOrdersPageChange(page: number): void {
+    this.ordersPage = page;
+  }
+
+  onOrdersPageSizeChange(size: number): void {
+    this.ordersPageSize = size;
+    this.ordersPage = 1;
+  }
+
+  onQuotesPageChange(page: number): void {
+    this.quotesPage = page;
+  }
+
+  onQuotesPageSizeChange(size: number): void {
+    this.quotesPageSize = size;
+    this.quotesPage = 1;
+  }
+
+  closeOrderModal(): void {
+    this.selectedOrder.set(null);
+  }
+
+  closeQuotingModal(): void {
+    this.quotingInquiry.set(null);
+  }
+
+  getOrderStatusBadgeClass(status?: OrderStatus): string {
+    switch (status) {
+      case 'PENDING_PAYMENT':
+        return 'badge-pending';
+      case 'PROCESSING':
+        return 'badge-transit';
+      case 'READY_FOR_DISPATCH':
+        return 'badge-limited';
+      case 'DELIVERED':
+        return 'badge-paid';
+      case 'CANCELLED':
+        return 'badge-out-of-stock';
+      default:
+        return 'badge-pending';
+    }
+  }
+
+  getPaymentStatusBadgeClass(status?: PaymentStatus): string {
+    return status === 'PAID' ? 'badge-paid' : 'badge-pending';
+  }
+
+  getFulfillmentDisplay(order?: Order | null): string {
+    if (!order) return '—';
+    if (order.fulfillment === 'BRANCH_PICKUP') {
+      return `Pickup at ${order.pickupBranchName || 'Branch'}`;
+    }
+    return `Address: ${order.deliveryAddress || 'Standard Delivery'}`;
+  }
+
   openOrderDetails(event: Event, order: Order) {
     event.stopPropagation();
     this.selectedOrder.set(order);

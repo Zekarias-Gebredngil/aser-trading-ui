@@ -44,6 +44,43 @@ export class TransfersComponent {
     this.currentPage = 1;
   }
 
+  onPageChange(page: number): void {
+    this.currentPage = page;
+  }
+
+  onPageSizeChange(size: number): void {
+    this.pageSize = size;
+    this.currentPage = 1;
+  }
+
+  getStatusBadgeClass(status?: string): string {
+    switch (status) {
+      case 'PENDING_APPROVAL':
+        return 'badge-pending';
+      case 'APPROVED':
+      case 'RECEIVED':
+        return 'badge-in-stock';
+      case 'IN_TRANSIT':
+        return 'badge-transit';
+      case 'DISCREPANCY_REVIEW':
+        return 'badge-out-of-stock';
+      default:
+        return 'badge-pending';
+    }
+  }
+
+  openNewTransferModal(): void {
+    this.isNewTransferModalOpen.set(true);
+  }
+
+  closeNewTransferModal(): void {
+    this.isNewTransferModalOpen.set(false);
+  }
+
+  closeDetailsModal(): void {
+    this.selectedTransfer.set(null);
+  }
+
   getBranchDisplayName(name?: string, fallback?: string): string {
     const val = name || fallback || '—';
     return val.split('(')[0].trim();

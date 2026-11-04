@@ -40,4 +40,25 @@ export class ServicesComponent {
     this.selectedCategory = cat;
     this.isQuoteOpen.set(true);
   }
+
+  closeQuote(): void {
+    this.isQuoteOpen.set(false);
+  }
+
+  openCart(): void {
+    this.isCartOpen.set(true);
+  }
+
+  closeCart(): void {
+    this.isCartOpen.set(false);
+  }
+
+  proceedToCheckout(): void {
+    this.isCartOpen.set(false);
+    this.isCheckoutOpen.set(true);
+  }
+
+  closeCheckout(): void {
+    this.isCheckoutOpen.set(false);
+  }
 }

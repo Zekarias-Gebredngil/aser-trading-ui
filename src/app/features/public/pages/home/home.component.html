@@ -1,5 +1,5 @@
 <div class="home-page">
-  <aser-public-header (openCart)="isCartOpen.set(true)" (requestQuote)="openQuoteModal($event)">
+  <aser-public-header (openCart)="openCart()" (requestQuote)="openQuoteModal($event)">
   </aser-public-header>
 
   <!-- Hero Section -->
@@ -201,11 +201,8 @@
             <p class="product-desc">{{ product.description }}</p>
 
             <div class="product-spec-mini">
-              <span class="badge" [class.badge-in-stock]="product.availability === 'IN_STOCK'"
-                [class.badge-limited]="product.availability === 'LIMITED'"
-                [class.badge-quote-only]="product.pricingType === 'QUOTATION'">
-                ● {{ product.availability === 'IN_STOCK' ? ('STOREFRONT.IN_STOCK' | translate:'In Stock') : product.availability === 'LIMITED' ? ('PRODUCT_DETAIL.LIMITED_STOCK' | translate:'Limited') :
-                ('PRODUCTS.QUOTATION_ONLY' | translate:'Quotation') }}
+              <span class="badge" [class]="getAvailabilityBadge(product).badgeClass">
+                ● {{ getAvailabilityBadge(product).textKey | translate:getAvailabilityBadge(product).defaultText }}
               </span>
               <span style="margin-left:auto;">Unit: {{ product.unit }}</span>
             </div>
@@ -227,7 +224,7 @@
             </div>
 
             <div style="display:flex; gap:6px;">
-              <button class="btn btn-outline btn-sm" (click)="selectedModalProduct.set(product)" title="View Details">
+              <button class="btn btn-outline btn-sm" (click)="viewProductDetails(product)" title="View Details">
                 {{ 'COMMON.VIEW' | translate:'Details' }}
               </button>
               @if (product.pricingType === 'FIXED') {
@@ -390,23 +387,20 @@
 
   <!-- Modals & Drawers -->
   @if (isCartOpen()) {
-  <aser-cart-drawer (close)="isCartOpen.set(false)" (checkout)="isCartOpen.set(false); isCheckoutOpen.set(true)">
-  </aser-cart-drawer>
+    <aser-cart-drawer (close)="closeCart()" (checkout)="proceedToCheckout()"></aser-cart-drawer>
   }
 
   @if (isCheckoutOpen()) {
-  <aser-checkout-modal (close)="isCheckoutOpen.set(false)">
-  </aser-checkout-modal>
+    <aser-checkout-modal (close)="closeCheckout()"></aser-checkout-modal>
   }
 
   @if (isQuoteOpen()) {
-  <aser-quote-modal [initialCategory]="activeQuoteCategory" (close)="isQuoteOpen.set(false)">
-  </aser-quote-modal>
+    <aser-quote-modal [initialCategory]="activeQuoteCategory" (close)="closeQuoteModal()"></aser-quote-modal>
   }
 
   @if (selectedModalProduct()) {
-  <aser-product-detail-modal [product]="selectedModalProduct()" (close)="selectedModalProduct.set(null)"
-    (requestQuote)="onProductQuoteRequest($event)">
-  </aser-product-detail-modal>
+    <aser-product-detail-modal [product]="selectedModalProduct()" (close)="closeProductDetails()"
+      (requestQuote)="onProductQuoteRequest($event)">
+    </aser-product-detail-modal>
   }
 </div>

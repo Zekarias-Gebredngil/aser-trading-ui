@@ -41,4 +41,27 @@ export class PublicHeaderComponent {
     this.i18n.setLanguage(lang);
     this.isLangDropdownOpen.set(false);
   }
+
+  onOpenCart(): void {
+    this.openCart.emit();
+  }
+
+  onMobileOpenCart(): void {
+    this.openCart.emit();
+    this.closeMobileNav();
+  }
+
+  onRequestQuote(cat: ServiceCategory = 'PRINTING_PRESS'): void {
+    this.requestQuote.emit(cat);
+  }
+
+  onMobileRequestQuote(cat: ServiceCategory = 'PRINTING_PRESS'): void {
+    this.requestQuote.emit(cat);
+    this.closeMobileNav();
+  }
+
+  onMobileLogout(): void {
+    this.state.logoutStaff();
+    this.closeMobileNav();
+  }
 }

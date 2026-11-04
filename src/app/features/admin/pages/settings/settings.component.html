@@ -30,19 +30,19 @@
 
   <!-- Settings Tabs -->
   <div class="tab-bar">
-    <button class="tab-item" [class.active]="activeTab() === 'general'" (click)="activeTab.set('general')">
+    <button class="tab-item" [class.active]="activeTab() === 'general'" (click)="setActiveTab('general')">
       <aser-icon name="lucide:building-2" [size]="15"></aser-icon>
       <span>{{ 'SETTINGS.COMPANY_PROFILE' | translate:'Company Profile' }}</span>
     </button>
-    <button class="tab-item" [class.active]="activeTab() === 'inventory'" (click)="activeTab.set('inventory')">
+    <button class="tab-item" [class.active]="activeTab() === 'inventory'" (click)="setActiveTab('inventory')">
       <aser-icon name="lucide:boxes" [size]="15"></aser-icon>
       <span>{{ 'SETTINGS.INVENTORY_POLICIES' | translate:'Inventory & Orders' }}</span>
     </button>
-    <button class="tab-item" [class.active]="activeTab() === 'security'" (click)="activeTab.set('security')">
+    <button class="tab-item" [class.active]="activeTab() === 'security'" (click)="setActiveTab('security')">
       <aser-icon name="lucide:shield-check" [size]="15"></aser-icon>
       <span>{{ 'SETTINGS.SECURITY_CONTROLS' | translate:'Security & Access Control' }}</span>
     </button>
-    <button class="tab-item" [class.active]="activeTab() === 'system'" (click)="activeTab.set('system')">
+    <button class="tab-item" [class.active]="activeTab() === 'system'" (click)="setActiveTab('system')">
       <aser-icon name="lucide:cog" [size]="15"></aser-icon>
       <span>{{ 'SETTINGS.DATABASE_MAINTENANCE' | translate:'Database & Maintenance' }}</span>
     </button>

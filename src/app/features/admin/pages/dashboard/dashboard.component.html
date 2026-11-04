@@ -14,10 +14,10 @@
     </div>
 
     <div style="display:flex; gap:10px;">
-      <button class="btn btn-secondary" style="display:inline-flex; align-items:center; gap:8px;" (click)="isReceiveModalOpen.set(true)">
+      <button class="btn btn-secondary" style="display:inline-flex; align-items:center; gap:8px;" (click)="openReceiveModal()">
         <aser-icon name="lucide:arrow-down" [size]="16"></aser-icon> {{ 'DASHBOARD.RECEIVE_STOCK' | translate:'Receive Inbound Stock' }}
       </button>
-      <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;" (click)="isTransferModalOpen.set(true)">
+      <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;" (click)="openTransferModal()">
         <aser-icon name="lucide:arrow-left-right-arrows" [size]="16"></aser-icon> {{ 'DASHBOARD.NEW_TRANSFER' | translate:'New Branch Transfer' }}
       </button>
     </div>
@@ -112,16 +112,16 @@
         @for (mov of state.stockMovements(); track mov.id) {
           <div style="display:flex; align-items:flex-start; gap:14px; padding:14px 0; border-bottom:1px solid var(--line);">
             <div style="width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0;"
-              [style.background]="mov.type === 'RECEIPT' ? 'var(--green-soft)' : mov.type === 'TRANSFER_OUT' ? 'var(--blue-soft)' : 'var(--amber-soft)'"
-              [style.color]="mov.type === 'RECEIPT' ? 'var(--green)' : mov.type === 'TRANSFER_OUT' ? 'var(--blue)' : 'var(--amber)'">
-              <aser-icon [name]="mov.type === 'RECEIPT' ? 'lucide:arrow-down' : mov.type === 'TRANSFER_OUT' ? 'lucide:arrow-left-right-arrows' : 'lucide:arrow-up'" [size]="18"></aser-icon>
+              [style.background]="getMovementVisual(mov.type).background"
+              [style.color]="getMovementVisual(mov.type).color">
+              <aser-icon [name]="getMovementVisual(mov.type).icon" [size]="18"></aser-icon>
             </div>
 
             <div style="flex:1;">
               <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
                 <strong style="font-size:13px; color:var(--ink);">{{ mov.productName }}</strong>
                 <strong style="font-size:13px;" [style.color]="mov.quantityDelta > 0 ? 'var(--green)' : 'var(--red)'">
-                  {{ mov.quantityDelta > 0 ? '+' : '' }}{{ mov.quantityDelta }} {{ mov.unit }}
+                  {{ formatQuantityDelta(mov.quantityDelta, mov.unit) }}
                 </strong>
               </div>
               <div style="font-size:11px; color:var(--muted); margin-bottom:4px;">
@@ -199,10 +199,10 @@
           <h2>{{ 'DASHBOARD.SHORTCUTS' | translate:'Operational Shortcuts' }}</h2>
         </div>
         <div style="padding:16px; display:flex; flex-direction:column; gap:10px;">
-          <button class="btn btn-secondary" style="justify-content:flex-start; width:100%; display:inline-flex; align-items:center; gap:10px;" (click)="isReceiveModalOpen.set(true)">
+          <button class="btn btn-secondary" style="justify-content:flex-start; width:100%; display:inline-flex; align-items:center; gap:10px;" (click)="openReceiveModal()">
             <aser-icon name="lucide:arrow-down" [size]="16"></aser-icon> {{ 'DASHBOARD.RECEIVE_DELIVERY' | translate:'Receive Inbound Supplier Delivery' }}
           </button>
-          <button class="btn btn-secondary" style="justify-content:flex-start; width:100%; display:inline-flex; align-items:center; gap:10px;" (click)="isTransferModalOpen.set(true)">
+          <button class="btn btn-secondary" style="justify-content:flex-start; width:100%; display:inline-flex; align-items:center; gap:10px;" (click)="openTransferModal()">
             <aser-icon name="lucide:arrow-left-right-arrows" [size]="16"></aser-icon> {{ 'DASHBOARD.REQUEST_TRANSFER' | translate:'Request Inter-Branch Transfer' }}
           </button>
           <a class="btn btn-outline" style="justify-content:flex-start; width:100%; text-decoration:none; display:inline-flex; align-items:center; gap:10px;" routerLink="/app/inventory">
@@ -218,10 +218,10 @@
 
   <!-- Modals -->
   @if (isReceiveModalOpen()) {
-    <aser-receive-stock-modal (close)="isReceiveModalOpen.set(false)"></aser-receive-stock-modal>
+    <aser-receive-stock-modal (close)="closeReceiveModal()"></aser-receive-stock-modal>
   }
 
   @if (isTransferModalOpen()) {
-    <aser-new-transfer-modal (close)="isTransferModalOpen.set(false)"></aser-new-transfer-modal>
+    <aser-new-transfer-modal (close)="closeTransferModal()"></aser-new-transfer-modal>
   }
 </aser-admin-shell>

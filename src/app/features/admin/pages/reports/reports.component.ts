@@ -37,6 +37,10 @@ export class ReportsComponent implements OnInit {
   readonly valPage = signal(0);
   readonly valPageSize = signal(15);
 
+  setActiveTab(tab: 'sales' | 'valuation' | 'stock' | 'transfers'): void {
+    this.activeTab.set(tab);
+  }
+
   ngOnInit(): void {
     this.loadAllReports();
   }

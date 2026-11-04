@@ -45,13 +45,13 @@
       </div>
 
       <!-- Request Quote Button (Desktop) -->
-      <button class="btn btn-secondary btn-sm desktop-only" (click)="requestQuote.emit('PRINTING_PRESS')">
+      <button class="btn btn-secondary btn-sm desktop-only" (click)="onRequestQuote('PRINTING_PRESS')">
         <aser-icon name="lucide:clipboard-list" [size]="15"></aser-icon>
         <span>{{ 'STOREFRONT.REQUEST_QUOTE' | translate:'Request Quote' }}</span>
       </button>
 
       <!-- Cart Button with Live Counter Badge -->
-      <button class="cart-button" (click)="openCart.emit(); closeMobileNav()" aria-label="Open Shopping Cart">
+      <button class="cart-button" (click)="onMobileOpenCart()" aria-label="Open Shopping Cart">
         <aser-icon name="lucide:shopping-cart" [size]="18"></aser-icon>
         @if (state.cartCount() > 0) {
         <span class="cart-badge">{{ state.cartCount() }}</span>
@@ -103,7 +103,7 @@
     </div>
 
     <div class="mobile-nav-footer">
-      <button class="btn btn-secondary btn-block" (click)="requestQuote.emit('PRINTING_PRESS'); closeMobileNav()">
+      <button class="btn btn-secondary btn-block" (click)="onMobileRequestQuote('PRINTING_PRESS')">
         <aser-icon name="lucide:clipboard-list" [size]="16"></aser-icon>
         <span>{{ 'STOREFRONT.REQUEST_QUOTE' | translate:'Request Quote' }}</span>
       </button>
@@ -113,7 +113,7 @@
         <aser-icon name="lucide:layout-dashboard" [size]="16"></aser-icon>
         <span>{{ 'STOREFRONT.PORTAL' | translate:'Enterprise Portal' }} ({{ state.currentUser()?.roleLabel }})</span>
       </a>
-      <button type="button" class="btn btn-outline btn-block" (click)="state.logoutStaff(); closeMobileNav()">
+      <button type="button" class="btn btn-outline btn-block" (click)="onMobileLogout()">
         <aser-icon name="lucide:log-in" [size]="16"></aser-icon>
         <span>{{ 'PROFILE.SIGN_OUT' | translate:'Sign Out' }}</span>
       </button>

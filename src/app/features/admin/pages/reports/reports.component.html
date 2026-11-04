@@ -72,19 +72,19 @@
 
   <!-- Navigation Tab Bar -->
   <div class="tab-bar">
-    <button class="tab-item" [class.active]="activeTab() === 'sales'" (click)="activeTab.set('sales')">
+    <button class="tab-item" [class.active]="activeTab() === 'sales'" (click)="setActiveTab('sales')">
       <aser-icon name="lucide:shopping-cart" [size]="15"></aser-icon>
       <span>{{ 'REPORTS.SALES_TAB' | translate:'Sales & Order Revenue' }}</span>
     </button>
-    <button class="tab-item" [class.active]="activeTab() === 'valuation'" (click)="activeTab.set('valuation')">
+    <button class="tab-item" [class.active]="activeTab() === 'valuation'" (click)="setActiveTab('valuation')">
       <aser-icon name="lucide:landmark" [size]="15"></aser-icon>
       <span>{{ 'REPORTS.VALUATION_TAB' | translate:'Inventory Valuation (WAC)' }}</span>
     </button>
-    <button class="tab-item" [class.active]="activeTab() === 'stock'" (click)="activeTab.set('stock')">
+    <button class="tab-item" [class.active]="activeTab() === 'stock'" (click)="setActiveTab('stock')">
       <aser-icon name="lucide:layers" [size]="15"></aser-icon>
       <span>{{ 'REPORTS.STOCK_TAB' | translate:'Cross-Branch Stock Summary' }}</span>
     </button>
-    <button class="tab-item" [class.active]="activeTab() === 'transfers'" (click)="activeTab.set('transfers')">
+    <button class="tab-item" [class.active]="activeTab() === 'transfers'" (click)="setActiveTab('transfers')">
       <aser-icon name="lucide:truck" [size]="15"></aser-icon>
       <span>{{ 'REPORTS.TRANSFERS_TAB' | translate:'Logistics & Transfers' }}</span>
     </button>

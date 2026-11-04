@@ -14,12 +14,12 @@
   <!-- Navigation Tabs -->
   <div style="display:flex; gap:12px; margin-bottom:20px; border-bottom:1px solid var(--line); padding-bottom:12px;">
     <button class="btn" [class.btn-primary]="activeTab === 'orders'" [class.btn-outline]="activeTab !== 'orders'"
-      (click)="activeTab = 'orders'" style="display:inline-flex; align-items:center; gap:8px;">
+      (click)="setActiveTab('orders')" style="display:inline-flex; align-items:center; gap:8px;">
       <aser-icon name="lucide:shopping-bag" [size]="16"></aser-icon>
       {{ 'ORDERS.TAB_ORDERS' | translate:'Customer Online Orders' }} ({{ state.orders().length }})
     </button>
     <button class="btn" [class.btn-primary]="activeTab === 'quotes'" [class.btn-outline]="activeTab !== 'quotes'"
-      (click)="activeTab = 'quotes'" style="display:inline-flex; align-items:center; gap:8px;">
+      (click)="setActiveTab('quotes')" style="display:inline-flex; align-items:center; gap:8px;">
       <aser-icon name="lucide:clipboard-list" [size]="16"></aser-icon>
       {{ 'ORDERS.TAB_QUOTES' | translate:'Technical Inquiries & Quotations' }} ({{ state.quotations().length }})
     </button>
@@ -105,7 +105,7 @@
                     <aser-icon name="lucide:banknote" [size]="13" color="var(--green)"></aser-icon> {{ 'ORDERS.CASH' | translate:'Cash in Hand' }}
                   }
                 </div>
-                <span class="badge" [class.badge-paid]="order.paymentStatus === 'PAID'" [class.badge-pending]="order.paymentStatus === 'PENDING'">
+                <span class="badge" [class]="getPaymentStatusBadgeClass(order.paymentStatus)">
                   {{ order.paymentStatus === 'PAID' ? ('ORDERS.PAID' | translate:'Paid ✓') : ('ORDERS.PENDING' | translate:'Pending') }}
                 </span>
                 @if (order.paymentReference) {
@@ -113,11 +113,7 @@
                 }
               </td>
               <td>
-                <span class="badge" 
-                  [class.badge-pending]="order.status === 'PENDING_PAYMENT'"
-                  [class.badge-transit]="order.status === 'PROCESSING'"
-                  [class.badge-limited]="order.status === 'READY_FOR_DISPATCH'"
-                  [class.badge-paid]="order.status === 'DELIVERED'">
+                <span class="badge" [class]="getOrderStatusBadgeClass(order.status)">
                   {{ order.status }}
                 </span>
               </td>
@@ -162,8 +158,8 @@
         [totalItems]="filteredOrders.length"
         [pageSize]="ordersPageSize"
         [currentPage]="ordersPage"
-        (pageChange)="ordersPage = $event"
-        (pageSizeChange)="ordersPageSize = $event; ordersPage = 1">
+        (pageChange)="onOrdersPageChange($event)"
+        (pageSizeChange)="onOrdersPageSizeChange($event)">
       </aser-paginator>
     }
   </div>
@@ -249,8 +245,8 @@
         [totalItems]="state.quotations().length"
         [pageSize]="quotesPageSize"
         [currentPage]="quotesPage"
-        (pageChange)="quotesPage = $event"
-        (pageSizeChange)="quotesPageSize = $event; quotesPage = 1">
+        (pageChange)="onQuotesPageChange($event)"
+        (pageSizeChange)="onQuotesPageSizeChange($event)">
       </aser-paginator>
     }
   </div>
@@ -258,14 +254,14 @@
 
   <!-- Order Detail Modal -->
   @if (selectedOrder()) {
-    <div class="modal-backdrop" (click)="selectedOrder.set(null)">
+    <div class="modal-backdrop" (click)="closeOrderModal()">
       <div class="modal-dialog" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <div>
             <h3 style="font-size:17px; font-weight:800; color:var(--ink);">Order {{ selectedOrder()?.orderNumber }}</h3>
             <span class="badge badge-in-stock">Stock Reserved ✓</span>
           </div>
-          <button class="modal-close-btn" (click)="selectedOrder.set(null)" aria-label="Close dialog">
+          <button class="modal-close-btn" (click)="closeOrderModal()" aria-label="Close dialog">
             <aser-icon name="lucide:x" [size]="18"></aser-icon>
           </button>
         </div>
@@ -294,7 +290,7 @@
             }
             <div style="display:flex; justify-content:space-between; font-size:13px;">
               <span style="color:var(--muted);">Fulfillment Type:</span>
-              <span>{{ selectedOrder()?.fulfillment === 'BRANCH_PICKUP' ? ('Pickup at ' + selectedOrder()?.pickupBranchName) : ('Address: ' + selectedOrder()?.deliveryAddress) }}</span>
+              <span>{{ getFulfillmentDisplay(selectedOrder()) }}</span>
             </div>
           </div>
 
@@ -338,21 +334,21 @@
         </div>
 
         <div class="modal-footer">
-          <button class="btn btn-outline" (click)="selectedOrder.set(null)">{{ 'COMMON.CLOSE' | translate:'Close' }}</button>
+          <button class="btn btn-outline" (click)="closeOrderModal()">{{ 'COMMON.CLOSE' | translate:'Close' }}</button>
         </div>
       </div>
     </div>
   }
   <!-- Quotation Issue Modal -->
   @if (quotingInquiry()) {
-    <div class="modal-backdrop" (click)="quotingInquiry.set(null)">
+    <div class="modal-backdrop" (click)="closeQuotingModal()">
       <div class="modal-dialog" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <div>
             <h3 style="font-size:17px; font-weight:800; color:var(--ink);">Issue Quotation for {{ quotingInquiry()?.quoteNumber }}</h3>
             <span class="category-tag">{{ quotingInquiry()?.serviceCategoryLabel }}</span>
           </div>
-          <button class="modal-close-btn" (click)="quotingInquiry.set(null)" aria-label="Close dialog">
+          <button class="modal-close-btn" (click)="closeQuotingModal()" aria-label="Close dialog">
             <aser-icon name="lucide:x" [size]="18"></aser-icon>
           </button>
         </div>
@@ -378,7 +374,7 @@
         </div>
 
         <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
-          <button class="btn btn-outline" (click)="quotingInquiry.set(null)">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
+          <button class="btn btn-outline" (click)="closeQuotingModal()">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
           <button class="btn btn-primary" [disabled]="quotePriceInput <= 0" (click)="submitQuotation()">
             {{ 'COMMON.SUBMIT' | translate:'Submit Official Quotation' }}
           </button>

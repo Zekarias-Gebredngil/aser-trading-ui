@@ -199,7 +199,7 @@
           <aser-icon name="lucide:map-pin" [size]="14" color="var(--blue)"></aser-icon>
           <span class="branch-scope-tag">{{ 'COMMON.BRANCH' | translate:'Branch' }}:</span>
           <select class="branch-scope-select" [ngModel]="state.selectedBranchFilter()"
-            (ngModelChange)="state.selectedBranchFilter.set($event)">
+            (ngModelChange)="onBranchFilterChange($event)">
             <option value="ALL">{{ 'DASHBOARD.ALL_BRANCHES' | translate:'All Branches (Consolidated System View)' }}
             </option>
             @for (b of state.branches(); track b.id) {
@@ -254,17 +254,17 @@
             <!-- Profile Nav Tabs -->
             <div class="profile-tabs">
               <button type="button" class="profile-tab-btn" [class.active]="activeProfileTab() === 'details'"
-                (click)="activeProfileTab.set('details')">
+                (click)="setActiveProfileTab('details')">
                 <aser-icon name="lucide:user" [size]="13"></aser-icon>
                 <span>{{ 'PROFILE.DETAILS' | translate:'Details' }}</span>
               </button>
               <button type="button" class="profile-tab-btn" [class.active]="activeProfileTab() === 'password'"
-                (click)="activeProfileTab.set('password')">
+                (click)="setActiveProfileTab('password')">
                 <aser-icon name="lucide:key-round" [size]="13"></aser-icon>
                 <span>{{ 'PROFILE.CHANGE_PASSWORD' | translate:'Password' }}</span>
               </button>
               <button type="button" class="profile-tab-btn" [class.active]="activeProfileTab() === 'language'"
-                (click)="activeProfileTab.set('language')">
+                (click)="setActiveProfileTab('language')">
                 <aser-icon name="lucide:globe" [size]="13"></aser-icon>
                 <span>{{ 'PROFILE.LANGUAGE' | translate:'Language' }}</span>
               </button>

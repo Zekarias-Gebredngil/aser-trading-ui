@@ -31,7 +31,7 @@
       <input 
         type="text" 
         [ngModel]="searchQuery()" 
-        (ngModelChange)="searchQuery.set($event)"
+        (ngModelChange)="onSearchQueryChange($event)"
         (keyup.enter)="onFilterChange()"
         [placeholder]="'ACTIVITY.FILTER_PLACEHOLDER' | translate:'Filter by actor username or email...'" 
         class="search-input" />
@@ -39,7 +39,7 @@
 
     <div class="filter-wrap">
       <label>{{ 'ACTIVITY.MODULE_FILTER' | translate:'Entity Module:' }}</label>
-      <select [ngModel]="selectedEntityType()" (ngModelChange)="selectedEntityType.set($event); onFilterChange()" class="entity-select">
+      <select [ngModel]="selectedEntityType()" (ngModelChange)="onEntityTypeChange($event)" class="entity-select">
         @for (e of entityTypes; track e) {
         <option [value]="e">{{ e === 'ALL' ? ('COMMON.ALL' | translate:'All Modules') : e }}</option>
         }

@@ -25,6 +25,10 @@ export class SettingsComponent implements OnInit {
   readonly isSaving = signal(false);
   readonly lastUpdatedMeta = signal<{ at?: string; by?: string }>({});
 
+  setActiveTab(tab: 'general' | 'inventory' | 'security' | 'system'): void {
+    this.activeTab.set(tab);
+  }
+
   // Dynamic Settings State loaded from and persisted to Database
   companySettings = {
     companyName: 'Aser Trading',

@@ -1,6 +1,6 @@
 <div class="services-page">
   <aser-public-header 
-    (openCart)="isCartOpen.set(true)"
+    (openCart)="openCart()"
     (requestQuote)="openQuote($event)">
   </aser-public-header>
 
@@ -86,21 +86,21 @@
   <!-- Modals -->
   @if (isCartOpen()) {
     <aser-cart-drawer 
-      (close)="isCartOpen.set(false)"
-      (checkout)="isCartOpen.set(false); isCheckoutOpen.set(true)">
+      (close)="closeCart()"
+      (checkout)="proceedToCheckout()">
     </aser-cart-drawer>
   }
 
   @if (isCheckoutOpen()) {
     <aser-checkout-modal 
-      (close)="isCheckoutOpen.set(false)">
+      (close)="closeCheckout()">
     </aser-checkout-modal>
   }
 
   @if (isQuoteOpen()) {
     <aser-quote-modal 
       [initialCategory]="selectedCategory"
-      (close)="isQuoteOpen.set(false)">
+      (close)="closeQuote()">
     </aser-quote-modal>
   }
 </div>

@@ -108,6 +108,27 @@ export class ProductsComponent {
     this.currentPage = 1;
   }
 
+  onPageChange(page: number): void {
+    this.currentPage = page;
+  }
+
+  onPageSizeChange(size: number): void {
+    this.pageSize = size;
+    this.currentPage = 1;
+  }
+
+  openAddModal(): void {
+    this.isAddModalOpen.set(true);
+  }
+
+  closeAddModal(): void {
+    this.isAddModalOpen.set(false);
+  }
+
+  closeEditModal(): void {
+    this.isEditModalOpen.set(false);
+  }
+
   togglePublish(product: Product) {
     this.state.updateProduct(product.id, { isPublished: !product.isPublished });
   }

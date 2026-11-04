@@ -28,6 +28,23 @@ export class ServicesMgmtComponent {
   currentPage = 1;
   pageSize = 10;
 
+  onPageChange(page: number): void {
+    this.currentPage = page;
+  }
+
+  onPageSizeChange(size: number): void {
+    this.pageSize = size;
+    this.currentPage = 1;
+  }
+
+  closeCreateModal(): void {
+    this.isCreateModalOpen.set(false);
+  }
+
+  closeEditModal(): void {
+    this.isEditModalOpen.set(false);
+  }
+
   get pagedServices(): AserServiceItem[] {
     const list = this.state.services();
     const start = (this.currentPage - 1) * this.pageSize;

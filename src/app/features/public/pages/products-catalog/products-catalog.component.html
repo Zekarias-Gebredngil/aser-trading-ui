@@ -1,6 +1,6 @@
 <div class="catalog-page">
   <aser-public-header 
-    (openCart)="isCartOpen.set(true)"
+    (openCart)="openCart()"
     (requestQuote)="openQuoteModal($event)">
   </aser-public-header>
 
@@ -30,19 +30,19 @@
       <!-- Filters and Search Bar -->
       <div class="catalog-toolbar">
         <div class="filter-tabs">
-          <button class="filter-tab" [class.active]="selectedCategory === 'ALL'" (click)="selectedCategory = 'ALL'; onFilterChange()">
+          <button class="filter-tab" [class.active]="selectedCategory === 'ALL'" (click)="selectCategory('ALL')">
             {{ 'PRODUCTS.ALL_CATEGORIES' | translate:'All Products' }} ({{ state.products().length }})
           </button>
-          <button class="filter-tab" [class.active]="selectedCategory === 'GARMENT_MATERIALS'" (click)="selectedCategory = 'GARMENT_MATERIALS'; onFilterChange()">
+          <button class="filter-tab" [class.active]="selectedCategory === 'GARMENT_MATERIALS'" (click)="selectCategory('GARMENT_MATERIALS')">
             {{ 'PRODUCTS.CAT_GARMENT' | translate:'Garment Materials' }}
           </button>
-          <button class="filter-tab" [class.active]="selectedCategory === 'PRINTING_SUPPLIES'" (click)="selectedCategory = 'PRINTING_SUPPLIES'; onFilterChange()">
+          <button class="filter-tab" [class.active]="selectedCategory === 'PRINTING_SUPPLIES'" (click)="selectCategory('PRINTING_SUPPLIES')">
             {{ 'PRODUCTS.CAT_PRINTING' | translate:'Printing Supplies' }}
           </button>
-          <button class="filter-tab" [class.active]="selectedCategory === 'BRANDING_PROMOTION'" (click)="selectedCategory = 'BRANDING_PROMOTION'; onFilterChange()">
+          <button class="filter-tab" [class.active]="selectedCategory === 'BRANDING_PROMOTION'" (click)="selectCategory('BRANDING_PROMOTION')">
             {{ 'PRODUCTS.CAT_BRANDING' | translate:'Branding & Promotion' }}
           </button>
-          <button class="filter-tab" [class.active]="selectedCategory === 'EQUIPMENT'" (click)="selectedCategory = 'EQUIPMENT'; onFilterChange()">
+          <button class="filter-tab" [class.active]="selectedCategory === 'EQUIPMENT'" (click)="selectCategory('EQUIPMENT')">
             {{ 'PRODUCTS.CAT_EQUIPMENT' | translate:'Machinery & Equipment' }}
           </button>
         </div>
@@ -97,10 +97,8 @@
               <p class="product-desc">{{ product.description }}</p>
 
               <div class="product-spec-mini">
-                <span class="badge" [class.badge-in-stock]="product.availability === 'IN_STOCK'"
-                  [class.badge-limited]="product.availability === 'LIMITED'"
-                  [class.badge-quote-only]="product.pricingType === 'QUOTATION'">
-                  ● {{ product.availability === 'IN_STOCK' ? ('STOREFRONT.IN_STOCK' | translate:'In Stock') : product.availability === 'LIMITED' ? 'Limited' : ('PRODUCTS.QUOTATION_ONLY' | translate:'Quotation') }}
+                <span class="badge" [class]="getAvailabilityBadge(product).badgeClass">
+                  ● {{ getAvailabilityBadge(product).textKey | translate:getAvailabilityBadge(product).defaultText }}
                 </span>
                 <span style="margin-left:auto;">Unit: {{ product.unit }}</span>
               </div>
@@ -122,7 +120,7 @@
               </div>
 
               <div style="display:flex; gap:6px;">
-                <button class="btn btn-outline btn-sm" (click)="selectedModalProduct.set(product)">
+                <button class="btn btn-outline btn-sm" (click)="viewProductDetails(product)">
                   {{ 'COMMON.VIEW' | translate:'Details' }}
                 </button>
                 @if (product.pricingType === 'FIXED') {
@@ -143,7 +141,7 @@
       @if (filteredProducts.length === 0) {
         <div style="text-align:center; padding:60px 20px; color:var(--muted);">
           <p style="font-size:16px;">No products match your current filters.</p>
-          <button class="btn btn-outline btn-sm" style="margin-top:12px;" (click)="searchQuery = ''; selectedCategory = 'ALL'; availabilityFilter = 'ALL'">
+          <button class="btn btn-outline btn-sm" style="margin-top:12px;" (click)="resetFilters()">
             Reset All Filters
           </button>
         </div>
@@ -154,8 +152,8 @@
             [pageSize]="pageSize"
             [currentPage]="currentPage"
             [pageSizeOptions]="[6, 12, 24, 48]"
-            (pageChange)="currentPage = $event"
-            (pageSizeChange)="pageSize = $event; currentPage = 1">
+            (pageChange)="onPageChange($event)"
+            (pageSizeChange)="onPageSizeChange($event)">
           </aser-paginator>
         </div>
       }
@@ -168,28 +166,28 @@
   <!-- Modals -->
   @if (isCartOpen()) {
     <aser-cart-drawer 
-      (close)="isCartOpen.set(false)"
-      (checkout)="isCartOpen.set(false); isCheckoutOpen.set(true)">
+      (close)="closeCart()"
+      (checkout)="proceedToCheckout()">
     </aser-cart-drawer>
   }
 
   @if (isCheckoutOpen()) {
     <aser-checkout-modal 
-      (close)="isCheckoutOpen.set(false)">
+      (close)="closeCheckout()">
     </aser-checkout-modal>
   }
 
   @if (isQuoteOpen()) {
     <aser-quote-modal 
       [initialCategory]="activeQuoteCategory"
-      (close)="isQuoteOpen.set(false)">
+      (close)="closeQuoteModal()">
     </aser-quote-modal>
   }
 
   @if (selectedModalProduct()) {
     <aser-product-detail-modal 
       [product]="selectedModalProduct()"
-      (close)="selectedModalProduct.set(null)"
+      (close)="closeProductDetails()"
       (requestQuote)="onProductQuoteRequest($event)">
     </aser-product-detail-modal>
   }

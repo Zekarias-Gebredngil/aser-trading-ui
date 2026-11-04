@@ -17,11 +17,11 @@
 
   <!-- Navigation Tabs -->
   <div class="tab-bar">
-    <button class="tab-item" [class.active]="activeTab() === 'list'" (click)="activeTab.set('list')">
+    <button class="tab-item" [class.active]="activeTab() === 'list'" (click)="setActiveTab('list')">
       <aser-icon name="lucide:users" [size]="15"></aser-icon>
       <span>{{ 'EMPLOYEES.STAFF_DIRECTORY' | translate:'Staff Directory' }} ({{ state.employees().length }})</span>
     </button>
-    <button class="tab-item" [class.active]="activeTab() === 'matrix'" (click)="activeTab.set('matrix')">
+    <button class="tab-item" [class.active]="activeTab() === 'matrix'" (click)="setActiveTab('matrix')">
       <aser-icon name="lucide:shield-check" [size]="15"></aser-icon>
       <span>{{ 'EMPLOYEES.SECURITY_MATRIX' | translate:'Role & Permission Security Matrix' }}</span>
     </button>
@@ -35,14 +35,14 @@
       <input 
         type="text" 
         [ngModel]="searchQuery()" 
-        (ngModelChange)="searchQuery.set($event); onFilterChange()"
+        (ngModelChange)="onSearchQueryChange($event)"
         [placeholder]="'EMPLOYEES.SEARCH_PLACEHOLDER' | translate:'Search employees by name, username, email, or branch...'" 
         class="search-input" />
     </div>
 
     <div class="filter-wrap">
       <label>{{ 'EMPLOYEES.FILTER_ROLE' | translate:'Filter Role:' }}</label>
-      <select [ngModel]="selectedRoleFilter()" (ngModelChange)="selectedRoleFilter.set($event); onFilterChange()" class="role-select">
+      <select [ngModel]="selectedRoleFilter()" (ngModelChange)="onRoleFilterChange($event)" class="role-select">
         <option value="ALL">{{ 'EMPLOYEES.ALL_ROLES' | translate:'All Roles' }}</option>
         @for (r of availableRoles; track r.key) {
         <option [value]="r.key">{{ r.label }}</option>
@@ -132,8 +132,8 @@
         [totalItems]="filteredEmployees().length"
         [pageSize]="pageSize"
         [currentPage]="currentPage"
-        (pageChange)="currentPage = $event"
-        (pageSizeChange)="pageSize = $event; currentPage = 1">
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)">
       </aser-paginator>
     }
   </div>
@@ -156,7 +156,7 @@
             <th style="min-width:240px;">Functional Permission</th>
             @for (r of availableRoles; track r.key) {
             <th style="text-align:center; min-width:140px;">
-              <span class="matrix-role-header">{{ (r.label || '').split('(')[0] }}</span>
+              <span class="matrix-role-header">{{ getRoleShortTitle(r.label) }}</span>
             </th>
             }
           </tr>
@@ -191,7 +191,7 @@
 
   <!-- Register Employee Modal -->
   @if (isRegisterModalOpen()) {
-  <div class="modal-backdrop" (click)="isRegisterModalOpen.set(false)">
+  <div class="modal-backdrop" (click)="closeRegisterModal()">
     <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div style="display:flex; align-items:center; gap:12px;">
@@ -203,7 +203,7 @@
             <p style="font-size:11px; color:var(--muted); margin:0;">Provision account credentials, assign enterprise role, and define branch scope.</p>
           </div>
         </div>
-        <button class="modal-close-btn" (click)="isRegisterModalOpen.set(false)" aria-label="Close dialog">
+        <button class="modal-close-btn" (click)="closeRegisterModal()" aria-label="Close dialog">
           <aser-icon name="lucide:x" [size]="18"></aser-icon>
         </button>
       </div>
@@ -257,7 +257,7 @@
       </div>
 
       <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
-        <button class="btn btn-outline" (click)="isRegisterModalOpen.set(false)">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
+        <button class="btn btn-outline" (click)="closeRegisterModal()">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
         <button 
           class="btn btn-primary" 
           style="display:inline-flex; align-items:center; gap:6px;"
@@ -272,7 +272,7 @@
 
   <!-- Edit Employee Modal -->
   @if (isEditModalOpen()) {
-  <div class="modal-backdrop" (click)="isEditModalOpen.set(false)">
+  <div class="modal-backdrop" (click)="closeEditModal()">
     <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div style="display:flex; align-items:center; gap:12px;">
@@ -284,7 +284,7 @@
             <p style="font-size:11px; color:var(--muted); margin:0;">Modify parameters for <strong>&#64;{{ selectedEmployee()?.username }}</strong></p>
           </div>
         </div>
-        <button class="modal-close-btn" (click)="isEditModalOpen.set(false)" aria-label="Close dialog">
+        <button class="modal-close-btn" (click)="closeEditModal()" aria-label="Close dialog">
           <aser-icon name="lucide:x" [size]="18"></aser-icon>
         </button>
       </div>
@@ -334,7 +334,7 @@
       </div>
 
       <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
-        <button class="btn btn-outline" (click)="isEditModalOpen.set(false)">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
+        <button class="btn btn-outline" (click)="closeEditModal()">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
         <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;" (click)="saveEdit()" [disabled]="!editForm.fullName || !editForm.email">
           <aser-icon name="lucide:check" [size]="14"></aser-icon> {{ 'COMMON.SAVE' | translate:'Update Profile' }}
         </button>

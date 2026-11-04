@@ -58,6 +58,48 @@ export class HomeComponent {
     });
   }
 
+  openCart(): void {
+    this.isCartOpen.set(true);
+  }
+
+  closeCart(): void {
+    this.isCartOpen.set(false);
+  }
+
+  proceedToCheckout(): void {
+    this.isCartOpen.set(false);
+    this.isCheckoutOpen.set(true);
+  }
+
+  closeCheckout(): void {
+    this.isCheckoutOpen.set(false);
+  }
+
+  closeQuoteModal(): void {
+    this.isQuoteOpen.set(false);
+  }
+
+  viewProductDetails(product: Product): void {
+    this.selectedModalProduct.set(product);
+  }
+
+  closeProductDetails(): void {
+    this.selectedModalProduct.set(null);
+  }
+
+  getAvailabilityBadge(product: Product): { badgeClass: string; textKey: string; defaultText: string } {
+    if (product.pricingType === 'QUOTATION') {
+      return { badgeClass: 'badge-quote-only', textKey: 'PRODUCTS.QUOTATION_ONLY', defaultText: 'Quotation' };
+    }
+    if (product.availability === 'IN_STOCK') {
+      return { badgeClass: 'badge-in-stock', textKey: 'STOREFRONT.IN_STOCK', defaultText: 'In Stock' };
+    }
+    if (product.availability === 'LIMITED') {
+      return { badgeClass: 'badge-limited', textKey: 'PRODUCT_DETAIL.LIMITED_STOCK', defaultText: 'Limited' };
+    }
+    return { badgeClass: 'badge-quote-only', textKey: 'PRODUCTS.QUOTATION_ONLY', defaultText: 'Quotation' };
+  }
+
   addToCart(product: Product) {
     this.state.addToCart(product, 1);
     this.isCartOpen.set(true);

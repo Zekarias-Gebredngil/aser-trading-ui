@@ -88,6 +88,14 @@ export class AdminShellComponent implements OnInit {
     this.profileMenuOpen.set(false);
   }
 
+  setActiveProfileTab(tab: 'details' | 'password' | 'language'): void {
+    this.activeProfileTab.set(tab);
+  }
+
+  onBranchFilterChange(branchId: string): void {
+    this.state.selectedBranchFilter.set(branchId);
+  }
+
   selectLanguage(lang: SupportedLanguage): void {
     this.translation.setLanguage(lang);
     const meta = SUPPORTED_LANGUAGES.find(l => l.code === lang);

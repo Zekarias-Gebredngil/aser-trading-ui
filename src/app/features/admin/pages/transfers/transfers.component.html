@@ -14,7 +14,7 @@
       <button class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;" (click)="exportTransfersToExcel()" [title]="'COMMON.EXPORT_EXCEL' | translate:'Export to Excel'">
         <aser-icon name="lucide:file-spreadsheet" [size]="16"></aser-icon> {{ 'COMMON.EXPORT_EXCEL' | translate:'Export to Excel' }}
       </button>
-      <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;" (click)="isNewTransferModalOpen.set(true)">
+      <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;" (click)="openNewTransferModal()">
         <aser-icon name="lucide:plus" [size]="16"></aser-icon> {{ 'TRANSFERS.REQUEST_TRANSFER' | translate:'Request New Transfer' }}
       </button>
     </div>
@@ -75,11 +75,7 @@
               </td>
               <td>{{ t.requestedBy }}</td>
               <td>
-                <span class="badge" 
-                  [class.badge-pending]="t.status === 'PENDING_APPROVAL'"
-                  [class.badge-in-stock]="t.status === 'APPROVED' || t.status === 'RECEIVED'"
-                  [class.badge-transit]="t.status === 'IN_TRANSIT'"
-                  [class.badge-out-of-stock]="t.status === 'DISCREPANCY_REVIEW'">
+                <span class="badge" [class]="getStatusBadgeClass(t.status)">
                   {{ t.status }}
                 </span>
               </td>
@@ -122,24 +118,24 @@
         [totalItems]="filteredTransfers.length"
         [pageSize]="pageSize"
         [currentPage]="currentPage"
-        (pageChange)="currentPage = $event"
-        (pageSizeChange)="pageSize = $event; currentPage = 1">
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)">
       </aser-paginator>
     }
   </div>
 
   <!-- Transfer Detail & Timeline Modal -->
   @if (selectedTransfer()) {
-    <div class="modal-backdrop" (click)="selectedTransfer.set(null)">
+    <div class="modal-backdrop" (click)="closeDetailsModal()">
       <div class="modal-dialog" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <div>
             <h3 style="font-size:17px; font-weight:800; color:var(--ink);">Transfer {{ selectedTransfer()?.referenceNumber }}</h3>
-            <span class="badge" [class.badge-transit]="selectedTransfer()?.status === 'IN_TRANSIT'" [class.badge-in-stock]="selectedTransfer()?.status === 'RECEIVED'">
+            <span class="badge" [class]="getStatusBadgeClass(selectedTransfer()?.status)">
               Status: {{ selectedTransfer()?.status }}
             </span>
           </div>
-          <button class="modal-close-btn" (click)="selectedTransfer.set(null)">
+          <button class="modal-close-btn" (click)="closeDetailsModal()">
             <aser-icon name="lucide:x" [size]="18"></aser-icon>
           </button>
         </div>
@@ -148,11 +144,11 @@
           <div style="background:var(--bg-soft); border-radius:var(--radius-md); padding:16px; margin-bottom:20px; border:1px solid var(--line);">
             <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
               <span style="color:var(--muted);">From:</span>
-              <strong>{{ selectedTransfer()?.fromBranchName || selectedTransfer()?.fromWarehouseName || '—' }}</strong>
+              <strong>{{ getBranchDisplayName(selectedTransfer()?.fromBranchName, selectedTransfer()?.fromWarehouseName) }}</strong>
             </div>
             <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
               <span style="color:var(--muted);">To:</span>
-              <strong>{{ selectedTransfer()?.toBranchName || selectedTransfer()?.toWarehouseName || '—' }}</strong>
+              <strong>{{ getBranchDisplayName(selectedTransfer()?.toBranchName, selectedTransfer()?.toWarehouseName) }}</strong>
             </div>
             <div style="display:flex; justify-content:space-between; font-size:13px;">
               <span style="color:var(--muted);">Requested By:</span>
@@ -176,7 +172,7 @@
         </div>
 
         <div class="modal-footer">
-          <button class="btn btn-outline" (click)="selectedTransfer.set(null)">{{ 'COMMON.CLOSE' | translate:'Close' }}</button>
+          <button class="btn btn-outline" (click)="closeDetailsModal()">{{ 'COMMON.CLOSE' | translate:'Close' }}</button>
         </div>
       </div>
     </div>
@@ -184,6 +180,6 @@
 
   <!-- New Transfer Modal -->
   @if (isNewTransferModalOpen()) {
-    <aser-new-transfer-modal (close)="isNewTransferModalOpen.set(false)"></aser-new-transfer-modal>
+    <aser-new-transfer-modal (close)="closeNewTransferModal()"></aser-new-transfer-modal>
   }
 </aser-admin-shell>

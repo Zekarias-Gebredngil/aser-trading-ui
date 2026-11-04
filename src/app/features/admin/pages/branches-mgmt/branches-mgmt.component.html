@@ -91,15 +91,15 @@
         [totalItems]="state.branches().length"
         [pageSize]="pageSize"
         [currentPage]="currentPage"
-        (pageChange)="currentPage = $event"
-        (pageSizeChange)="pageSize = $event; currentPage = 1">
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)">
       </aser-paginator>
     </div>
   }
 
   <!-- Create Branch Modal -->
   @if (isCreateModalOpen()) {
-  <div class="modal-backdrop" (click)="isCreateModalOpen.set(false)">
+  <div class="modal-backdrop" (click)="closeCreateModal()">
     <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div style="display:flex; align-items:center; gap:12px;">
@@ -111,7 +111,7 @@
             <p style="font-size:11px; color:var(--muted); margin:0;">Add a regional operating branch or depot to Aser central network.</p>
           </div>
         </div>
-        <button class="modal-close-btn" (click)="isCreateModalOpen.set(false)" aria-label="Close dialog">
+        <button class="modal-close-btn" (click)="closeCreateModal()" aria-label="Close dialog">
           <aser-icon name="lucide:x" [size]="18"></aser-icon>
         </button>
       </div>
@@ -162,7 +162,7 @@
       </div>
 
       <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
-        <button class="btn btn-outline" (click)="isCreateModalOpen.set(false)">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
+        <button class="btn btn-outline" (click)="closeCreateModal()">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
         <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;" (click)="saveNewBranch()" [disabled]="!branchForm.name || !branchForm.code">
           <aser-icon name="lucide:check" [size]="14"></aser-icon> {{ 'COMMON.SAVE' | translate:'Create Branch & Depot' }}
         </button>
@@ -173,7 +173,7 @@
 
   <!-- Edit Branch Modal -->
   @if (isEditModalOpen()) {
-  <div class="modal-backdrop" (click)="isEditModalOpen.set(false)">
+  <div class="modal-backdrop" (click)="closeEditModal()">
     <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div style="display:flex; align-items:center; gap:12px;">
@@ -185,7 +185,7 @@
             <p style="font-size:11px; color:var(--muted); margin:0;">Modify contact and address parameters for <strong>{{ selectedBranch()?.name }}</strong></p>
           </div>
         </div>
-        <button class="modal-close-btn" (click)="isEditModalOpen.set(false)" aria-label="Close dialog">
+        <button class="modal-close-btn" (click)="closeEditModal()" aria-label="Close dialog">
           <aser-icon name="lucide:x" [size]="18"></aser-icon>
         </button>
       </div>
@@ -229,7 +229,7 @@
       </div>
 
       <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
-        <button class="btn btn-outline" (click)="isEditModalOpen.set(false)">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
+        <button class="btn btn-outline" (click)="closeEditModal()">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
         <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;" (click)="saveBranchEdit()" [disabled]="!branchForm.name">
           <aser-icon name="lucide:check" [size]="14"></aser-icon> {{ 'COMMON.SAVE' | translate:'Save Changes' }}
         </button>
@@ -240,7 +240,7 @@
 
   <!-- Add Warehouse Modal -->
   @if (isWarehouseModalOpen()) {
-  <div class="modal-backdrop" (click)="isWarehouseModalOpen.set(false)">
+  <div class="modal-backdrop" (click)="closeWarehouseModal()">
     <div class="modal-dialog modal-md" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div style="display:flex; align-items:center; gap:12px;">
@@ -252,7 +252,7 @@
             <p style="font-size:11px; color:var(--muted); margin:0;">Attach a storage room or depot to <strong>{{ selectedBranch()?.name }}</strong></p>
           </div>
         </div>
-        <button class="modal-close-btn" (click)="isWarehouseModalOpen.set(false)" aria-label="Close dialog">
+        <button class="modal-close-btn" (click)="closeWarehouseModal()" aria-label="Close dialog">
           <aser-icon name="lucide:x" [size]="18"></aser-icon>
         </button>
       </div>
@@ -270,7 +270,7 @@
       </div>
 
       <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
-        <button class="btn btn-outline" (click)="isWarehouseModalOpen.set(false)">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
+        <button class="btn btn-outline" (click)="closeWarehouseModal()">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
         <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;" (click)="saveNewWarehouse()" [disabled]="!warehouseForm.name || !warehouseForm.code">
           <aser-icon name="lucide:check" [size]="14"></aser-icon> {{ 'COMMON.SAVE' | translate:'Add Warehouse' }}
         </button>

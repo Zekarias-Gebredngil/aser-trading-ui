@@ -20,7 +20,7 @@
 
       @if (state.hasPermission('MANAGE_PRODUCTS')) {
       <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;"
-        (click)="isAddModalOpen.set(true)">
+        (click)="openAddModal()">
         <aser-icon name="lucide:plus" [size]="16"></aser-icon> {{ 'PRODUCTS.ADD_PRODUCT' | translate:'Add New Product' }}
       </button>
       }
@@ -139,19 +139,19 @@
     </div>
     } @else {
     <aser-paginator [totalItems]="filteredProducts.length" [pageSize]="pageSize" [currentPage]="currentPage"
-      (pageChange)="currentPage = $event" (pageSizeChange)="pageSize = $event; currentPage = 1">
+      (pageChange)="onPageChange($event)" (pageSizeChange)="onPageSizeChange($event)">
     </aser-paginator>
     }
   </div>
 
   <!-- Add Product Modal -->
   @if (isAddModalOpen()) {
-  <aser-add-product-modal (close)="isAddModalOpen.set(false)"></aser-add-product-modal>
+  <aser-add-product-modal (close)="closeAddModal()"></aser-add-product-modal>
   }
 
   <!-- Edit Product Modal (Aser Brand UI) -->
   @if (isEditModalOpen()) {
-  <div class="modal-backdrop" (click)="isEditModalOpen.set(false)">
+  <div class="modal-backdrop" (click)="closeEditModal()">
     <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div style="display:flex; align-items:center; gap:12px;">
@@ -167,7 +167,7 @@
             </p>
           </div>
         </div>
-        <button class="modal-close-btn" (click)="isEditModalOpen.set(false)" aria-label="Close dialog">
+        <button class="modal-close-btn" (click)="closeEditModal()" aria-label="Close dialog">
           <aser-icon name="lucide:x" [size]="18"></aser-icon>
         </button>
       </div>
@@ -298,7 +298,7 @@
       </div>
 
       <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
-        <button class="btn btn-outline" (click)="isEditModalOpen.set(false)">{{ 'COMMON.CANCEL' | translate:'Cancel'
+        <button class="btn btn-outline" (click)="closeEditModal()">{{ 'COMMON.CANCEL' | translate:'Cancel'
           }}</button>
         <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;" (click)="saveEdit()"
           [disabled]="!editForm.name">

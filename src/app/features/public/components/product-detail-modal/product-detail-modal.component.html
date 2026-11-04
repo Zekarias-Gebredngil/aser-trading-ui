@@ -1,137 +1,137 @@
-<div class="modal-backdrop" (click)="close.emit()">
+<div class="modal-backdrop" (click)="onClose()">
   <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
     @if (product) {
-      <div class="modal-header">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <span class="category-tag">{{ product.categoryLabel }}</span>
-          <span class="product-sku">{{ product.sku }}</span>
-        </div>
-        <button class="modal-close-btn" (click)="close.emit()" aria-label="Close dialog">
-          <aser-icon name="lucide:x" [size]="18"></aser-icon>
-        </button>
+    <div class="modal-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span class="category-tag">{{ product.categoryLabel }}</span>
+        <span class="product-sku">{{ product.sku }}</span>
       </div>
+      <button class="modal-close-btn" (click)="onClose()" aria-label="Close dialog">
+        <aser-icon name="lucide:x" [size]="18"></aser-icon>
+      </button>
+    </div>
 
-      <div class="modal-body">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px; margin-bottom:24px;">
-          <!-- Visual Art Box / Image Slider -->
-          <div style="background:linear-gradient(135deg, #f8f9ff 0%, #ebf0fe 100%); border-radius:var(--radius-lg); padding:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; border:1px solid var(--line); overflow:hidden;">
-            @if ((product.images && product.images.length > 0) || product.imageUrl) {
-              <div style="width:100%; border-radius:var(--radius-md); overflow:hidden; margin-bottom:12px;">
-                <aser-image-slider 
-                  [images]="product.images || (product.imageUrl ? [product.imageUrl] : [])" 
-                  [fallbackCategory]="product.category" 
-                  [alt]="product.name"
-                  height="240px">
-                </aser-image-slider>
+    <div class="modal-body">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px; margin-bottom:24px;">
+        <!-- Visual Art Box / Image Slider -->
+        <div
+          style="background:linear-gradient(135deg, #f8f9ff 0%, #ebf0fe 100%); border-radius:var(--radius-lg); padding:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; border:1px solid var(--line); overflow:hidden;">
+          @if (hasImages) {
+          <div style="width:100%; border-radius:var(--radius-md); overflow:hidden; margin-bottom:12px;">
+            <aser-image-slider [images]="productImages" [fallbackCategory]="product.category" [alt]="product.name"
+              height="240px">
+            </aser-image-slider>
+          </div>
+          } @else {
+          <div style="margin-bottom:16px; padding:30px 0;">
+            <aser-icon [name]="categoryIcon.name" [size]="categoryIcon.size" [color]="categoryIcon.color"></aser-icon>
+          </div>
+          }
+          <div style="display:flex; gap:6px;">
+            <span class="badge" [class]="availabilityStatus.badgeClass">
+              {{ availabilityStatus.textKey | translate:availabilityStatus.defaultText }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Product Details -->
+        <div>
+          <h2 style="font-size:20px; font-weight:800; color:var(--ink); margin-bottom:4px; line-height:1.3;">
+            {{ product.name }}
+          </h2>
+          @if (product.amharicName) {
+          <p style="font-size:13px; font-weight:600; color:var(--blue); margin-bottom:12px;">
+            {{ product.amharicName }}
+          </p>
+          }
+
+          <p style="font-size:13px; color:var(--slate); line-height:1.6; margin-bottom:20px;">
+            {{ product.description }}
+          </p>
+
+          <div
+            style="background:var(--bg-soft); border-radius:var(--radius-md); padding:14px; margin-bottom:20px; border:1px solid var(--line);">
+            <div
+              style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">
+              {{ 'PRODUCT_DETAIL.TECH_SPECS' | translate:'Technical Specifications' }}
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+              @for (entry of specEntries; track entry.key) {
+              <div style="display:flex; justify-content:space-between; font-size:12px;">
+                <span style="color:var(--muted);">{{ entry.key }}</span>
+                <strong style="color:var(--ink);">{{ entry.value }}</strong>
               </div>
-            } @else {
-              <div style="margin-bottom:16px; padding:30px 0;">
-                @if (product.category === 'GARMENT_MATERIALS') {
-                  <aser-icon name="lucide:scissors" [size]="64" color="var(--magenta)"></aser-icon>
-                } @else if (product.category === 'PRINTING_SUPPLIES') {
-                  <aser-icon name="lucide:file-text" [size]="64" color="var(--blue)"></aser-icon>
-                } @else if (product.category === 'BRANDING_PROMOTION') {
-                  <aser-icon name="lucide:sparkles" [size]="64" color="var(--amber)"></aser-icon>
-                } @else if (product.category === 'EQUIPMENT') {
-                  <aser-icon name="lucide:cog" [size]="64" color="var(--ink)"></aser-icon>
-                } @else {
-                  <aser-icon name="lucide:printer" [size]="36" color="var(--blue)"></aser-icon>
-                }
-              </div>
-            }
-            <div style="display:flex; gap:6px;">
-              <span class="badge" [class.badge-in-stock]="product.availability === 'IN_STOCK'"
-                [class.badge-limited]="product.availability === 'LIMITED'"
-                [class.badge-quote-only]="product.pricingType === 'QUOTATION'">
-                {{ product.availability === 'IN_STOCK' ? ('PRODUCT_DETAIL.IN_STOCK_READY' | translate:'In Stock (Ready)') : product.availability === 'LIMITED' ? ('PRODUCT_DETAIL.LIMITED_STOCK' | translate:'Limited Stock') : ('PRODUCT_DETAIL.QUOTATION_ONLY' | translate:'Quotation Only') }}
-              </span>
+              }
             </div>
           </div>
 
-          <!-- Product Details -->
-          <div>
-            <h2 style="font-size:20px; font-weight:800; color:var(--ink); margin-bottom:4px; line-height:1.3;">
-              {{ product.name }}
-            </h2>
-            @if (product.amharicName) {
-              <p style="font-size:13px; font-weight:600; color:var(--blue); margin-bottom:12px;">
-                {{ product.amharicName }}
-              </p>
-            }
+          <!-- Price & Actions -->
+          @if (isFixedPrice) {
+          <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:18px;">
+            <span style="font-size:24px; font-weight:800; color:var(--ink);">
+              ETB {{ product.unitPrice | number:'1.2-2' }}
+            </span>
+            <span style="font-size:12px; color:var(--muted);">/ {{ product.unit }}</span>
+          </div>
 
-            <p style="font-size:13px; color:var(--slate); line-height:1.6; margin-bottom:20px;">
-              {{ product.description }}
-            </p>
-
-            <div style="background:var(--bg-soft); border-radius:var(--radius-md); padding:14px; margin-bottom:20px; border:1px solid var(--line);">
-              <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">
-                {{ 'PRODUCT_DETAIL.TECH_SPECS' | translate:'Technical Specifications' }}
-              </div>
-              <div style="display:flex; flex-direction:column; gap:6px;">
-                @for (entry of specEntries; track entry.key) {
-                  <div style="display:flex; justify-content:space-between; font-size:12px;">
-                    <span style="color:var(--muted);">{{ entry.key }}</span>
-                    <strong style="color:var(--ink);">{{ entry.value }}</strong>
-                  </div>
-                }
-              </div>
-            </div>
-
-            <!-- Price & Actions -->
-            @if (product.pricingType === 'FIXED') {
-              <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:18px;">
-                <span style="font-size:24px; font-weight:800; color:var(--ink);">
-                  ETB {{ product.unitPrice | number:'1.2-2' }}
-                </span>
-                <span style="font-size:12px; color:var(--muted);">/ {{ product.unit }}</span>
-              </div>
-
-              <div class="display:flex; gap:12px; align-items:center;" style="display:flex; gap:12px; align-items:center;">
-                <div class="cart-qty-control" style="height:42px;">
-                  <button class="cart-qty-btn" style="width:34px; height:100%; cursor:pointer;" (click)="qty = Math.max(1, qty - 1)">
-                    <aser-icon name="lucide:minus" [size]="14"></aser-icon>
-                  </button>
-                  <span class="cart-qty-val" style="min-width:38px; font-size:14px;">{{ qty }}</span>
-                  <button class="cart-qty-btn" style="width:34px; height:100%; cursor:pointer;" (click)="qty = qty + 1">
-                    <aser-icon name="lucide:plus" [size]="14"></aser-icon>
-                  </button>
-                </div>
-                <button class="btn btn-primary" style="flex:1; height:42px; display:inline-flex; align-items:center; justify-content:center; gap:8px;" (click)="onAddToCart()">
-                  {{ 'STOREFRONT.ADD_TO_CART' | translate:'Add to Cart' }} <aser-icon name="lucide:shopping-cart" [size]="16"></aser-icon>
-                </button>
-              </div>
-            } @else {
-              <div style="background:var(--blue-soft); border:1px solid var(--blue-border); border-radius:var(--radius-md); padding:14px; margin-bottom:16px;">
-                <strong style="display:block; font-size:13px; color:var(--blue); margin-bottom:4px;">
-                  {{ 'PRODUCT_DETAIL.QUOTATION_PRICING_TITLE' | translate:'Quotation-Based Pricing' }}
-                </strong>
-                <p style="font-size:11px; color:var(--ink-secondary); margin:0;">
-                  {{ 'PRODUCT_DETAIL.QUOTATION_PRICING_DESC' | translate:'Custom project specifications, bulk volume discounts, and machine installations require an official sales quote.' }}
-                </p>
-              </div>
-              <button class="btn btn-primary" style="width:100%; height:42px; display:inline-flex; align-items:center; justify-content:center; gap:8px;" (click)="requestQuote.emit(product)">
-                {{ 'PRODUCT_DETAIL.REQUEST_CUSTOM_QUOTE' | translate:'Request Custom Quotation' }} <aser-icon name="lucide:arrow-right" [size]="16"></aser-icon>
+          <div class="display:flex; gap:12px; align-items:center;" style="display:flex; gap:12px; align-items:center;">
+            <div class="cart-qty-control" style="height:42px;">
+              <button class="cart-qty-btn" style="width:34px; height:100%; cursor:pointer;" (click)="decrementQty()">
+                <aser-icon name="lucide:minus" [size]="14"></aser-icon>
               </button>
-            }
+              <span class="cart-qty-val" style="min-width:38px; font-size:14px;">{{ qty }}</span>
+              <button class="cart-qty-btn" style="width:34px; height:100%; cursor:pointer;" (click)="incrementQty()">
+                <aser-icon name="lucide:plus" [size]="14"></aser-icon>
+              </button>
+            </div>
+            <button class="btn btn-primary"
+              style="flex:1; height:42px; display:inline-flex; align-items:center; justify-content:center; gap:8px;"
+              (click)="onAddToCart()">
+              {{ 'STOREFRONT.ADD_TO_CART' | translate:'Add to Cart' }} <aser-icon name="lucide:shopping-cart"
+                [size]="16"></aser-icon>
+            </button>
           </div>
-        </div>
-
-        <!-- Multi-Branch Stock Status -->
-        <div style="border-top:1px solid var(--line); padding-top:18px;">
-          <h4 style="font-size:12px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">
-            {{ 'PRODUCT_DETAIL.AVAILABILITY_BRANCHES' | translate:'Availability Status Across Branches' }}
-          </h4>
-          <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px;">
-            @for (branch of state.branches(); track branch.id) {
-              <div style="background:var(--bg-soft); border:1px solid var(--line); border-radius:var(--radius-md); padding:10px; font-size:11px;">
-                <strong style="display:block; color:var(--ink); margin-bottom:4px;">{{ (branch.name || '').split('(')[0] }}</strong>
-                <span class="badge badge-in-stock" style="font-size:10px; padding:2px 6px;">{{ 'PRODUCT_DETAIL.AVAILABLE' | translate:'Available' }}</span>
-              </div>
-            }
+          } @else {
+          <div
+            style="background:var(--blue-soft); border:1px solid var(--blue-border); border-radius:var(--radius-md); padding:14px; margin-bottom:16px;">
+            <strong style="display:block; font-size:13px; color:var(--blue); margin-bottom:4px;">
+              {{ 'PRODUCT_DETAIL.QUOTATION_PRICING_TITLE' | translate:'Quotation-Based Pricing' }}
+            </strong>
+            <p style="font-size:11px; color:var(--ink-secondary); margin:0;">
+              {{ 'PRODUCT_DETAIL.QUOTATION_PRICING_DESC' | translate:'Custom project specifications, bulk volume
+              discounts, and machine installations require an official sales quote.' }}
+            </p>
           </div>
+          <button class="btn btn-primary"
+            style="width:100%; height:42px; display:inline-flex; align-items:center; justify-content:center; gap:8px;"
+            (click)="onRequestQuote()">
+            {{ 'PRODUCT_DETAIL.REQUEST_CUSTOM_QUOTE' | translate:'Request Custom Quotation' }} <aser-icon
+              name="lucide:arrow-right" [size]="16"></aser-icon>
+          </button>
+          }
         </div>
-
       </div>
+
+      <!-- Multi-Branch Stock Status -->
+      <div style="border-top:1px solid var(--line); padding-top:18px;">
+        <h4
+          style="font-size:12px; font-weight:800; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">
+          {{ 'PRODUCT_DETAIL.AVAILABILITY_BRANCHES' | translate:'Availability Status Across Branches' }}
+        </h4>
+        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px;">
+          @for (branch of state.branches(); track branch.id) {
+          <div
+            style="background:var(--bg-soft); border:1px solid var(--line); border-radius:var(--radius-md); padding:10px; font-size:11px;">
+            <strong style="display:block; color:var(--ink); margin-bottom:4px;">{{ getCleanBranchName(branch.name)
+              }}</strong>
+            <span class="badge badge-in-stock" style="font-size:10px; padding:2px 6px;">{{ 'PRODUCT_DETAIL.AVAILABLE' |
+              translate:'Available' }}</span>
+          </div>
+          }
+        </div>
+      </div>
+
+    </div>
     }
   </div>
 </div>

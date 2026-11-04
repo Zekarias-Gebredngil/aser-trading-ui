@@ -17,7 +17,7 @@
       <button class="btn btn-secondary" style="display:inline-flex; align-items:center; gap:8px;" (click)="openAdjustModal()">
         <aser-icon name="lucide:sliders" [size]="16"></aser-icon> {{ 'INVENTORY.ADJUST_STOCK' | translate:'Adjust Stock' }}
       </button>
-      <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;" (click)="isReceiveModalOpen.set(true)">
+      <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;" (click)="openReceiveModal()">
         <aser-icon name="lucide:arrow-down" [size]="16"></aser-icon> {{ 'INVENTORY.RECORD_RECEIPT' | translate:'Record Stock Receipt' }}
       </button>
     </div>
@@ -41,13 +41,13 @@
 
   <!-- Tabs Navigation -->
   <div style="display:flex; gap:12px; margin-bottom:20px; border-bottom:1px solid var(--line); padding-bottom:10px;">
-    <button class="btn btn-sm" style="display:inline-flex; align-items:center; gap:6px;" [class.btn-primary]="activeTab === 'BALANCES'" [class.btn-outline]="activeTab !== 'BALANCES'" (click)="activeTab = 'BALANCES'">
+    <button class="btn btn-sm" style="display:inline-flex; align-items:center; gap:6px;" [class.btn-primary]="activeTab === 'BALANCES'" [class.btn-outline]="activeTab !== 'BALANCES'" (click)="setActiveTab('BALANCES')">
       <aser-icon name="lucide:layers" [size]="15"></aser-icon> {{ 'INVENTORY.TAB_BALANCES' | translate:'Stock Balances By Location' }} ({{ filteredBalances.length }})
     </button>
-    <button class="btn btn-sm" style="display:inline-flex; align-items:center; gap:6px;" [class.btn-primary]="activeTab === 'MOVEMENTS'" [class.btn-outline]="activeTab !== 'MOVEMENTS'" (click)="activeTab = 'MOVEMENTS'">
+    <button class="btn btn-sm" style="display:inline-flex; align-items:center; gap:6px;" [class.btn-primary]="activeTab === 'MOVEMENTS'" [class.btn-outline]="activeTab !== 'MOVEMENTS'" (click)="setActiveTab('MOVEMENTS')">
       <aser-icon name="lucide:clock" [size]="15"></aser-icon> {{ 'INVENTORY.TAB_MOVEMENTS' | translate:'Movement Ledger & Audit Trail' }} ({{ state.stockMovements().length }})
     </button>
-    <button class="btn btn-sm" style="display:inline-flex; align-items:center; gap:6px;" [class.btn-primary]="activeTab === 'ALERTS'" [class.btn-outline]="activeTab !== 'ALERTS'" (click)="activeTab = 'ALERTS'">
+    <button class="btn btn-sm" style="display:inline-flex; align-items:center; gap:6px;" [class.btn-primary]="activeTab === 'ALERTS'" [class.btn-outline]="activeTab !== 'ALERTS'" (click)="setActiveTab('ALERTS')">
       <aser-icon name="lucide:alert-triangle" [size]="15"></aser-icon> {{ 'INVENTORY.TAB_ALERTS' | translate:'Low Stock Alerts & Reorders' }} ({{ state.lowStockAlerts().length }})
     </button>
   </div>
@@ -120,10 +120,7 @@
                   <strong style="color:var(--blue);">ETB {{ bal.totalValuation | number:'1.2-2' }}</strong>
                 </td>
                 <td>
-                  <span class="badge" 
-                    [class.badge-in-stock]="bal.status === 'In stock'"
-                    [class.badge-limited]="bal.status === 'Low stock'"
-                    [class.badge-out-of-stock]="bal.status === 'Out of stock'">
+                  <span class="badge" [class]="getStockStatusBadgeClass(bal.status)">
                     {{ bal.status }}
                   </span>
                 </td>
@@ -142,8 +139,8 @@
           [totalItems]="filteredBalances.length"
           [pageSize]="balancesPageSize"
           [currentPage]="balancesPage"
-          (pageChange)="balancesPage = $event"
-          (pageSizeChange)="balancesPageSize = $event; balancesPage = 1">
+          (pageChange)="onBalancesPageChange($event)"
+          (pageSizeChange)="onBalancesPageSizeChange($event)">
         </aser-paginator>
       }
     </div>
@@ -219,8 +216,8 @@
           [totalItems]="state.stockMovements().length"
           [pageSize]="movementsPageSize"
           [currentPage]="movementsPage"
-          (pageChange)="movementsPage = $event"
-          (pageSizeChange)="movementsPageSize = $event; movementsPage = 1">
+          (pageChange)="onMovementsPageChange($event)"
+          (pageSizeChange)="onMovementsPageSizeChange($event)">
         </aser-paginator>
       }
     </div>
@@ -277,19 +274,19 @@
 
   <!-- Stock Receipt Modal -->
   @if (isReceiveModalOpen()) {
-    <aser-receive-stock-modal (close)="isReceiveModalOpen.set(false)"></aser-receive-stock-modal>
+    <aser-receive-stock-modal (close)="closeReceiveModal()"></aser-receive-stock-modal>
   }
 
   <!-- Stock Adjustment Modal -->
   @if (isAdjustModalOpen()) {
-    <div class="modal-backdrop" (click)="isAdjustModalOpen.set(false)">
+    <div class="modal-backdrop" (click)="closeAdjustModal()">
       <div class="modal-dialog" (click)="$event.stopPropagation()">
         <div class="modal-header">
           <div>
             <h3 style="font-size:17px; font-weight:800; color:var(--ink);">Record Inventory Adjustment</h3>
             <span class="badge badge-quote-only">Audit & Reconciliation</span>
           </div>
-          <button class="modal-close-btn" (click)="isAdjustModalOpen.set(false)" aria-label="Close dialog">
+          <button class="modal-close-btn" (click)="closeAdjustModal()" aria-label="Close dialog">
             <aser-icon name="lucide:x" [size]="18"></aser-icon>
           </button>
         </div>
@@ -335,7 +332,7 @@
         </div>
 
         <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
-          <button class="btn btn-outline" (click)="isAdjustModalOpen.set(false)">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
+          <button class="btn btn-outline" (click)="closeAdjustModal()">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
           <button class="btn btn-primary" [disabled]="adjustDelta === 0" (click)="submitAdjustment()">
             {{ 'COMMON.SUBMIT' | translate:'Post Stock Adjustment' }}
           </button>

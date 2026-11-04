@@ -28,6 +28,22 @@ export class DashboardComponent {
   isReceiveModalOpen = signal(false);
   isTransferModalOpen = signal(false);
 
+  openReceiveModal(): void {
+    this.isReceiveModalOpen.set(true);
+  }
+
+  closeReceiveModal(): void {
+    this.isReceiveModalOpen.set(false);
+  }
+
+  openTransferModal(): void {
+    this.isTransferModalOpen.set(true);
+  }
+
+  closeTransferModal(): void {
+    this.isTransferModalOpen.set(false);
+  }
+
   get greetingKey(): string {
     const hour = new Date().getHours();
     if (hour >= 12 && hour < 18) {
@@ -52,5 +68,33 @@ export class DashboardComponent {
 
   getBranchName(id: string): string {
     return this.state.branches().find(b => b.id === id)?.name || id;
+  }
+
+  getMovementVisual(type?: string): { background: string; color: string; icon: string } {
+    switch (type) {
+      case 'RECEIPT':
+        return {
+          background: 'var(--green-soft)',
+          color: 'var(--green)',
+          icon: 'lucide:arrow-down'
+        };
+      case 'TRANSFER_OUT':
+        return {
+          background: 'var(--blue-soft)',
+          color: 'var(--blue)',
+          icon: 'lucide:arrow-left-right-arrows'
+        };
+      default:
+        return {
+          background: 'var(--amber-soft)',
+          color: 'var(--amber)',
+          icon: 'lucide:arrow-up'
+        };
+    }
+  }
+
+  formatQuantityDelta(delta: number, unit?: string): string {
+    const prefix = delta > 0 ? '+' : '';
+    return `${prefix}${delta} ${unit || ''}`.trim();
   }
 }

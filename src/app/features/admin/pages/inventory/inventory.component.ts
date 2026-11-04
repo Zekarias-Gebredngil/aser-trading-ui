@@ -69,6 +69,53 @@ export class InventoryComponent {
     this.balancesPage = 1;
   }
 
+  setActiveTab(tab: 'BALANCES' | 'MOVEMENTS' | 'ALERTS'): void {
+    this.activeTab = tab;
+  }
+
+  openReceiveModal(): void {
+    this.isReceiveModalOpen.set(true);
+  }
+
+  closeReceiveModal(): void {
+    this.isReceiveModalOpen.set(false);
+  }
+
+  closeAdjustModal(): void {
+    this.isAdjustModalOpen.set(false);
+  }
+
+  onBalancesPageChange(page: number): void {
+    this.balancesPage = page;
+  }
+
+  onBalancesPageSizeChange(size: number): void {
+    this.balancesPageSize = size;
+    this.balancesPage = 1;
+  }
+
+  onMovementsPageChange(page: number): void {
+    this.movementsPage = page;
+  }
+
+  onMovementsPageSizeChange(size: number): void {
+    this.movementsPageSize = size;
+    this.movementsPage = 1;
+  }
+
+  getStockStatusBadgeClass(status?: string): string {
+    switch (status) {
+      case 'In stock':
+        return 'badge-in-stock';
+      case 'Low stock':
+        return 'badge-limited';
+      case 'Out of stock':
+        return 'badge-out-of-stock';
+      default:
+        return 'badge-pending';
+    }
+  }
+
   get allWarehouses(): { id: number; name: string; branchName: string }[] {
     const list: { id: number; name: string; branchName: string }[] = [];
     for (const b of this.state.branches()) {

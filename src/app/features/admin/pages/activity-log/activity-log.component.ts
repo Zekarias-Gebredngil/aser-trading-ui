@@ -73,6 +73,16 @@ export class ActivityLogComponent implements OnInit {
     this.loadLogs();
   }
 
+  onSearchQueryChange(query: string): void {
+    this.searchQuery.set(query);
+    this.onFilterChange();
+  }
+
+  onEntityTypeChange(type: string): void {
+    this.selectedEntityType.set(type);
+    this.onFilterChange();
+  }
+
   onPageChange(newPage: number): void {
     this.page.set(newPage);
     this.loadLogs();

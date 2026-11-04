@@ -104,6 +104,42 @@ export class EmployeesComponent {
     this.currentPage = 1;
   }
 
+  setActiveTab(tab: 'list' | 'matrix'): void {
+    this.activeTab.set(tab);
+  }
+
+  onSearchQueryChange(query: string): void {
+    this.searchQuery.set(query);
+    this.currentPage = 1;
+  }
+
+  onRoleFilterChange(role: string): void {
+    this.selectedRoleFilter.set(role);
+    this.currentPage = 1;
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage = page;
+  }
+
+  onPageSizeChange(size: number): void {
+    this.pageSize = size;
+    this.currentPage = 1;
+  }
+
+  getRoleShortTitle(label?: string): string {
+    if (!label) return '—';
+    return label.split('(')[0].trim();
+  }
+
+  closeRegisterModal(): void {
+    this.isRegisterModalOpen.set(false);
+  }
+
+  closeEditModal(): void {
+    this.isEditModalOpen.set(false);
+  }
+
   hasRolePerm(role: StaffRole, perm: Permission): boolean {
     return (ROLE_PERMISSIONS[role] || []).includes(perm);
   }
