@@ -1,0 +1,21 @@
+<div class="toast-viewport" aria-live="polite">
+  @for (toast of toastService.toasts(); track toast.id) {
+    <div class="toast-card" [class]="'toast-' + toast.type" role="alert">
+      <div class="toast-accent-bar"></div>
+      
+      <div class="toast-icon-box">
+        <aser-icon [name]="toast.icon" [size]="20"></aser-icon>
+      </div>
+
+      <div class="toast-content">
+        <div class="toast-title">{{ toast.title }}</div>
+        <div class="toast-message">{{ toast.message }}</div>
+      </div>
+
+      <button class="toast-dismiss-btn" (click)="toastService.dismiss(toast.id)" aria-label="Dismiss notification">
+        <aser-icon name="lucide:x" [size]="14"></aser-icon>
+      </button>
+    </div>
+  }
+</div>
+

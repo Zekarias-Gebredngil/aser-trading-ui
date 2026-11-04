@@ -1,0 +1,345 @@
+<aser-admin-shell section="Staff & Permissions">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">{{ 'EMPLOYEES.TITLE' | translate:'Employee Registry & Role Access Control' }}</h1>
+      <p class="page-subtitle">
+        {{ 'EMPLOYEES.SUBTITLE' | translate:'System Administrators can register personnel, allocate branch operating scope, and enforce strict separation-of-duties.' }}
+      </p>
+    </div>
+
+    @if (state.hasPermission('MANAGE_EMPLOYEES')) {
+    <button class="btn btn-primary" (click)="openRegisterModal()">
+      <aser-icon name="lucide:user-plus" [size]="16"></aser-icon>
+      <span>{{ 'EMPLOYEES.REGISTER_EMPLOYEE' | translate:'Register Employee' }}</span>
+    </button>
+    }
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="tab-bar">
+    <button class="tab-item" [class.active]="activeTab() === 'list'" (click)="activeTab.set('list')">
+      <aser-icon name="lucide:users" [size]="15"></aser-icon>
+      <span>{{ 'EMPLOYEES.STAFF_DIRECTORY' | translate:'Staff Directory' }} ({{ state.employees().length }})</span>
+    </button>
+    <button class="tab-item" [class.active]="activeTab() === 'matrix'" (click)="activeTab.set('matrix')">
+      <aser-icon name="lucide:shield-check" [size]="15"></aser-icon>
+      <span>{{ 'EMPLOYEES.SECURITY_MATRIX' | translate:'Role & Permission Security Matrix' }}</span>
+    </button>
+  </div>
+
+  @if (activeTab() === 'list') {
+  <!-- Filter & Search Toolbar -->
+  <div class="toolbar-card">
+    <div class="search-input-wrap">
+      <aser-icon name="lucide:search" [size]="15" color="var(--muted)"></aser-icon>
+      <input 
+        type="text" 
+        [ngModel]="searchQuery()" 
+        (ngModelChange)="searchQuery.set($event); onFilterChange()"
+        [placeholder]="'EMPLOYEES.SEARCH_PLACEHOLDER' | translate:'Search employees by name, username, email, or branch...'" 
+        class="search-input" />
+    </div>
+
+    <div class="filter-wrap">
+      <label>{{ 'EMPLOYEES.FILTER_ROLE' | translate:'Filter Role:' }}</label>
+      <select [ngModel]="selectedRoleFilter()" (ngModelChange)="selectedRoleFilter.set($event); onFilterChange()" class="role-select">
+        <option value="ALL">{{ 'EMPLOYEES.ALL_ROLES' | translate:'All Roles' }}</option>
+        @for (r of availableRoles; track r.key) {
+        <option [value]="r.key">{{ r.label }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- Employees Table -->
+  <div class="table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>{{ 'EMPLOYEES.EMPLOYEE_NAME' | translate:'Employee Name & User' }}</th>
+          <th>{{ 'EMPLOYEES.SYSTEM_ROLE' | translate:'System Role' }}</th>
+          <th>{{ 'EMPLOYEES.ASSIGNED_BRANCH' | translate:'Assigned Branch Scope' }}</th>
+          <th>{{ 'EMPLOYEES.CONTACT' | translate:'Contact' }}</th>
+          <th>{{ 'EMPLOYEES.ACCOUNT_STATUS' | translate:'Account Status' }}</th>
+          @if (state.hasPermission('MANAGE_EMPLOYEES')) {
+          <th style="text-align:right;">{{ 'COMMON.ACTIONS' | translate:'Actions' }}</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (emp of pagedEmployees(); track emp.id) {
+        <tr>
+          <td>
+            <div class="user-cell">
+              <div class="avatar">{{ emp.fullName.charAt(0) }}</div>
+              <div>
+                <div class="emp-name">{{ emp.fullName }}</div>
+                <div class="emp-username">&#64;{{ emp.username }}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <span class="role-badge" [attr.data-role]="emp.role">
+              {{ emp.roleLabel }}
+            </span>
+          </td>
+          <td>
+            <div class="branch-cell">
+              <aser-icon name="lucide:map-pin" [size]="13" color="var(--blue)"></aser-icon>
+              <span>{{ emp.assignedBranchName || 'Consolidated HQ / All' }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="contact-cell">
+              <div>{{ emp.email }}</div>
+              @if (emp.phone) {
+              <div class="text-muted">{{ emp.phone }}</div>
+              }
+            </div>
+          </td>
+          <td>
+            <button 
+              class="status-pill" 
+              [class.active]="emp.isActive" 
+              [class.inactive]="!emp.isActive"
+              (click)="toggleStatus(emp)"
+              title="Click to toggle status">
+              <span class="dot"></span>
+              <span>{{ emp.isActive ? ('COMMON.ACTIVE' | translate:'Active') : ('COMMON.INACTIVE' | translate:'Suspended') }}</span>
+            </button>
+          </td>
+          @if (state.hasPermission('MANAGE_EMPLOYEES')) {
+          <td style="text-align:right;">
+            <button class="btn btn-outline btn-sm" (click)="openEditModal(emp)">
+              <aser-icon name="lucide:pencil" [size]="13"></aser-icon>
+              <span>{{ 'COMMON.EDIT' | translate:'Edit' }}</span>
+            </button>
+          </td>
+          }
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="6" class="empty-state">
+            No employees match the filter criteria.
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (filteredEmployees().length > 0) {
+      <aser-paginator
+        [totalItems]="filteredEmployees().length"
+        [pageSize]="pageSize"
+        [currentPage]="currentPage"
+        (pageChange)="currentPage = $event"
+        (pageSizeChange)="pageSize = $event; currentPage = 1">
+      </aser-paginator>
+    }
+  </div>
+  }
+
+  @if (activeTab() === 'matrix') {
+  <!-- Role & Permission Matrix Table -->
+  <div class="table-card matrix-card">
+    <div class="matrix-info-banner">
+      <aser-icon name="lucide:info" [size]="18" color="var(--blue)"></aser-icon>
+      <div>
+        <strong>Separation of Duties (SRS Section 9):</strong> Branch Managers and Storekeepers are restricted to their assigned branch warehouse. Only System Administrators and Executives can access multi-branch consolidated data.
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="data-table matrix-table">
+        <thead>
+          <tr>
+            <th style="min-width:240px;">Functional Permission</th>
+            @for (r of availableRoles; track r.key) {
+            <th style="text-align:center; min-width:140px;">
+              <span class="matrix-role-header">{{ (r.label || '').split('(')[0] }}</span>
+            </th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (perm of permissionList; track perm.key) {
+          <tr>
+            <td>
+              <div class="perm-title">{{ perm.label }}</div>
+              <div class="perm-desc">{{ perm.desc }}</div>
+            </td>
+            @for (r of availableRoles; track r.key) {
+            <td style="text-align:center;">
+              @if (hasRolePerm(r.key, perm.key)) {
+              <span class="perm-icon check">
+                <aser-icon name="lucide:check-circle" [size]="18"></aser-icon>
+              </span>
+              } @else {
+              <span class="perm-icon cross">
+                <aser-icon name="lucide:minus" [size]="14"></aser-icon>
+              </span>
+              }
+            </td>
+            }
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+
+  <!-- Register Employee Modal -->
+  @if (isRegisterModalOpen()) {
+  <div class="modal-backdrop" (click)="isRegisterModalOpen.set(false)">
+    <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:38px; height:38px; border-radius:10px; background:var(--blue-soft); display:flex; align-items:center; justify-content:center;">
+            <aser-icon name="lucide:user-plus" [size]="20" color="var(--blue)"></aser-icon>
+          </div>
+          <div>
+            <h3 style="font-size:17px; font-weight:800; color:var(--ink); margin:0;">{{ 'EMPLOYEES.REGISTER_EMPLOYEE' | translate:'Register New Employee' }}</h3>
+            <p style="font-size:11px; color:var(--muted); margin:0;">Provision account credentials, assign enterprise role, and define branch scope.</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" (click)="isRegisterModalOpen.set(false)" aria-label="Close dialog">
+          <aser-icon name="lucide:x" [size]="18"></aser-icon>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label class="form-label">Full Employee Name *</label>
+            <input type="text" [(ngModel)]="regForm.fullName" placeholder="e.g. Almaz Tadesse" class="form-input" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ 'PROFILE.USERNAME' | translate:'Login Username' }} *</label>
+            <input type="text" [(ngModel)]="regForm.username" placeholder="e.g. almaz" class="form-input" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ 'PROFILE.EMAIL' | translate:'Work Email' }} *</label>
+            <input type="email" [(ngModel)]="regForm.email" placeholder="e.g. almaz@asertrading.et" class="form-input" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ 'COMMON.PHONE' | translate:'Contact Phone' }}</label>
+            <input type="text" [(ngModel)]="regForm.phone" placeholder="e.g. +251 91 234 5678" class="form-input" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ 'EMPLOYEES.SYSTEM_ROLE' | translate:'Enterprise System Role' }} *</label>
+            <select [(ngModel)]="regForm.role" class="form-select">
+              @for (r of availableRoles; track r.key) {
+              <option [value]="r.key">{{ r.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group full-width" style="margin-top:14px;">
+            <label class="form-label">{{ 'EMPLOYEES.ASSIGNED_BRANCH' | translate:'Assigned Branch Scope' }} *</label>
+            <select [(ngModel)]="regForm.assignedBranchId" class="form-select">
+              @for (b of state.branches(); track b.id) {
+              <option [value]="b.id">{{ b.name }} ({{ b.city }})</option>
+              }
+            </select>
+            <p style="font-size:11px; color:var(--muted); margin:4px 0 0;">Staff will be scoped to view inventory, orders, and receive transfers only for this branch.</p>
+          </div>
+
+          <div class="form-group full-width" style="margin-top:14px;">
+            <label class="form-label">Account Password * (min 6 characters)</label>
+            <input type="password" [(ngModel)]="regForm.password" placeholder="••••••••" class="form-input" />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
+        <button class="btn btn-outline" (click)="isRegisterModalOpen.set(false)">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
+        <button 
+          class="btn btn-primary" 
+          style="display:inline-flex; align-items:center; gap:6px;"
+          (click)="saveEmployee()" 
+          [disabled]="!regForm.fullName || !regForm.username || !regForm.email || !regForm.password || regForm.password.length < 6">
+          <aser-icon name="lucide:check" [size]="14"></aser-icon> {{ 'EMPLOYEES.REGISTER_EMPLOYEE' | translate:'Register & Grant Permissions' }}
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Edit Employee Modal -->
+  @if (isEditModalOpen()) {
+  <div class="modal-backdrop" (click)="isEditModalOpen.set(false)">
+    <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:38px; height:38px; border-radius:10px; background:var(--blue-soft); display:flex; align-items:center; justify-content:center;">
+            <aser-icon name="lucide:pencil" [size]="20" color="var(--blue)"></aser-icon>
+          </div>
+          <div>
+            <h3 style="font-size:17px; font-weight:800; color:var(--ink); margin:0;">Edit Staff Profile & Role</h3>
+            <p style="font-size:11px; color:var(--muted); margin:0;">Modify parameters for <strong>&#64;{{ selectedEmployee()?.username }}</strong></p>
+          </div>
+        </div>
+        <button class="modal-close-btn" (click)="isEditModalOpen.set(false)" aria-label="Close dialog">
+          <aser-icon name="lucide:x" [size]="18"></aser-icon>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label class="form-label">Full Employee Name *</label>
+            <input type="text" [(ngModel)]="editForm.fullName" class="form-input" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ 'PROFILE.EMAIL' | translate:'Work Email' }} *</label>
+            <input type="email" [(ngModel)]="editForm.email" class="form-input" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ 'COMMON.PHONE' | translate:'Contact Phone' }}</label>
+            <input type="text" [(ngModel)]="editForm.phone" class="form-input" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ 'EMPLOYEES.SYSTEM_ROLE' | translate:'Enterprise Role' }} *</label>
+            <select [(ngModel)]="editForm.role" class="form-select">
+              @for (r of availableRoles; track r.key) {
+              <option [value]="r.key">{{ r.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ 'EMPLOYEES.ASSIGNED_BRANCH' | translate:'Reassign Branch Scope' }}</label>
+            <select [(ngModel)]="editForm.assignedBranchId" class="form-select">
+              @for (b of state.branches(); track b.id) {
+              <option [value]="b.id">{{ b.name }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group full-width" style="display:flex; align-items:center; gap:10px; margin-top:14px;">
+            <input type="checkbox" id="empActiveCheck" [(ngModel)]="editForm.isActive" style="width:18px; height:18px; accent-color:var(--blue); cursor:pointer;" />
+            <label for="empActiveCheck" style="font-size:13px; font-weight:700; color:var(--ink); cursor:pointer;">
+              Account Status is Active (Permit login and system actions)
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
+        <button class="btn btn-outline" (click)="isEditModalOpen.set(false)">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
+        <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;" (click)="saveEdit()" [disabled]="!editForm.fullName || !editForm.email">
+          <aser-icon name="lucide:check" [size]="14"></aser-icon> {{ 'COMMON.SAVE' | translate:'Update Profile' }}
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+</aser-admin-shell>

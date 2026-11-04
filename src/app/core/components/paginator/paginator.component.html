@@ -1,0 +1,85 @@
+<div class="paginator-container">
+  @if (showRangeInfo) {
+    <div class="paginator-info">
+      {{ 'PAGINATOR.SHOWING' | translate:'Showing' }} <span class="highlight">{{ startIndex }}</span> {{ 'PAGINATOR.TO' | translate:'to' }} <span class="highlight">{{ endIndex }}</span> {{ 'PAGINATOR.OF' | translate:'of' }} <span class="highlight">{{ totalItems }}</span> {{ 'PAGINATOR.ENTRIES' | translate:'entries' }}
+    </div>
+  }
+
+  <div class="paginator-controls">
+    @if (showPageSizeOptions && pageSizeOptions.length > 0) {
+      <div class="page-size-selector">
+        <label for="pageSizeSelect" class="page-size-label">{{ 'PAGINATOR.ROWS_PER_PAGE' | translate:'Rows per page:' }}</label>
+        <select
+          id="pageSizeSelect"
+          class="page-size-select"
+          [ngModel]="pageSize"
+          (ngModelChange)="onPageSizeSelected($event)"
+          aria-label="Rows per page">
+          @for (option of pageSizeOptions; track option) {
+            <option [value]="option">{{ option }}</option>
+          }
+        </select>
+      </div>
+    }
+
+    <div class="pagination-nav" role="navigation" aria-label="Pagination">
+      <button
+        type="button"
+        class="nav-btn"
+        [disabled]="isFirstPage"
+        (click)="goToPage(1)"
+        [title]="'PAGINATOR.FIRST_PAGE' | translate:'First Page'"
+        aria-label="Go to first page">
+        <aser-icon name="lucide:chevrons-left" [size]="14"></aser-icon>
+      </button>
+
+      <button
+        type="button"
+        class="nav-btn"
+        [disabled]="isFirstPage"
+        (click)="goToPage(currentPage - 1)"
+        [title]="'PAGINATOR.PREVIOUS_PAGE' | translate:'Previous Page'"
+        aria-label="Go to previous page">
+        <aser-icon name="lucide:chevron-left" [size]="14"></aser-icon>
+      </button>
+
+      <div class="page-numbers">
+        @for (page of visiblePages; track $index) {
+          @if (page === '...') {
+            <span class="ellipsis" aria-hidden="true">&hellip;</span>
+          } @else {
+            <button
+              type="button"
+              class="page-num-btn"
+              [class.active]="page === currentPage"
+              (click)="goToPage(page)"
+              [attr.aria-current]="page === currentPage ? 'page' : null">
+              {{ page }}
+            </button>
+          }
+        }
+      </div>
+
+      <button
+        type="button"
+        class="nav-btn"
+        [disabled]="isLastPage"
+        (click)="goToPage(currentPage + 1)"
+        [title]="'PAGINATOR.NEXT_PAGE' | translate:'Next Page'"
+        aria-label="Go to next page">
+        <aser-icon name="lucide:chevron-right" [size]="14"></aser-icon>
+      </button>
+
+      <button
+        type="button"
+        class="nav-btn"
+        [disabled]="isLastPage"
+        (click)="goToPage(totalPages)"
+        [title]="'PAGINATOR.LAST_PAGE' | translate:'Last Page'"
+        aria-label="Go to last page">
+        <aser-icon name="lucide:chevrons-right" [size]="14"></aser-icon>
+      </button>
+    </div>
+  </div>
+</div>
+

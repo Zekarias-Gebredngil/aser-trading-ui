@@ -1,0 +1,128 @@
+export type StaffRole =
+  | 'SYSTEM_ADMINISTRATOR'
+  | 'COMPANY_MANAGER'
+  | 'INVENTORY_MANAGER'
+  | 'BRANCH_MANAGER'
+  | 'STOREKEEPER'
+  | 'PROCUREMENT_OFFICER'
+  | 'SALES_OFFICER'
+  | 'ACCOUNTANT_AUDITOR'
+  | 'WEBSITE_MANAGER'
+  | 'CUSTOMER';
+
+export type Permission =
+  | 'MANAGE_BRANCHES'
+  | 'MANAGE_PRODUCTS'
+  | 'MANAGE_SERVICES'
+  | 'MANAGE_EMPLOYEES'
+  | 'VIEW_INVENTORY'
+  | 'RECEIVE_STOCK'
+  | 'REQUEST_TRANSFER'
+  | 'APPROVE_TRANSFER'
+  | 'DISPATCH_TRANSFER'
+  | 'RECEIVE_TRANSFER'
+  | 'MANAGE_ORDERS'
+  | 'VIEW_FINANCIALS'
+  | 'VIEW_REPORTS'
+  | 'SYSTEM_CONFIG'
+  | 'ACCESS_ALL_BRANCHES';
+
+export interface EmployeeUser {
+  id: string;
+  username: string;
+  email: string;
+  fullName: string;
+  phone?: string;
+  role: StaffRole;
+  roleLabel: string;
+  assignedBranchId?: string;
+  assignedBranchName?: string;
+  isActive: boolean;
+  createdAt?: string;
+}
+
+export const ROLE_LABELS: Record<StaffRole, string> = {
+  SYSTEM_ADMINISTRATOR: 'System Administrator',
+  COMPANY_MANAGER: 'Company Manager (Executive)',
+  INVENTORY_MANAGER: 'Inventory Manager',
+  BRANCH_MANAGER: 'Branch Manager',
+  STOREKEEPER: 'Storekeeper',
+  PROCUREMENT_OFFICER: 'Procurement Officer',
+  SALES_OFFICER: 'Sales Officer',
+  ACCOUNTANT_AUDITOR: 'Accountant / Auditor',
+  WEBSITE_MANAGER: 'Website Manager',
+  CUSTOMER: 'Customer'
+};
+
+export const ROLE_PERMISSIONS: Record<StaffRole, Permission[]> = {
+  SYSTEM_ADMINISTRATOR: [
+    'MANAGE_BRANCHES',
+    'MANAGE_PRODUCTS',
+    'MANAGE_SERVICES',
+    'MANAGE_EMPLOYEES',
+    'VIEW_INVENTORY',
+    'RECEIVE_STOCK',
+    'REQUEST_TRANSFER',
+    'APPROVE_TRANSFER',
+    'DISPATCH_TRANSFER',
+    'RECEIVE_TRANSFER',
+    'MANAGE_ORDERS',
+    'VIEW_FINANCIALS',
+    'VIEW_REPORTS',
+    'SYSTEM_CONFIG',
+    'ACCESS_ALL_BRANCHES'
+  ],
+  COMPANY_MANAGER: [
+    'VIEW_INVENTORY',
+    'REQUEST_TRANSFER',
+    'APPROVE_TRANSFER',
+    'MANAGE_ORDERS',
+    'VIEW_FINANCIALS',
+    'ACCESS_ALL_BRANCHES'
+  ],
+  INVENTORY_MANAGER: [
+    'MANAGE_PRODUCTS',
+    'VIEW_INVENTORY',
+    'RECEIVE_STOCK',
+    'REQUEST_TRANSFER',
+    'APPROVE_TRANSFER',
+    'DISPATCH_TRANSFER',
+    'RECEIVE_TRANSFER',
+    'VIEW_FINANCIALS',
+    'ACCESS_ALL_BRANCHES'
+  ],
+  BRANCH_MANAGER: [
+    'VIEW_INVENTORY',
+    'RECEIVE_STOCK',
+    'REQUEST_TRANSFER',
+    'APPROVE_TRANSFER',
+    'MANAGE_ORDERS'
+  ],
+  STOREKEEPER: [
+    'VIEW_INVENTORY',
+    'RECEIVE_STOCK',
+    'REQUEST_TRANSFER',
+    'DISPATCH_TRANSFER',
+    'RECEIVE_TRANSFER'
+  ],
+  PROCUREMENT_OFFICER: [
+    'VIEW_INVENTORY',
+    'RECEIVE_STOCK',
+    'VIEW_FINANCIALS'
+  ],
+  SALES_OFFICER: [
+    'VIEW_INVENTORY',
+    'MANAGE_ORDERS'
+  ],
+  ACCOUNTANT_AUDITOR: [
+    'VIEW_INVENTORY',
+    'VIEW_FINANCIALS',
+    'ACCESS_ALL_BRANCHES'
+  ],
+  WEBSITE_MANAGER: [
+    'MANAGE_PRODUCTS',
+    'MANAGE_SERVICES'
+  ],
+  CUSTOMER: []
+};
+

@@ -1,0 +1,281 @@
+<aser-admin-shell section="Branch Network & Warehouses">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">{{ 'BRANCHES.TITLE' | translate:'Branch & Multi-Warehouse Management' }}</h1>
+      <p class="page-subtitle">
+        {{ 'BRANCHES.SUBTITLE' | translate:'Dynamically register regional hubs, production plants, and local distribution depots across Ethiopia.' }}
+      </p>
+    </div>
+    @if (state.hasPermission('MANAGE_BRANCHES')) {
+    <button class="btn btn-primary" (click)="openCreateModal()">
+      <aser-icon name="lucide:plus" [size]="16"></aser-icon>
+      <span>{{ 'BRANCHES.REGISTER_BRANCH' | translate:'Register New Branch' }}</span>
+    </button>
+    }
+  </div>
+
+  <!-- Branch Cards Grid -->
+  <div class="branches-grid">
+    @for (branch of pagedBranches; track branch.id) {
+    <div class="branch-card" [class.is-hq]="branch.isHeadOffice">
+      <div class="branch-card-header">
+        <div>
+          <div class="branch-header-top">
+            <span class="branch-code-badge">{{ branch.code }}</span>
+            @if (branch.isHeadOffice) {
+            <span class="badge badge-hq">{{ 'BRANCHES.HQ_PLANT' | translate:'HQ Plant' }}</span>
+            }
+          </div>
+          <h2 class="branch-name">{{ branch.name }}</h2>
+          <div class="branch-city">
+            <aser-icon name="lucide:map-pin" [size]="13" color="var(--blue)"></aser-icon>
+            <span>{{ branch.city }} &bull; {{ branch.address }}</span>
+          </div>
+        </div>
+
+        @if (state.hasPermission('MANAGE_BRANCHES')) {
+        <div class="branch-actions">
+          <button class="btn-icon" title="Edit Branch" (click)="openEditModal(branch)">
+            <aser-icon name="lucide:pencil" [size]="15"></aser-icon>
+          </button>
+          @if (!branch.isHeadOffice) {
+          <button class="btn-icon text-danger" title="Delete Branch" (click)="deleteBranch(branch)">
+            <aser-icon name="lucide:trash-2" [size]="15"></aser-icon>
+          </button>
+          }
+        </div>
+        }
+      </div>
+
+      <div class="branch-card-body">
+        <div class="branch-contact-row">
+          <div class="contact-item">
+            <aser-icon name="lucide:phone" [size]="13"></aser-icon>
+            <span>{{ branch.phone }}</span>
+          </div>
+          <div class="contact-item">
+            <aser-icon name="lucide:mail" [size]="13"></aser-icon>
+            <span>{{ branch.email }}</span>
+          </div>
+        </div>
+
+        <div class="warehouses-section">
+          <div class="warehouses-header">
+            <span class="wh-title">{{ 'BRANCHES.WAREHOUSES' | translate:'Storage Warehouses' }} ({{ branch.warehouses.length }})</span>
+            @if (state.hasPermission('MANAGE_BRANCHES')) {
+            <button class="btn-link" (click)="openAddWarehouseModal(branch)">+ {{ 'BRANCHES.REGISTER_WAREHOUSE' | translate:'Add Warehouse' }}</button>
+            }
+          </div>
+
+          <div class="warehouses-list">
+            @for (wh of branch.warehouses; track wh.id) {
+            <div class="warehouse-pill">
+              <aser-icon name="lucide:box" [size]="13"></aser-icon>
+              <span>{{ wh.name }}</span>
+              <span class="wh-code">({{ wh.code }})</span>
+              @if (wh.isDefault) {
+              <span class="badge badge-default-wh">Default</span>
+              }
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+    }
+  </div>
+
+  @if (state.branches().length > 0) {
+    <div style="margin-top:20px;">
+      <aser-paginator
+        [totalItems]="state.branches().length"
+        [pageSize]="pageSize"
+        [currentPage]="currentPage"
+        (pageChange)="currentPage = $event"
+        (pageSizeChange)="pageSize = $event; currentPage = 1">
+      </aser-paginator>
+    </div>
+  }
+
+  <!-- Create Branch Modal -->
+  @if (isCreateModalOpen()) {
+  <div class="modal-backdrop" (click)="isCreateModalOpen.set(false)">
+    <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:38px; height:38px; border-radius:10px; background:var(--blue-soft); display:flex; align-items:center; justify-content:center;">
+            <aser-icon name="lucide:building-2" [size]="20" color="var(--blue)"></aser-icon>
+          </div>
+          <div>
+            <h3 style="font-size:17px; font-weight:800; color:var(--ink); margin:0;">{{ 'BRANCHES.REGISTER_BRANCH' | translate:'Register New Company Branch' }}</h3>
+            <p style="font-size:11px; color:var(--muted); margin:0;">Add a regional operating branch or depot to Aser central network.</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" (click)="isCreateModalOpen.set(false)" aria-label="Close dialog">
+          <aser-icon name="lucide:x" [size]="18"></aser-icon>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Branch Name *</label>
+            <input type="text" [(ngModel)]="branchForm.name" placeholder="e.g. Adama Regional Distribution Depot" class="form-input" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Branch Code *</label>
+            <input type="text" [(ngModel)]="branchForm.code" placeholder="e.g. ADA-DEP" class="form-input" />
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">{{ 'COMMON.CITY' | translate:'City' }} *</label>
+            <input type="text" [(ngModel)]="branchForm.city" placeholder="e.g. Adama" class="form-input" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ 'COMMON.ADDRESS' | translate:'Physical Address' }}</label>
+            <input type="text" [(ngModel)]="branchForm.address" placeholder="e.g. Expressway Gateway, Commercial Sector 4" class="form-input" />
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">{{ 'COMMON.PHONE' | translate:'Contact Phone' }}</label>
+            <input type="text" [(ngModel)]="branchForm.phone" placeholder="e.g. +251 22 112 3456" class="form-input" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ 'COMMON.EMAIL' | translate:'Contact Email' }}</label>
+            <input type="email" [(ngModel)]="branchForm.email" placeholder="e.g. adama@asertrading.et" class="form-input" />
+          </div>
+        </div>
+
+        <div class="form-group" style="display:flex; align-items:center; gap:10px; margin-top:14px;">
+          <input type="checkbox" id="createHqCheck" [(ngModel)]="branchForm.isHeadOffice" style="width:18px; height:18px; accent-color:var(--blue); cursor:pointer;" />
+          <label for="createHqCheck" style="font-size:13px; font-weight:700; color:var(--ink); cursor:pointer;">
+            Designate as Main Head Office / Industrial Plant
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
+        <button class="btn btn-outline" (click)="isCreateModalOpen.set(false)">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
+        <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;" (click)="saveNewBranch()" [disabled]="!branchForm.name || !branchForm.code">
+          <aser-icon name="lucide:check" [size]="14"></aser-icon> {{ 'COMMON.SAVE' | translate:'Create Branch & Depot' }}
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Edit Branch Modal -->
+  @if (isEditModalOpen()) {
+  <div class="modal-backdrop" (click)="isEditModalOpen.set(false)">
+    <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:38px; height:38px; border-radius:10px; background:var(--blue-soft); display:flex; align-items:center; justify-content:center;">
+            <aser-icon name="lucide:pencil" [size]="20" color="var(--blue)"></aser-icon>
+          </div>
+          <div>
+            <h3 style="font-size:17px; font-weight:800; color:var(--ink); margin:0;">Edit Branch Details</h3>
+            <p style="font-size:11px; color:var(--muted); margin:0;">Modify contact and address parameters for <strong>{{ selectedBranch()?.name }}</strong></p>
+          </div>
+        </div>
+        <button class="modal-close-btn" (click)="isEditModalOpen.set(false)" aria-label="Close dialog">
+          <aser-icon name="lucide:x" [size]="18"></aser-icon>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Branch Name *</label>
+            <input type="text" [(ngModel)]="branchForm.name" class="form-input" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Branch Code *</label>
+            <input type="text" [(ngModel)]="branchForm.code" class="form-input" />
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">{{ 'COMMON.CITY' | translate:'City' }} *</label>
+            <input type="text" [(ngModel)]="branchForm.city" class="form-input" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ 'COMMON.ADDRESS' | translate:'Physical Address' }}</label>
+            <input type="text" [(ngModel)]="branchForm.address" class="form-input" />
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">{{ 'COMMON.PHONE' | translate:'Contact Phone' }}</label>
+            <input type="text" [(ngModel)]="branchForm.phone" class="form-input" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ 'COMMON.EMAIL' | translate:'Contact Email' }}</label>
+            <input type="email" [(ngModel)]="branchForm.email" class="form-input" />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
+        <button class="btn btn-outline" (click)="isEditModalOpen.set(false)">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
+        <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;" (click)="saveBranchEdit()" [disabled]="!branchForm.name">
+          <aser-icon name="lucide:check" [size]="14"></aser-icon> {{ 'COMMON.SAVE' | translate:'Save Changes' }}
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Add Warehouse Modal -->
+  @if (isWarehouseModalOpen()) {
+  <div class="modal-backdrop" (click)="isWarehouseModalOpen.set(false)">
+    <div class="modal-dialog modal-md" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:38px; height:38px; border-radius:10px; background:var(--blue-soft); display:flex; align-items:center; justify-content:center;">
+            <aser-icon name="lucide:warehouse" [size]="20" color="var(--blue)"></aser-icon>
+          </div>
+          <div>
+            <h3 style="font-size:17px; font-weight:800; color:var(--ink); margin:0;">{{ 'BRANCHES.REGISTER_WAREHOUSE' | translate:'Add Storage Warehouse' }}</h3>
+            <p style="font-size:11px; color:var(--muted); margin:0;">Attach a storage room or depot to <strong>{{ selectedBranch()?.name }}</strong></p>
+          </div>
+        </div>
+        <button class="modal-close-btn" (click)="isWarehouseModalOpen.set(false)" aria-label="Close dialog">
+          <aser-icon name="lucide:x" [size]="18"></aser-icon>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Warehouse Name *</label>
+          <input type="text" [(ngModel)]="warehouseForm.name" placeholder="e.g. Raw Material Storage Bin A" class="form-input" />
+        </div>
+
+        <div class="form-group" style="margin-top:14px;">
+          <label class="form-label">Warehouse Code *</label>
+          <input type="text" [(ngModel)]="warehouseForm.code" placeholder="e.g. WH-ADA-RAW" class="form-input" />
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
+        <button class="btn btn-outline" (click)="isWarehouseModalOpen.set(false)">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
+        <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;" (click)="saveNewWarehouse()" [disabled]="!warehouseForm.name || !warehouseForm.code">
+          <aser-icon name="lucide:check" [size]="14"></aser-icon> {{ 'COMMON.SAVE' | translate:'Add Warehouse' }}
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+</aser-admin-shell>

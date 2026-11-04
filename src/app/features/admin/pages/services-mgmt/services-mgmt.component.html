@@ -1,0 +1,377 @@
+<aser-admin-shell section="Commercial Services">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">{{ 'SERVICES.TITLE' | translate:'Commercial Services & Custom Quotation Portfolio' }}</h1>
+      <p class="page-subtitle">
+        {{ 'SERVICES.SUBTITLE' | translate:'Dynamically manage corporate service lines, technical specification
+        requirements, and customer inquiry categories.' }}
+      </p>
+    </div>
+    @if (state.hasPermission('MANAGE_SERVICES')) {
+    <button class="btn btn-primary" (click)="openCreateModal()">
+      <aser-icon name="lucide:plus" [size]="16"></aser-icon>
+      <span>{{ 'SERVICES.REGISTER_SERVICE' | translate:'Register New Service' }}</span>
+    </button>
+    }
+  </div>
+
+  <!-- Services Grid -->
+  <div class="services-admin-grid">
+    @for (svc of pagedServices; track svc.id) {
+    <div class="service-admin-card" [class.is-inactive]="!svc.isActive">
+      <div class="card-top">
+        <div class="icon-wrap">
+          <aser-icon [name]="svc.icon || 'lucide:printer'" [size]="24" color="var(--blue)"></aser-icon>
+        </div>
+        <div class="top-meta">
+          <span class="category-pill">{{ svc.categoryLabel }}</span>
+          <span class="code-pill">{{ svc.code }}</span>
+          @if (svc.requiresQuotation) {
+          <span class="badge badge-quote">{{ 'SERVICES.QUOTE_REQUIRED' | translate:'Quote Required' }}</span>
+          }
+        </div>
+        <div class="status-toggle">
+          <button class="badge" [class.badge-active]="svc.isActive" [class.badge-hidden]="!svc.isActive"
+            (click)="toggleActive(svc)" title="Click to toggle active status on Website">
+            {{ svc.isActive ? ('SERVICES.ACTIVE_ON_WEB' | translate:'Active on Web') : ('SERVICES.HIDDEN_DRAFT' |
+            translate:'Hidden / Draft') }}
+          </button>
+        </div>
+      </div>
+
+      <h2 class="service-card-title">{{ svc.title }}</h2>
+      <p class="service-card-desc">{{ svc.description }}</p>
+
+      <div class="features-box">
+        <div class="features-label">{{ 'SERVICES.INCLUDED_CAPABILITIES' | translate:'Included Technical Capabilities:'
+          }}</div>
+        <ul class="features-list">
+          @for (f of svc.features; track f) {
+          <li>
+            <aser-icon name="lucide:check" [size]="12" color="var(--blue)"></aser-icon>
+            <span>{{ f }}</span>
+          </li>
+          }
+        </ul>
+      </div>
+
+      @if (state.hasPermission('MANAGE_SERVICES')) {
+      <div class="card-footer">
+        <button class="btn btn-outline btn-sm" (click)="openEditModal(svc)">
+          <aser-icon name="lucide:pencil" [size]="14"></aser-icon>
+          <span>{{ 'SERVICES.EDIT_SERVICE' | translate:'Edit Service' }}</span>
+        </button>
+        <button class="btn btn-outline btn-sm text-danger" (click)="deleteService(svc)">
+          <aser-icon name="lucide:trash-2" [size]="14"></aser-icon>
+          <span>{{ 'SERVICES.DELETE_SERVICE' | translate:'Delete' }}</span>
+        </button>
+      </div>
+      }
+    </div>
+    }
+  </div>
+
+  @if (state.services().length > 0) {
+  <div style="margin-top:20px;">
+    <aser-paginator [totalItems]="state.services().length" [pageSize]="pageSize" [currentPage]="currentPage"
+      (pageChange)="currentPage = $event" (pageSizeChange)="pageSize = $event; currentPage = 1">
+    </aser-paginator>
+  </div>
+  }
+
+  <!-- Create Service Modal -->
+  @if (isCreateModalOpen()) {
+  <div class="modal-backdrop" (click)="isCreateModalOpen.set(false)">
+    <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div
+            style="width:38px; height:38px; border-radius:10px; background:var(--blue-soft); display:flex; align-items:center; justify-content:center;">
+            <aser-icon name="lucide:plus-circle" [size]="20" color="var(--blue)"></aser-icon>
+          </div>
+          <div>
+            <h3 style="font-size:17px; font-weight:800; color:var(--ink); margin:0;">{{ 'SERVICES.REGISTER_SERVICE' |
+              translate:'Register New Commercial Service' }}</h3>
+            <p style="font-size:11px; color:var(--muted); margin:0;">Add a specialized commercial printing, branding, or
+              equipment supply service.</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" (click)="isCreateModalOpen.set(false)" aria-label="Close dialog">
+          <aser-icon name="lucide:x" [size]="18"></aser-icon>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Service Title *</label>
+            <input type="text" [(ngModel)]="serviceForm.title"
+              placeholder="e.g. Architectural & Expo Exhibition Booth Fabrication" class="form-input" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Service Code *</label>
+            <input type="text" [(ngModel)]="serviceForm.code" placeholder="e.g. EXPO-FAB" class="form-input" />
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Service Category *</label>
+            <select [ngModel]="serviceForm.category"
+              (ngModelChange)="serviceForm.category = $event; onCategoryChange($event)" class="form-select">
+              @for (cat of categoryOptions; track cat.key) {
+              <option [value]="cat.key">{{ cat.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">UI Visual Icon</label>
+            <select [(ngModel)]="serviceForm.icon" class="form-select">
+              @for (ic of iconOptions; track ic.value) {
+              <option [value]="ic.value">{{ ic.label }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:14px;">
+          <label class="form-label">Detailed Description *</label>
+          <textarea [(ngModel)]="serviceForm.description" rows="3"
+            placeholder="Describe scope of service, machinery used, and target clients..."
+            class="form-textarea"></textarea>
+        </div>
+
+        <div class="form-group" style="margin-top:14px;">
+          <label class="form-label">Capabilities & Features Checklist (One item per line) *</label>
+          <textarea [(ngModel)]="serviceForm.featuresText" rows="4" placeholder="Enter bullet points line by line..."
+            class="form-textarea"></textarea>
+        </div>
+
+        <!-- Service Image Slides Upload -->
+        <div class="form-group"
+          style="background:#f8fafc; border:1px dashed var(--line); border-radius:var(--radius-md); padding:16px; margin-top:14px;">
+          <label class="form-label"
+            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <span style="font-weight:700; color:var(--ink); display:flex; align-items:center; gap:6px;">
+              <aser-icon name="lucide:image" [size]="16" color="var(--blue)"></aser-icon>
+              Service Showcase Slides
+            </span>
+            <span class="badge badge-quote-only" style="font-size:10px;">
+              {{ serviceForm.images.length }} Slide(s) Uploaded
+            </span>
+          </label>
+
+          <p style="font-size:12px; color:var(--muted); margin:0 0 12px;">
+            Upload high-resolution portfolio photos. These images will be presented as an interactive slide carousel on
+            the public services page.
+          </p>
+
+          <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:14px;">
+            <input type="file" #serviceFileInput multiple accept="image/*" (change)="onServiceFilesSelected($event)"
+              style="display:none">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="serviceFileInput.click()"
+              style="display:inline-flex; align-items:center; gap:6px;">
+              <aser-icon name="lucide:upload-cloud" [size]="15"></aser-icon> Upload Image File(s)
+            </button>
+
+            <span style="font-size:12px; color:var(--muted);">or paste URL:</span>
+
+            <div style="display:flex; gap:6px; flex:1; min-width:240px;">
+              <input class="form-input" [(ngModel)]="serviceImageUrlInput"
+                placeholder="https://example.com/service-photo.jpg" style="font-size:12px; padding:6px 10px;">
+              <button type="button" class="btn btn-outline btn-sm" (click)="addServiceImageUrl()"
+                [disabled]="!serviceImageUrlInput.trim()">
+                Add URL
+              </button>
+            </div>
+          </div>
+
+          @if (serviceForm.images.length > 0) {
+          <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:8px;">
+            @for (img of serviceForm.images; track $index) {
+            <div
+              style="position:relative; width:80px; height:80px; border-radius:var(--radius-sm); border:1px solid var(--line); overflow:hidden; background:#ffffff; box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+              <img [src]="img" alt="Slide preview" style="width:100%; height:100%; object-fit:cover;">
+              <span
+                style="position:absolute; bottom:2px; left:2px; background:rgba(0,0,0,0.75); color:#fff; font-size:9px; font-weight:800; padding:1px 5px; border-radius:3px;">
+                Slide {{ $index + 1 }}
+              </span>
+              <button type="button" (click)="removeServiceImage($index)" title="Remove slide"
+                style="position:absolute; top:3px; right:3px; background:rgba(239,68,68,0.9); color:#fff; border:none; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;">
+                <aser-icon name="lucide:x" [size]="10"></aser-icon>
+              </button>
+            </div>
+            }
+          </div>
+          }
+        </div>
+
+        <div class="form-group" style="display:flex; align-items:center; gap:10px; margin-top:14px;">
+          <input type="checkbox" id="createReqQuote" [(ngModel)]="serviceForm.requiresQuotation"
+            style="width:18px; height:18px; accent-color:var(--blue); cursor:pointer;" />
+          <label for="createReqQuote" style="font-size:13px; font-weight:700; color:var(--ink); cursor:pointer;">
+            Enable Custom Technical Quotation Request button for this service
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
+        <button class="btn btn-outline" (click)="isCreateModalOpen.set(false)">{{ 'COMMON.CANCEL' | translate:'Cancel'
+          }}</button>
+        <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;"
+          (click)="saveNewService()" [disabled]="!serviceForm.title || !serviceForm.code">
+          <aser-icon name="lucide:check" [size]="14"></aser-icon> {{ 'SERVICES.REGISTER_SERVICE' | translate:'Register
+          Service' }}
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Edit Service Modal -->
+  @if (isEditModalOpen()) {
+  <div class="modal-backdrop" (click)="isEditModalOpen.set(false)">
+    <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div
+            style="width:38px; height:38px; border-radius:10px; background:var(--blue-soft); display:flex; align-items:center; justify-content:center;">
+            <aser-icon name="lucide:pencil" [size]="20" color="var(--blue)"></aser-icon>
+          </div>
+          <div>
+            <h3 style="font-size:17px; font-weight:800; color:var(--ink); margin:0;">Edit Service Details</h3>
+            <p style="font-size:11px; color:var(--muted); margin:0;">Modify commercial parameters, slides, and features
+              for <strong>{{ selectedService()?.title }}</strong></p>
+          </div>
+        </div>
+        <button class="modal-close-btn" (click)="isEditModalOpen.set(false)" aria-label="Close dialog">
+          <aser-icon name="lucide:x" [size]="18"></aser-icon>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Service Title *</label>
+            <input type="text" [(ngModel)]="serviceForm.title" class="form-input" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Service Code *</label>
+            <input type="text" [(ngModel)]="serviceForm.code" class="form-input" />
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Service Category *</label>
+            <select [ngModel]="serviceForm.category"
+              (ngModelChange)="serviceForm.category = $event; onCategoryChange($event)" class="form-select">
+              @for (cat of categoryOptions; track cat.key) {
+              <option [value]="cat.key">{{ cat.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">UI Visual Icon</label>
+            <select [(ngModel)]="serviceForm.icon" class="form-select">
+              @for (ic of iconOptions; track ic.value) {
+              <option [value]="ic.value">{{ ic.label }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:14px;">
+          <label class="form-label">Detailed Description</label>
+          <textarea [(ngModel)]="serviceForm.description" rows="3" class="form-textarea"></textarea>
+        </div>
+
+        <div class="form-group" style="margin-top:14px;">
+          <label class="form-label">Capabilities & Features Checklist (One item per line)</label>
+          <textarea [(ngModel)]="serviceForm.featuresText" rows="4" class="form-textarea"></textarea>
+        </div>
+
+        <!-- Service Image Slides Upload -->
+        <div class="form-group"
+          style="background:#f8fafc; border:1px dashed var(--line); border-radius:var(--radius-md); padding:16px; margin-top:14px;">
+          <label class="form-label"
+            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <span style="font-weight:700; color:var(--ink); display:flex; align-items:center; gap:6px;">
+              <aser-icon name="lucide:image" [size]="16" color="var(--blue)"></aser-icon>
+              Service Showcase Slides
+            </span>
+            <span class="badge badge-quote-only" style="font-size:10px;">
+              {{ serviceForm.images.length }} Slide(s) Uploaded
+            </span>
+          </label>
+
+          <p style="font-size:12px; color:var(--muted); margin:0 0 12px;">
+            Upload portfolio photos or web URLs. When multiple images are present, visitors can flip through them as an
+            interactive slide carousel.
+          </p>
+
+          <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:14px;">
+            <input type="file" #serviceEditFileInput multiple accept="image/*" (change)="onServiceFilesSelected($event)"
+              style="display:none">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="serviceEditFileInput.click()"
+              style="display:inline-flex; align-items:center; gap:6px;">
+              <aser-icon name="lucide:upload-cloud" [size]="15"></aser-icon> Upload Image File(s)
+            </button>
+
+            <span style="font-size:12px; color:var(--muted);">or paste URL:</span>
+
+            <div style="display:flex; gap:6px; flex:1; min-width:240px;">
+              <input class="form-input" [(ngModel)]="serviceImageUrlInput"
+                placeholder="https://example.com/service-photo.jpg" style="font-size:12px; padding:6px 10px;">
+              <button type="button" class="btn btn-outline btn-sm" (click)="addServiceImageUrl()"
+                [disabled]="!serviceImageUrlInput.trim()">
+                Add URL
+              </button>
+            </div>
+          </div>
+
+          @if (serviceForm.images.length > 0) {
+          <div style="display:flex; flex-wrap:wrap; gap:12px; margin-top:8px;">
+            @for (img of serviceForm.images; track $index) {
+            <div
+              style="position:relative; width:80px; height:80px; border-radius:var(--radius-sm); border:1px solid var(--line); overflow:hidden; background:#ffffff; box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+              <img [src]="img" alt="Slide preview" style="width:100%; height:100%; object-fit:cover;">
+              <span
+                style="position:absolute; bottom:2px; left:2px; background:rgba(0,0,0,0.75); color:#fff; font-size:9px; font-weight:800; padding:1px 5px; border-radius:3px;">
+                Slide {{ $index + 1 }}
+              </span>
+              <button type="button" (click)="removeServiceImage($index)" title="Remove slide"
+                style="position:absolute; top:3px; right:3px; background:rgba(239,68,68,0.9); color:#fff; border:none; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;">
+                <aser-icon name="lucide:x" [size]="10"></aser-icon>
+              </button>
+            </div>
+            }
+          </div>
+          }
+        </div>
+
+        <div class="form-group" style="display:flex; align-items:center; gap:10px; margin-top:14px;">
+          <input type="checkbox" id="editReqQuote" [(ngModel)]="serviceForm.requiresQuotation"
+            style="width:18px; height:18px; accent-color:var(--blue); cursor:pointer;" />
+          <label for="editReqQuote" style="font-size:13px; font-weight:700; color:var(--ink); cursor:pointer;">
+            Enable Custom Technical Quotation Request form for this service
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
+        <button class="btn btn-outline" (click)="isEditModalOpen.set(false)">{{ 'COMMON.CANCEL' | translate:'Cancel'
+          }}</button>
+        <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;"
+          (click)="saveServiceEdit()" [disabled]="!serviceForm.title">
+          <aser-icon name="lucide:check" [size]="14"></aser-icon> {{ 'COMMON.SAVE' | translate:'Save Changes' }}
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+</aser-admin-shell>

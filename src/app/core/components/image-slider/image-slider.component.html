@@ -1,0 +1,71 @@
+<div class="slider-container" [style.height]="height" [class.rounded-box]="rounded">
+  @if (currentImage) {
+    <img 
+      [src]="currentImage" 
+      [alt]="alt" 
+      class="slider-image" 
+      [style.object-fit]="objectFit"
+      (error)="onImageError(currentImage)"
+    />
+
+    <!-- Navigation Arrows for Multi-image Slides -->
+    @if (validImages.length > 1) {
+      <button 
+        type="button" 
+        class="slider-arrow prev" 
+        (click)="prev($event)" 
+        aria-label="Previous slide"
+      >
+        <aser-icon name="lucide:chevron-left" [size]="18"></aser-icon>
+      </button>
+
+      <button 
+        type="button" 
+        class="slider-arrow next" 
+        (click)="next($event)" 
+        aria-label="Next slide"
+      >
+        <aser-icon name="lucide:chevron-right" [size]="18"></aser-icon>
+      </button>
+
+      <!-- Dots Indicators with Aser Rainbow Styling -->
+      <div class="slider-dots" (click)="$event.stopPropagation()">
+        @for (img of validImages; track $index) {
+          <button 
+            type="button" 
+            class="slider-dot" 
+            [class.active]="currentIndex() === $index"
+            [class.c-blue]="$index % 5 === 0"
+            [class.c-amber]="$index % 5 === 1"
+            [class.c-red]="$index % 5 === 2"
+            [class.c-pink]="$index % 5 === 3"
+            [class.c-black]="$index % 5 === 4"
+            (click)="goTo($index, $event)"
+            [attr.aria-label]="'Slide ' + ($index + 1)"
+          ></button>
+        }
+      </div>
+
+      <!-- Slide Counter Badge -->
+      <div class="slide-counter-badge">
+        {{ currentIndex() + 1 }} / {{ validImages.length }}
+      </div>
+    }
+  } @else {
+    <!-- Fallback Category Art Illustration -->
+    <div class="slider-fallback">
+      @if (fallbackCategory === 'GARMENT_MATERIALS') {
+        <aser-icon name="lucide:scissors" [size]="40" color="var(--magenta)"></aser-icon>
+      } @else if (fallbackCategory === 'PRINTING_SUPPLIES') {
+        <aser-icon name="lucide:file-text" [size]="40" color="var(--blue)"></aser-icon>
+      } @else if (fallbackCategory === 'BRANDING_PROMOTION') {
+        <aser-icon name="lucide:sparkles" [size]="40" color="var(--amber)"></aser-icon>
+      } @else if (fallbackCategory === 'EQUIPMENT') {
+        <aser-icon name="lucide:cog" [size]="40" color="var(--ink)"></aser-icon>
+      } @else {
+        <aser-icon name="lucide:printer" [size]="40" color="var(--blue)"></aser-icon>
+      }
+    </div>
+  }
+</div>
+
