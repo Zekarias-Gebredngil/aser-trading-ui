@@ -11,6 +11,29 @@ import { Order, OrderStatus, PaymentStatus } from '../../../../core/models/order
 import { QuotationRequest } from '../../../../core/models/quote.model';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 
+export interface OrderRowViewModel {
+  readonly id: string;
+  readonly orderNumber: string;
+  readonly createdAtFormatted: string;
+  readonly customerName: string;
+  readonly customerPhone: string;
+  readonly isPickup: boolean;
+  readonly fulfillmentLabel: string;
+  readonly fulfillmentDetail: string;
+  readonly itemsCount: number;
+  readonly totalAmount: number;
+  readonly isBankTransfer: boolean;
+  readonly paymentMethodLabel: string;
+  readonly paymentStatusBadgeClass: string;
+  readonly paymentStatusTextKey: string;
+  readonly paymentStatusDefaultText: string;
+  readonly paymentReference?: string;
+  readonly status: OrderStatus;
+  readonly statusBadgeClass: string;
+  readonly paymentStatus: PaymentStatus;
+  readonly rawOrder: Order;
+}
+
 @Component({
   selector: 'aser-admin-orders',
   standalone: true,
@@ -47,6 +70,31 @@ export class OrdersComponent {
     const list = this.filteredOrders;
     const start = (this.ordersPage - 1) * this.ordersPageSize;
     return list.slice(start, start + this.ordersPageSize);
+  }
+
+  get pagedOrderRows(): readonly OrderRowViewModel[] {
+    return this.pagedOrders.map(o => ({
+      id: o.id,
+      orderNumber: o.orderNumber,
+      createdAtFormatted: o.createdAt,
+      customerName: o.customerName,
+      customerPhone: o.customerPhone,
+      isPickup: o.fulfillment === 'BRANCH_PICKUP',
+      fulfillmentLabel: o.fulfillment === 'BRANCH_PICKUP' ? 'Pickup' : 'Delivery',
+      fulfillmentDetail: o.fulfillment === 'BRANCH_PICKUP' ? (o.pickupBranchName || 'Branch') : (o.deliveryAddress || 'Address'),
+      itemsCount: o.items.length,
+      totalAmount: o.totalAmount,
+      isBankTransfer: o.paymentMethod === 'MANUAL_BANK_TRANSFER',
+      paymentMethodLabel: o.paymentMethod === 'MANUAL_BANK_TRANSFER' ? 'Bank Transfer' : 'Cash in Hand',
+      paymentStatusBadgeClass: this.getPaymentStatusBadgeClass(o.paymentStatus),
+      paymentStatusTextKey: o.paymentStatus === 'PAID' ? 'ORDERS.PAID' : 'ORDERS.PENDING',
+      paymentStatusDefaultText: o.paymentStatus === 'PAID' ? 'Paid ✓' : 'Pending',
+      paymentReference: o.paymentReference,
+      status: o.status,
+      statusBadgeClass: this.getOrderStatusBadgeClass(o.status),
+      paymentStatus: o.paymentStatus,
+      rawOrder: o
+    }));
   }
 
   get pagedQuotations(): QuotationRequest[] {

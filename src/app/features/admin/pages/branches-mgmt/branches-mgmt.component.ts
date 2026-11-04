@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminShellComponent } from '../../layout/admin-shell/admin-shell.component';
@@ -7,6 +7,27 @@ import { PaginatorComponent } from '../../../../core/components/paginator/pagina
 import { AserStateService } from '../../../../core/services/aser-state.service';
 import { Branch } from '../../../../core/models/inventory.model';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
+
+export interface AdminBranchWarehouseViewModel {
+  readonly id: string;
+  readonly name: string;
+  readonly code: string;
+  readonly isDefault: boolean;
+}
+
+export interface AdminBranchCardViewModel {
+  readonly id: string;
+  readonly code: string;
+  readonly name: string;
+  readonly isHeadOffice: boolean;
+  readonly city: string;
+  readonly address: string;
+  readonly phone: string;
+  readonly email: string;
+  readonly warehouses: readonly AdminBranchWarehouseViewModel[];
+  readonly warehouseCount: number;
+  readonly raw: Branch;
+}
 
 @Component({
   selector: 'aser-branches-mgmt',
@@ -18,23 +39,48 @@ import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 export class BranchesMgmtComponent {
   readonly state = inject(AserStateService);
 
-  isCreateModalOpen = signal(false);
-  isEditModalOpen = signal(false);
-  isWarehouseModalOpen = signal(false);
+  readonly isCreateModalOpen = signal(false);
+  readonly isEditModalOpen = signal(false);
+  readonly isWarehouseModalOpen = signal(false);
+  readonly selectedBranch = signal<Branch | null>(null);
 
-  selectedBranch = signal<Branch | null>(null);
+  // Pagination Signals
+  readonly currentPage = signal<number>(1);
+  readonly pageSize = signal<number>(5);
 
-  // Pagination
-  currentPage = 1;
-  pageSize = 5;
+  readonly canManageBranches = computed<boolean>(() => this.state.hasPermission('MANAGE_BRANCHES'));
+  readonly totalBranchesCount = computed<number>(() => this.state.branches().length);
+
+  readonly pagedBranchCards = computed<readonly AdminBranchCardViewModel[]>(() => {
+    const list = this.state.branches();
+    const start = (this.currentPage() - 1) * this.pageSize();
+    return list.slice(start, start + this.pageSize()).map(b => ({
+      id: b.id,
+      code: b.code,
+      name: b.name,
+      isHeadOffice: !!b.isHeadOffice,
+      city: b.city,
+      address: b.address,
+      phone: b.phone,
+      email: b.email,
+      warehouses: (b.warehouses || []).map(w => ({
+        id: w.id,
+        name: w.name,
+        code: w.code,
+        isDefault: !!w.isDefault
+      })),
+      warehouseCount: b.warehouses ? b.warehouses.length : 0,
+      raw: b
+    }));
+  });
 
   onPageChange(page: number): void {
-    this.currentPage = page;
+    this.currentPage.set(page);
   }
 
   onPageSizeChange(size: number): void {
-    this.pageSize = size;
-    this.currentPage = 1;
+    this.pageSize.set(size);
+    this.currentPage.set(1);
   }
 
   closeCreateModal(): void {
@@ -47,12 +93,6 @@ export class BranchesMgmtComponent {
 
   closeWarehouseModal(): void {
     this.isWarehouseModalOpen.set(false);
-  }
-
-  get pagedBranches(): Branch[] {
-    const list = this.state.branches();
-    const start = (this.currentPage - 1) * this.pageSize;
-    return list.slice(start, start + this.pageSize);
   }
 
   // Form Model for Branch

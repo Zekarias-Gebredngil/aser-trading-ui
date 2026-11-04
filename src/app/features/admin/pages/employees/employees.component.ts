@@ -8,6 +8,22 @@ import { AserStateService } from '../../../../core/services/aser-state.service';
 import { EmployeeUser, StaffRole, ROLE_LABELS, ROLE_PERMISSIONS, Permission } from '../../../../core/models/user.model';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 
+export interface EmployeeRowViewModel {
+  readonly id: string;
+  readonly initial: string;
+  readonly fullName: string;
+  readonly username: string;
+  readonly role: StaffRole;
+  readonly roleLabel: string;
+  readonly branchDisplay: string;
+  readonly email: string;
+  readonly phone?: string;
+  readonly isActive: boolean;
+  readonly statusTextKey: string;
+  readonly statusDefaultText: string;
+  readonly rawEmployee: EmployeeUser;
+}
+
 @Component({
   selector: 'aser-employees',
   standalone: true,
@@ -98,6 +114,24 @@ export class EmployeesComponent {
     const list = this.filteredEmployees();
     const start = (this.currentPage - 1) * this.pageSize;
     return list.slice(start, start + this.pageSize);
+  }
+
+  get pagedEmployeeRows(): readonly EmployeeRowViewModel[] {
+    return this.pagedEmployees().map(emp => ({
+      id: emp.id,
+      initial: (emp.fullName || 'U').charAt(0).toUpperCase(),
+      fullName: emp.fullName,
+      username: emp.username,
+      role: emp.role,
+      roleLabel: emp.roleLabel,
+      branchDisplay: emp.assignedBranchName || 'Consolidated HQ / All',
+      email: emp.email,
+      phone: emp.phone,
+      isActive: emp.isActive,
+      statusTextKey: emp.isActive ? 'COMMON.ACTIVE' : 'COMMON.INACTIVE',
+      statusDefaultText: emp.isActive ? 'Active' : 'Suspended',
+      rawEmployee: emp
+    }));
   }
 
   onFilterChange(): void {

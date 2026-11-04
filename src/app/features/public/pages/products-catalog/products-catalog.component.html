@@ -52,12 +52,12 @@
             <span class="search-icon">
               <aser-icon name="lucide:search" [size]="16" color="var(--muted)"></aser-icon>
             </span>
-            <input class="search-input" [ngModel]="searchQuery" (ngModelChange)="searchQuery = $event; onFilterChange()" [placeholder]="'STOREFRONT.SEARCH_CATALOG' | translate:'Search materials by title or SKU...'">
+            <input class="search-input" [ngModel]="searchQuery" (ngModelChange)="onSearchChange($event)" [placeholder]="'STOREFRONT.SEARCH_CATALOG' | translate:'Search materials by title or SKU...'">
           </div>
 
           <div style="display:flex; align-items:center; gap:8px;">
             <label style="font-size:12px; font-weight:700; color:var(--muted); white-space:nowrap;">{{ 'COMMON.STATUS' | translate:'Availability' }}:</label>
-            <select class="form-select" style="width:160px; padding:10px;" [ngModel]="availabilityFilter" (ngModelChange)="availabilityFilter = $event; onFilterChange()">
+            <select class="form-select" style="width:160px; padding:10px;" [ngModel]="availabilityFilter" (ngModelChange)="onAvailabilityFilterChange($event)">
               <option value="ALL">{{ 'COMMON.ALL' | translate:'All Stock Statuses' }}</option>
               <option value="IN_STOCK">{{ 'STOREFRONT.IN_STOCK' | translate:'In Stock Only' }}</option>
               <option value="LIMITED">{{ 'PRODUCT_DETAIL.LIMITED_STOCK' | translate:'Limited Stock' }}</option>
@@ -69,48 +69,48 @@
 
       <!-- Products Grid -->
       <div class="product-grid">
-        @for (product of pagedProducts; track product.id) {
+        @for (item of pagedProductCards; track item.id) {
           <div class="product-card">
             <div class="product-card-top">
               <div class="product-card-badges">
-                <span class="category-tag">{{ product.categoryLabel }}</span>
-                @if (product.badge) {
-                  <span class="badge badge-transit">{{ product.badge }}</span>
+                <span class="category-tag">{{ item.categoryLabel }}</span>
+                @if (item.badge) {
+                  <span class="badge badge-transit">{{ item.badge }}</span>
                 }
               </div>
               <div class="product-slider-wrapper" style="width: 100%; border-radius: var(--radius-sm); overflow: hidden; margin-top: 8px;">
                 <aser-image-slider 
-                  [images]="product.images || (product.imageUrl ? [product.imageUrl] : [])" 
-                  [fallbackCategory]="product.category" 
-                  [alt]="product.name"
+                  [images]="item.images" 
+                  [fallbackCategory]="item.category" 
+                  [alt]="item.name"
                   height="170px">
                 </aser-image-slider>
               </div>
             </div>
 
             <div class="product-card-body">
-              <div class="product-sku">{{ product.sku }}</div>
-              <h3 class="product-title">{{ product.name }}</h3>
-              @if (product.amharicName) {
-                <div class="product-amharic">{{ product.amharicName }}</div>
+              <div class="product-sku">{{ item.sku }}</div>
+              <h3 class="product-title">{{ item.name }}</h3>
+              @if (item.amharicName) {
+                <div class="product-amharic">{{ item.amharicName }}</div>
               }
-              <p class="product-desc">{{ product.description }}</p>
+              <p class="product-desc">{{ item.description }}</p>
 
               <div class="product-spec-mini">
-                <span class="badge" [class]="getAvailabilityBadge(product).badgeClass">
-                  ● {{ getAvailabilityBadge(product).textKey | translate:getAvailabilityBadge(product).defaultText }}
+                <span class="badge" [class]="item.badgeClass">
+                  ● {{ item.badgeTextKey | translate:item.badgeDefaultText }}
                 </span>
-                <span style="margin-left:auto;">Unit: {{ product.unit }}</span>
+                <span style="margin-left:auto;">Unit: {{ item.unit }}</span>
               </div>
             </div>
 
             <div class="product-card-footer">
               <div class="product-price-box">
                 <span class="product-price-label">{{ 'PRODUCTS.PUBLIC_PRICE' | translate:'Price' }} (ETB)</span>
-                @if (product.pricingType === 'FIXED') {
+                @if (item.isFixedPrice) {
                   <span class="product-price-amount">
-                    ETB {{ product.unitPrice | number:'1.2-2' }}
-                    <small class="product-unit-text">/ {{ product.unit }}</small>
+                    ETB {{ item.unitPrice | number:'1.2-2' }}
+                    <small class="product-unit-text">/ {{ item.unit }}</small>
                   </span>
                 } @else {
                   <span class="product-price-amount" style="font-size:14px; color:var(--blue);">
@@ -120,11 +120,11 @@
               </div>
 
               <div style="display:flex; gap:6px;">
-                <button class="btn btn-outline btn-sm" (click)="viewProductDetails(product)">
+                <button class="btn btn-outline btn-sm" (click)="viewProductDetails(item.rawProduct)">
                   {{ 'COMMON.VIEW' | translate:'Details' }}
                 </button>
-                @if (product.pricingType === 'FIXED') {
-                  <button class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;" (click)="addToCart(product)">
+                @if (item.isFixedPrice) {
+                  <button class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;" (click)="addToCart(item.rawProduct)">
                     {{ 'STOREFRONT.ADD_TO_CART' | translate:'Add' }} <aser-icon name="lucide:shopping-cart" [size]="13"></aser-icon>
                   </button>
                 } @else {

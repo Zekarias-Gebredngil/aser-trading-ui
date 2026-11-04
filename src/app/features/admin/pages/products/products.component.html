@@ -18,7 +18,7 @@
         {{ 'COMMON.EXPORT_EXCEL' | translate:'Export to Excel' }}
       </button>
 
-      @if (state.hasPermission('MANAGE_PRODUCTS')) {
+      @if (canManageProducts()) {
       <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;"
         (click)="openAddModal()">
         <aser-icon name="lucide:plus" [size]="16"></aser-icon> {{ 'PRODUCTS.ADD_PRODUCT' | translate:'Add New Product' }}
@@ -34,15 +34,15 @@
       <span class="search-icon">
         <aser-icon name="lucide:search" [size]="16" color="var(--muted)"></aser-icon>
       </span>
-      <input class="search-input" [ngModel]="searchQuery" (ngModelChange)="searchQuery = $event; onFilterChange()"
+      <input class="search-input" [ngModel]="searchQuery()" (ngModelChange)="onSearchChange($event)"
         [placeholder]="'PRODUCTS.SEARCH_PLACEHOLDER' | translate:'Search by SKU, product name, or Amharic title...'">
     </div>
 
     <div style="display:flex; align-items:center; gap:8px;">
       <label style="font-size:12px; font-weight:700; color:var(--muted);">{{ 'PRODUCTS.CATEGORY' | translate:'Category:'
         }}</label>
-      <select class="form-select" style="width:180px;" [ngModel]="selectedCategory"
-        (ngModelChange)="selectedCategory = $event; onFilterChange()">
+      <select class="form-select" style="width:180px;" [ngModel]="selectedCategory()"
+        (ngModelChange)="onCategoryChange($event)">
         <option value="ALL">{{ 'PRODUCTS.ALL_CATEGORIES' | translate:'All Categories' }}</option>
         <option value="PRINTING_SUPPLIES">Printing Supplies</option>
         <option value="GARMENT_MATERIALS">Garment Materials</option>
@@ -67,13 +67,13 @@
             <th>{{ 'PRODUCTS.PUBLIC_PRICE' | translate:'Public Price' }}</th>
             <th>{{ 'PRODUCTS.REORDER_ALERT' | translate:'Reorder Alert' }}</th>
             <th>{{ 'PRODUCTS.STOREFRONT_STATUS' | translate:'Storefront Status' }}</th>
-            @if (state.hasPermission('MANAGE_PRODUCTS')) {
+            @if (canManageProducts()) {
             <th style="text-align:right;">{{ 'COMMON.ACTIONS' | translate:'Actions' }}</th>
             }
           </tr>
         </thead>
         <tbody>
-          @for (p of pagedProducts; track p.id) {
+          @for (p of pagedProductRows(); track p.id) {
           <tr>
             <td>
               <strong style="color:var(--ink); display:block; font-size:13px;">{{ p.name }}</strong>
@@ -89,39 +89,34 @@
             </td>
             <td style="text-transform:capitalize;">{{ p.unit }}</td>
             <td>
-              <span class="badge" [class.badge-in-stock]="p.pricingType === 'FIXED'"
-                [class.badge-quote-only]="p.pricingType === 'QUOTATION'">
-                {{ p.pricingType === 'FIXED' ? ('PRODUCTS.FIXED_PRICE' | translate:'Fixed Price') :
-                ('PRODUCTS.QUOTATION_ONLY' | translate:'Quotation Only') }}
+              <span class="badge" [class]="p.pricingBadgeClass">
+                {{ p.pricingLabelKey | translate:p.pricingLabelDefault }}
               </span>
             </td>
             <td>
-              @if (p.pricingType === 'FIXED') {
+              @if (p.isFixedPrice) {
               <strong style="color:var(--ink);">ETB {{ p.unitPrice | number:'1.2-2' }}</strong>
               } @else {
-              <span style="color:var(--muted); font-size:12px;">{{ 'PRODUCTS.QUOTATION_ONLY' | translate:'By Project
-                Quote' }}</span>
+              <span style="color:var(--muted); font-size:12px;">{{ 'PRODUCTS.QUOTATION_ONLY' | translate:'By Project Quote' }}</span>
               }
             </td>
             <td>{{ p.reorderThreshold }} {{ p.unit }}</td>
             <td>
-              <span class="badge" [class.badge-in-stock]="p.isPublished" [class.badge-limited]="!p.isPublished">
-                {{ p.isPublished ? ('PRODUCTS.PUBLISHED' | translate:'Published') : ('PRODUCTS.HIDDEN' |
-                translate:'Hidden (Draft)') }}
+              <span class="badge" [class]="p.storefrontBadgeClass">
+                {{ p.storefrontLabelKey | translate:p.storefrontLabelDefault }}
               </span>
             </td>
-            @if (state.hasPermission('MANAGE_PRODUCTS')) {
+            @if (canManageProducts()) {
             <td style="text-align:right;">
               <div style="display:inline-flex; align-items:center; gap:6px;">
-                <button class="btn btn-outline btn-sm" (click)="togglePublish(p)" title="Toggle storefront visibility">
-                  {{ p.isPublished ? ('COMMON.CLOSE' | translate:'Hide') : ('PRODUCTS.PUBLISHED' | translate:'Publish')
-                  }}
+                <button class="btn btn-outline btn-sm" (click)="togglePublish(p.raw)" title="Toggle storefront visibility">
+                  {{ p.toggleActionLabelKey | translate:p.toggleActionLabelDefault }}
                 </button>
-                <button class="btn btn-outline btn-sm" (click)="openEditModal(p)" title="Edit product details">
+                <button class="btn btn-outline btn-sm" (click)="openEditModal(p.raw)" title="Edit product details">
                   <aser-icon name="lucide:pencil" [size]="13"></aser-icon>
                 </button>
                 <button class="btn btn-outline btn-sm" style="color:#dc2626; border-color:#fecaca;"
-                  (click)="deleteProduct(p)" title="Archive product">
+                  (click)="deleteProduct(p.raw)" title="Archive product">
                   <aser-icon name="lucide:trash-2" [size]="13"></aser-icon>
                 </button>
               </div>
@@ -133,12 +128,12 @@
       </table>
     </div>
 
-    @if (filteredProducts.length === 0) {
+    @if (filteredCount() === 0) {
     <div style="text-align:center; padding:40px; color:var(--muted);">
       No products match your search.
     </div>
     } @else {
-    <aser-paginator [totalItems]="filteredProducts.length" [pageSize]="pageSize" [currentPage]="currentPage"
+    <aser-paginator [totalItems]="filteredCount()" [pageSize]="pageSize()" [currentPage]="currentPage()"
       (pageChange)="onPageChange($event)" (pageSizeChange)="onPageSizeChange($event)">
     </aser-paginator>
     }

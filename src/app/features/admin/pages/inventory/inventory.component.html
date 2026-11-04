@@ -6,19 +6,26 @@
       </div>
       <h1>{{ 'INVENTORY.TITLE' | translate:'Centralized Inventory Ledger' }}</h1>
       <p>
-        {{ 'INVENTORY.SUBTITLE' | translate:'Weighted-average costing valuation, physical balances, and transaction history.' }}
+        {{ 'INVENTORY.SUBTITLE' | translate:'Weighted-average costing valuation, physical balances, and transaction
+        history.' }}
       </p>
     </div>
 
     <div style="display:flex; gap:10px;">
-      <button class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;" (click)="exportInventoryToExcel()" [title]="'COMMON.EXPORT_EXCEL' | translate:'Export to Excel'">
-        <aser-icon name="lucide:file-spreadsheet" [size]="16"></aser-icon> {{ 'COMMON.EXPORT_EXCEL' | translate:'Export to Excel' }}
+      <button class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;"
+        (click)="exportInventoryToExcel()" [title]="'COMMON.EXPORT_EXCEL' | translate:'Export to Excel'">
+        <aser-icon name="lucide:file-spreadsheet" [size]="16"></aser-icon> {{ 'COMMON.EXPORT_EXCEL' | translate:'Export
+        to Excel' }}
       </button>
-      <button class="btn btn-secondary" style="display:inline-flex; align-items:center; gap:8px;" (click)="openAdjustModal()">
-        <aser-icon name="lucide:sliders" [size]="16"></aser-icon> {{ 'INVENTORY.ADJUST_STOCK' | translate:'Adjust Stock' }}
+      <button class="btn btn-secondary" style="display:inline-flex; align-items:center; gap:8px;"
+        (click)="openAdjustModal()">
+        <aser-icon name="lucide:sliders" [size]="16"></aser-icon> {{ 'INVENTORY.ADJUST_STOCK' | translate:'Adjust Stock'
+        }}
       </button>
-      <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;" (click)="openReceiveModal()">
-        <aser-icon name="lucide:arrow-down" [size]="16"></aser-icon> {{ 'INVENTORY.RECORD_RECEIPT' | translate:'Record Stock Receipt' }}
+      <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;"
+        (click)="openReceiveModal()">
+        <aser-icon name="lucide:arrow-down" [size]="16"></aser-icon> {{ 'INVENTORY.RECORD_RECEIPT' | translate:'Record
+        Stock Receipt' }}
       </button>
     </div>
   </div>
@@ -27,10 +34,12 @@
   <div class="costing-formula-box">
     <div class="costing-formula-text">
       <h4 style="display:flex; align-items:center; gap:8px;">
-        <aser-icon name="lucide:layers" [size]="18" color="var(--blue)"></aser-icon> {{ 'INVENTORY.COSTING_TITLE' | translate:'Weighted-Average Costing Model ' }}
+        <aser-icon name="lucide:layers" [size]="18" color="var(--blue)"></aser-icon> {{ 'INVENTORY.COSTING_TITLE' |
+        translate:'Weighted-Average Costing Model ' }}
       </h4>
       <p>
-        {{ 'INVENTORY.COSTING_DESC' | translate:'Stock issues & valuation automatically update upon posting each inbound supplier delivery:' }}<br>
+        {{ 'INVENTORY.COSTING_DESC' | translate:'Stock issues & valuation automatically update upon posting each inbound
+        supplier delivery:' }}<br>
         <strong>New Average Cost = (Existing Qty × Existing Avg + Received Qty × Inbound Cost) ÷ Total New Qty</strong>
       </p>
     </div>
@@ -41,303 +50,311 @@
 
   <!-- Tabs Navigation -->
   <div style="display:flex; gap:12px; margin-bottom:20px; border-bottom:1px solid var(--line); padding-bottom:10px;">
-    <button class="btn btn-sm" style="display:inline-flex; align-items:center; gap:6px;" [class.btn-primary]="activeTab === 'BALANCES'" [class.btn-outline]="activeTab !== 'BALANCES'" (click)="setActiveTab('BALANCES')">
-      <aser-icon name="lucide:layers" [size]="15"></aser-icon> {{ 'INVENTORY.TAB_BALANCES' | translate:'Stock Balances By Location' }} ({{ filteredBalances.length }})
+    <button class="btn btn-sm" style="display:inline-flex; align-items:center; gap:6px;"
+      [class.btn-primary]="activeTab === 'BALANCES'" [class.btn-outline]="activeTab !== 'BALANCES'"
+      (click)="setActiveTab('BALANCES')">
+      <aser-icon name="lucide:layers" [size]="15"></aser-icon> {{ 'INVENTORY.TAB_BALANCES' | translate:'Stock Balances
+      By Location' }} ({{ filteredBalances.length }})
     </button>
-    <button class="btn btn-sm" style="display:inline-flex; align-items:center; gap:6px;" [class.btn-primary]="activeTab === 'MOVEMENTS'" [class.btn-outline]="activeTab !== 'MOVEMENTS'" (click)="setActiveTab('MOVEMENTS')">
-      <aser-icon name="lucide:clock" [size]="15"></aser-icon> {{ 'INVENTORY.TAB_MOVEMENTS' | translate:'Movement Ledger & Audit Trail' }} ({{ state.stockMovements().length }})
+    <button class="btn btn-sm" style="display:inline-flex; align-items:center; gap:6px;"
+      [class.btn-primary]="activeTab === 'MOVEMENTS'" [class.btn-outline]="activeTab !== 'MOVEMENTS'"
+      (click)="setActiveTab('MOVEMENTS')">
+      <aser-icon name="lucide:clock" [size]="15"></aser-icon> {{ 'INVENTORY.TAB_MOVEMENTS' | translate:'Movement Ledger
+      & Audit Trail' }} ({{ state.stockMovements().length }})
     </button>
-    <button class="btn btn-sm" style="display:inline-flex; align-items:center; gap:6px;" [class.btn-primary]="activeTab === 'ALERTS'" [class.btn-outline]="activeTab !== 'ALERTS'" (click)="setActiveTab('ALERTS')">
-      <aser-icon name="lucide:alert-triangle" [size]="15"></aser-icon> {{ 'INVENTORY.TAB_ALERTS' | translate:'Low Stock Alerts & Reorders' }} ({{ state.lowStockAlerts().length }})
+    <button class="btn btn-sm" style="display:inline-flex; align-items:center; gap:6px;"
+      [class.btn-primary]="activeTab === 'ALERTS'" [class.btn-outline]="activeTab !== 'ALERTS'"
+      (click)="setActiveTab('ALERTS')">
+      <aser-icon name="lucide:alert-triangle" [size]="15"></aser-icon> {{ 'INVENTORY.TAB_ALERTS' | translate:'Low Stock
+      Alerts & Reorders' }} ({{ state.lowStockAlerts().length }})
     </button>
   </div>
 
   @if (activeTab === 'BALANCES') {
-    <!-- Search & Filter Controls -->
-    <div style="background:#ffffff; border:1px solid var(--line); border-radius:var(--radius-lg); padding:16px 20px; margin-bottom:20px; display:flex; gap:16px; align-items:center;">
-      <div class="search-input-wrapper" style="flex:1;">
-        <span class="search-icon">
-          <aser-icon name="lucide:search" [size]="16" color="var(--muted)"></aser-icon>
-        </span>
-        <input class="search-input" [ngModel]="searchQuery" (ngModelChange)="searchQuery = $event; onFilterChange()" [placeholder]="'INVENTORY.SEARCH_PLACEHOLDER' | translate:'Search by SKU, product name, or branch location...'">
-      </div>
-
-      <div style="display:flex; align-items:center; gap:8px;">
-        <label style="font-size:12px; font-weight:700; color:var(--muted);">{{ 'INVENTORY.FILTER_STATUS' | translate:'Filter Status:' }}</label>
-        <select class="form-select" style="width:160px;" [ngModel]="statusFilter" (ngModelChange)="statusFilter = $event; onFilterChange()">
-          <option value="ALL">{{ 'COMMON.ALL' | translate:'All Statuses' }}</option>
-          <option value="In stock">{{ 'INVENTORY.IN_STOCK' | translate:'In Stock' }}</option>
-          <option value="Low stock">{{ 'INVENTORY.LOW_STOCK' | translate:'Low Stock Alert' }}</option>
-          <option value="Out of stock">{{ 'INVENTORY.OUT_OF_STOCK' | translate:'Out of Stock' }}</option>
-        </select>
-      </div>
+  <!-- Search & Filter Controls -->
+  <div
+    style="background:#ffffff; border:1px solid var(--line); border-radius:var(--radius-lg); padding:16px 20px; margin-bottom:20px; display:flex; gap:16px; align-items:center;">
+    <div class="search-input-wrapper" style="flex:1;">
+      <span class="search-icon">
+        <aser-icon name="lucide:search" [size]="16" color="var(--muted)"></aser-icon>
+      </span>
+      <input class="search-input" [ngModel]="searchQuery" (ngModelChange)="searchQuery = $event; onFilterChange()"
+        [placeholder]="'INVENTORY.SEARCH_PLACEHOLDER' | translate:'Search by SKU, product name, or branch location...'">
     </div>
 
-    <!-- Stock Balances Table -->
-    <div class="panel-card">
-      <div class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>{{ 'INVENTORY.PRODUCT_CATEGORY' | translate:'Product & Category' }}</th>
-              <th>{{ 'INVENTORY.SKU' | translate:'SKU' }}</th>
-              <th>{{ 'INVENTORY.BRANCH_WAREHOUSE' | translate:'Branch / Warehouse' }}</th>
-              <th>{{ 'INVENTORY.PHYSICAL_ON_HAND' | translate:'Physical On Hand' }}</th>
-              <th>{{ 'INVENTORY.RESERVED' | translate:'Reserved' }}</th>
-              <th>{{ 'INVENTORY.AVAILABLE' | translate:'Available to Sell' }}</th>
-              <th>{{ 'INVENTORY.WEIGHTED_AVG_COST' | translate:'Weighted Avg Cost' }}</th>
-              <th>{{ 'INVENTORY.TOTAL_VALUATION' | translate:'Total Valuation' }}</th>
-              <th>{{ 'COMMON.STATUS' | translate:'Status' }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (bal of pagedBalances; track bal.id) {
-              <tr>
-                <td>
-                  <strong style="color:var(--ink); display:block; font-size:13px;">{{ bal.productName }}</strong>
-                  <span style="font-size:11px; color:var(--muted);">{{ bal.category }}</span>
-                </td>
-                <td style="font-family:monospace; font-weight:700; color:var(--slate);">
-                  {{ bal.productSku }}
-                </td>
-                <td>
-                  <span style="font-weight:600; color:var(--ink); display:block;">{{ bal.branchName }}</span>
-                  <small style="color:var(--muted);">{{ bal.warehouseName }}</small>
-                </td>
-                <td>
-                  <strong style="font-size:13px;">{{ bal.onHandQty }} {{ bal.unit }}</strong>
-                </td>
-                <td style="color:var(--amber); font-weight:600;">
-                  {{ bal.reservedQty }} {{ bal.unit }}
-                </td>
-                <td>
-                  <strong style="color:var(--green); font-size:13px;">{{ bal.availableQty }} {{ bal.unit }}</strong>
-                </td>
-                <td>
-                  ETB {{ bal.weightedAvgCost | number:'1.2-2' }}
-                </td>
-                <td>
-                  <strong style="color:var(--blue);">ETB {{ bal.totalValuation | number:'1.2-2' }}</strong>
-                </td>
-                <td>
-                  <span class="badge" [class]="getStockStatusBadgeClass(bal.status)">
-                    {{ bal.status }}
-                  </span>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-
-      @if (filteredBalances.length === 0) {
-        <div style="text-align:center; padding:40px; color:var(--muted);">
-          No inventory items match your current filter.
-        </div>
-      } @else {
-        <aser-paginator
-          [totalItems]="filteredBalances.length"
-          [pageSize]="balancesPageSize"
-          [currentPage]="balancesPage"
-          (pageChange)="onBalancesPageChange($event)"
-          (pageSizeChange)="onBalancesPageSizeChange($event)">
-        </aser-paginator>
-      }
+    <div style="display:flex; align-items:center; gap:8px;">
+      <label style="font-size:12px; font-weight:700; color:var(--muted);">{{ 'INVENTORY.FILTER_STATUS' |
+        translate:'Filter Status:' }}</label>
+      <select class="form-select" style="width:160px;" [ngModel]="statusFilter"
+        (ngModelChange)="statusFilter = $event; onFilterChange()">
+        <option value="ALL">{{ 'COMMON.ALL' | translate:'All Statuses' }}</option>
+        <option value="In stock">{{ 'INVENTORY.IN_STOCK' | translate:'In Stock' }}</option>
+        <option value="Low stock">{{ 'INVENTORY.LOW_STOCK' | translate:'Low Stock Alert' }}</option>
+        <option value="Out of stock">{{ 'INVENTORY.OUT_OF_STOCK' | translate:'Out of Stock' }}</option>
+      </select>
     </div>
+  </div>
+
+  <!-- Stock Balances Table -->
+  <div class="panel-card">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ 'INVENTORY.PRODUCT_CATEGORY' | translate:'Product & Category' }}</th>
+            <th>{{ 'INVENTORY.SKU' | translate:'SKU' }}</th>
+            <th>{{ 'INVENTORY.BRANCH_WAREHOUSE' | translate:'Branch / Warehouse' }}</th>
+            <th>{{ 'INVENTORY.PHYSICAL_ON_HAND' | translate:'Physical On Hand' }}</th>
+            <th>{{ 'INVENTORY.RESERVED' | translate:'Reserved' }}</th>
+            <th>{{ 'INVENTORY.AVAILABLE' | translate:'Available to Sell' }}</th>
+            <th>{{ 'INVENTORY.WEIGHTED_AVG_COST' | translate:'Weighted Avg Cost' }}</th>
+            <th>{{ 'INVENTORY.TOTAL_VALUATION' | translate:'Total Valuation' }}</th>
+            <th>{{ 'COMMON.STATUS' | translate:'Status' }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (bal of pagedBalanceRows; track bal.id) {
+          <tr>
+            <td>
+              <strong style="color:var(--ink); display:block; font-size:13px;">{{ bal.productName }}</strong>
+              <span style="font-size:11px; color:var(--muted);">{{ bal.category }}</span>
+            </td>
+            <td style="font-family:monospace; font-weight:700; color:var(--slate);">
+              {{ bal.productSku }}
+            </td>
+            <td>
+              <span style="font-weight:600; color:var(--ink); display:block;">{{ bal.branchName }}</span>
+              <small style="color:var(--muted);">{{ bal.warehouseName }}</small>
+            </td>
+            <td>
+              <strong style="font-size:13px;">{{ bal.onHandDisplay }}</strong>
+            </td>
+            <td style="color:var(--amber); font-weight:600;">
+              {{ bal.reservedDisplay }}
+            </td>
+            <td>
+              <strong style="color:var(--green); font-size:13px;">{{ bal.availableDisplay }}</strong>
+            </td>
+            <td>
+              ETB {{ bal.weightedAvgCost | number:'1.2-2' }}
+            </td>
+            <td>
+              <strong style="color:var(--blue);">ETB {{ bal.totalValuation | number:'1.2-2' }}</strong>
+            </td>
+            <td>
+              <span class="badge" [class]="bal.statusBadgeClass">
+                {{ bal.status }}
+              </span>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (filteredBalances.length === 0) {
+    <div style="text-align:center; padding:40px; color:var(--muted);">
+      No inventory items match your current filter.
+    </div>
+    } @else {
+    <aser-paginator [totalItems]="filteredBalances.length" [pageSize]="balancesPageSize" [currentPage]="balancesPage"
+      (pageChange)="onBalancesPageChange($event)" (pageSizeChange)="onBalancesPageSizeChange($event)">
+    </aser-paginator>
+    }
+  </div>
   } @else {
-    <!-- Movements Ledger Table -->
-    <div class="panel-card">
-      <div class="panel-card-header">
-        <div>
-          <h2>Stock Movement Audit Ledger</h2>
-          <p>Immutable append-only record of all stock receipts, issues & transfers</p>
-        </div>
+  <!-- Movements Ledger Table -->
+  <div class="panel-card">
+    <div class="panel-card-header">
+      <div>
+        <h2>Stock Movement Audit Ledger</h2>
+        <p>Immutable append-only record of all stock receipts, issues & transfers</p>
       </div>
-
-      <div class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Timestamp</th>
-              <th>Type</th>
-              <th>Product & SKU</th>
-              <th>Branch / Warehouse</th>
-              <th>Quantity Delta</th>
-              <th>Unit Cost (ETB)</th>
-              <th>Total Cost</th>
-              <th>Reference</th>
-              <th>Authorized Actor</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (mov of pagedMovements; track mov.id) {
-              <tr>
-                <td style="font-size:11px; color:var(--muted);">{{ mov.timestamp }}</td>
-                <td>
-                  <span class="badge" 
-                    [class.badge-in-stock]="mov.type === 'RECEIPT'"
-                    [class.badge-transit]="mov.type === 'TRANSFER_OUT' || mov.type === 'TRANSFER_IN'"
-                    [class.badge-limited]="mov.type === 'ISSUE'">
-                    {{ mov.type }}
-                  </span>
-                </td>
-                <td>
-                  <strong style="display:block; color:var(--ink);">{{ mov.productName }}</strong>
-                  <small style="font-family:monospace; color:var(--muted);">{{ mov.productSku }}</small>
-                </td>
-                <td>{{ mov.branchName }} ({{ mov.warehouseName }})</td>
-                <td>
-                  <strong [style.color]="mov.quantityDelta > 0 ? 'var(--green)' : 'var(--red)'">
-                    {{ mov.quantityDelta > 0 ? '+' : '' }}{{ mov.quantityDelta }} {{ mov.unit }}
-                  </strong>
-                </td>
-                <td>ETB {{ mov.unitCost | number:'1.2-2' }}</td>
-                <td>
-                  <strong>ETB {{ mov.totalCost | number:'1.2-2' }}</strong>
-                </td>
-                <td>
-                  <span style="font-family:monospace; font-size:11px; background:var(--bg-soft); padding:2px 6px; border-radius:4px;">
-                    {{ mov.referenceNumber }}
-                  </span>
-                </td>
-                <td style="font-size:12px;">{{ mov.actor }}</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-
-      @if (state.stockMovements().length === 0) {
-        <div style="text-align:center; padding:40px; color:var(--muted);">
-          No stock movements recorded yet.
-        </div>
-      } @else {
-        <aser-paginator
-          [totalItems]="state.stockMovements().length"
-          [pageSize]="movementsPageSize"
-          [currentPage]="movementsPage"
-          (pageChange)="onMovementsPageChange($event)"
-          (pageSizeChange)="onMovementsPageSizeChange($event)">
-        </aser-paginator>
-      }
     </div>
+
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Type</th>
+            <th>Product & SKU</th>
+            <th>Branch / Warehouse</th>
+            <th>Quantity Delta</th>
+            <th>Unit Cost (ETB)</th>
+            <th>Total Cost</th>
+            <th>Reference</th>
+            <th>Authorized Actor</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (mov of pagedMovements; track mov.id) {
+          <tr>
+            <td style="font-size:11px; color:var(--muted);">{{ mov.timestamp }}</td>
+            <td>
+              <span class="badge" [class.badge-in-stock]="mov.type === 'RECEIPT'"
+                [class.badge-transit]="mov.type === 'TRANSFER_OUT' || mov.type === 'TRANSFER_IN'"
+                [class.badge-limited]="mov.type === 'ISSUE'">
+                {{ mov.type }}
+              </span>
+            </td>
+            <td>
+              <strong style="display:block; color:var(--ink);">{{ mov.productName }}</strong>
+              <small style="font-family:monospace; color:var(--muted);">{{ mov.productSku }}</small>
+            </td>
+            <td>{{ mov.branchName }} ({{ mov.warehouseName }})</td>
+            <td>
+              <strong [style.color]="mov.quantityDelta > 0 ? 'var(--green)' : 'var(--red)'">
+                {{ mov.quantityDelta > 0 ? '+' : '' }}{{ mov.quantityDelta }} {{ mov.unit }}
+              </strong>
+            </td>
+            <td>ETB {{ mov.unitCost | number:'1.2-2' }}</td>
+            <td>
+              <strong>ETB {{ mov.totalCost | number:'1.2-2' }}</strong>
+            </td>
+            <td>
+              <span
+                style="font-family:monospace; font-size:11px; background:var(--bg-soft); padding:2px 6px; border-radius:4px;">
+                {{ mov.referenceNumber }}
+              </span>
+            </td>
+            <td style="font-size:12px;">{{ mov.actor }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (state.stockMovements().length === 0) {
+    <div style="text-align:center; padding:40px; color:var(--muted);">
+      No stock movements recorded yet.
+    </div>
+    } @else {
+    <aser-paginator [totalItems]="state.stockMovements().length" [pageSize]="movementsPageSize"
+      [currentPage]="movementsPage" (pageChange)="onMovementsPageChange($event)"
+      (pageSizeChange)="onMovementsPageSizeChange($event)">
+    </aser-paginator>
+    }
+  </div>
   }
 
   @if (activeTab === 'ALERTS') {
-    <div class="panel-card">
-      <div class="table-responsive">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Product SKU</th>
-              <th>Product Name</th>
-              <th>Warehouse</th>
-              <th>Current Stock</th>
-              <th>Reorder Threshold</th>
-              <th>Shortage Delta</th>
-              <th>Urgency Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (alert of state.lowStockAlerts(); track alert.productId) {
-              <tr>
-                <td>
-                  <strong style="color:var(--blue); font-family:monospace;">{{ alert.productSku }}</strong>
-                </td>
-                <td>
-                  <strong style="color:var(--ink);">{{ alert.productName }}</strong>
-                </td>
-                <td>{{ alert.warehouseName }}</td>
-                <td>
-                  <strong style="color:var(--red);">{{ alert.currentStock }}</strong>
-                </td>
-                <td>{{ alert.reorderThreshold }}</td>
-                <td>
-                  <span class="badge" style="background:#fee2e2; color:#b91c1c;">-{{ alert.shortageQuantity }} units</span>
-                </td>
-                <td>
-                  <span class="badge badge-limited">Reorder Required</span>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-
-      @if (state.lowStockAlerts().length === 0) {
-        <div style="text-align:center; padding:40px; color:var(--muted);">
-          All inventory items are currently above their reorder thresholds. No urgent alerts.
-        </div>
-      }
+  <div class="panel-card">
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Product SKU</th>
+            <th>Product Name</th>
+            <th>Warehouse</th>
+            <th>Current Stock</th>
+            <th>Reorder Threshold</th>
+            <th>Shortage Delta</th>
+            <th>Urgency Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (alert of state.lowStockAlerts(); track alert.productId) {
+          <tr>
+            <td>
+              <strong style="color:var(--blue); font-family:monospace;">{{ alert.productSku }}</strong>
+            </td>
+            <td>
+              <strong style="color:var(--ink);">{{ alert.productName }}</strong>
+            </td>
+            <td>{{ alert.warehouseName }}</td>
+            <td>
+              <strong style="color:var(--red);">{{ alert.currentStock }}</strong>
+            </td>
+            <td>{{ alert.reorderThreshold }}</td>
+            <td>
+              <span class="badge" style="background:#fee2e2; color:#b91c1c;">-{{ alert.shortageQuantity }} units</span>
+            </td>
+            <td>
+              <span class="badge badge-limited">Reorder Required</span>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
     </div>
+
+    @if (state.lowStockAlerts().length === 0) {
+    <div style="text-align:center; padding:40px; color:var(--muted);">
+      All inventory items are currently above their reorder thresholds. No urgent alerts.
+    </div>
+    }
+  </div>
   }
 
   <!-- Stock Receipt Modal -->
   @if (isReceiveModalOpen()) {
-    <aser-receive-stock-modal (close)="closeReceiveModal()"></aser-receive-stock-modal>
+  <aser-receive-stock-modal (close)="closeReceiveModal()"></aser-receive-stock-modal>
   }
 
   <!-- Stock Adjustment Modal -->
   @if (isAdjustModalOpen()) {
-    <div class="modal-backdrop" (click)="closeAdjustModal()">
-      <div class="modal-dialog" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <div>
-            <h3 style="font-size:17px; font-weight:800; color:var(--ink);">Record Inventory Adjustment</h3>
-            <span class="badge badge-quote-only">Audit & Reconciliation</span>
-          </div>
-          <button class="modal-close-btn" (click)="closeAdjustModal()" aria-label="Close dialog">
-            <aser-icon name="lucide:x" [size]="18"></aser-icon>
-          </button>
+  <div class="modal-backdrop" (click)="closeAdjustModal()">
+    <div class="modal-dialog" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h3 style="font-size:17px; font-weight:800; color:var(--ink);">Record Inventory Adjustment</h3>
+          <span class="badge badge-quote-only">Audit & Reconciliation</span>
+        </div>
+        <button class="modal-close-btn" (click)="closeAdjustModal()" aria-label="Close dialog">
+          <aser-icon name="lucide:x" [size]="18"></aser-icon>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom:14px;">
+          <label class="form-label" style="font-size:12px; font-weight:700;">Warehouse *</label>
+          <select class="form-select" [(ngModel)]="adjustWarehouseId">
+            @for (wh of allWarehouses; track wh.id) {
+            <option [value]="wh.id">{{ wh.branchName }} - {{ wh.name }}</option>
+            }
+          </select>
         </div>
 
-        <div class="modal-body">
-          <div class="form-group" style="margin-bottom:14px;">
-            <label class="form-label" style="font-size:12px; font-weight:700;">Warehouse *</label>
-            <select class="form-select" [(ngModel)]="adjustWarehouseId">
-              @for (wh of allWarehouses; track wh.id) {
-                <option [value]="wh.id">{{ wh.branchName }} - {{ wh.name }}</option>
-              }
-            </select>
-          </div>
-
-          <div class="form-group" style="margin-bottom:14px;">
-            <label class="form-label" style="font-size:12px; font-weight:700;">Product SKU *</label>
-            <select class="form-select" [(ngModel)]="adjustProductId">
-              @for (p of state.products(); track p.id) {
-                <option [value]="p.id.replace('PRD-', '')">{{ p.sku }} - {{ p.name }}</option>
-              }
-            </select>
-          </div>
-
-          <div class="form-group" style="margin-bottom:14px;">
-            <label class="form-label" style="font-size:12px; font-weight:700;">Quantity Delta (+ to add, - to subtract) *</label>
-            <input type="number" class="form-control" [(ngModel)]="adjustDelta" placeholder="e.g. +5 or -2" />
-          </div>
-
-          <div class="form-group" style="margin-bottom:14px;">
-            <label class="form-label" style="font-size:12px; font-weight:700;">Reason Code *</label>
-            <select class="form-select" [(ngModel)]="adjustReason">
-              <option value="PHYSICAL_COUNT_AUDIT">Physical Count Reconciliation</option>
-              <option value="DAMAGED_EXPIRED">Damaged / Expired Material</option>
-              <option value="FOUND_STOCK">Found Unrecorded Stock</option>
-              <option value="SUPPLIER_RETURN">Return to Supplier</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" style="font-size:12px; font-weight:700;">Auditor / Reason Notes</label>
-            <textarea class="form-control" rows="2" [(ngModel)]="adjustNotes" placeholder="Describe the physical discrepancy..."></textarea>
-          </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label class="form-label" style="font-size:12px; font-weight:700;">Product SKU *</label>
+          <select class="form-select" [(ngModel)]="adjustProductId">
+            @for (p of state.products(); track p.id) {
+            <option [value]="p.id.replace('PRD-', '')">{{ p.sku }} - {{ p.name }}</option>
+            }
+          </select>
         </div>
 
-        <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
-          <button class="btn btn-outline" (click)="closeAdjustModal()">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
-          <button class="btn btn-primary" [disabled]="adjustDelta === 0" (click)="submitAdjustment()">
-            {{ 'COMMON.SUBMIT' | translate:'Post Stock Adjustment' }}
-          </button>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label class="form-label" style="font-size:12px; font-weight:700;">Quantity Delta (+ to add, - to subtract)
+            *</label>
+          <input type="number" class="form-control" [(ngModel)]="adjustDelta" placeholder="e.g. +5 or -2" />
+        </div>
+
+        <div class="form-group" style="margin-bottom:14px;">
+          <label class="form-label" style="font-size:12px; font-weight:700;">Reason Code *</label>
+          <select class="form-select" [(ngModel)]="adjustReason">
+            <option value="PHYSICAL_COUNT_AUDIT">Physical Count Reconciliation</option>
+            <option value="DAMAGED_EXPIRED">Damaged / Expired Material</option>
+            <option value="FOUND_STOCK">Found Unrecorded Stock</option>
+            <option value="SUPPLIER_RETURN">Return to Supplier</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-size:12px; font-weight:700;">Auditor / Reason Notes</label>
+          <textarea class="form-control" rows="2" [(ngModel)]="adjustNotes"
+            placeholder="Describe the physical discrepancy..."></textarea>
         </div>
       </div>
+
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
+        <button class="btn btn-outline" (click)="closeAdjustModal()">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
+        <button class="btn btn-primary" [disabled]="adjustDelta === 0" (click)="submitAdjustment()">
+          {{ 'COMMON.SUBMIT' | translate:'Post Stock Adjustment' }}
+        </button>
+      </div>
     </div>
+  </div>
   }
 </aser-admin-shell>

@@ -16,6 +16,25 @@ import { ServiceCategory } from '../../../../core/models/quote.model';
 import { AserStateService } from '../../../../core/services/aser-state.service';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 
+export interface CatalogProductCardViewModel {
+  readonly id: string;
+  readonly sku: string;
+  readonly name: string;
+  readonly amharicName?: string;
+  readonly category: ProductCategory;
+  readonly categoryLabel: string;
+  readonly description: string;
+  readonly unit: string;
+  readonly unitPrice: number;
+  readonly isFixedPrice: boolean;
+  readonly badge?: string;
+  readonly badgeClass: string;
+  readonly badgeTextKey: string;
+  readonly badgeDefaultText: string;
+  readonly images: readonly string[];
+  readonly rawProduct: Product;
+}
+
 @Component({
   selector: 'aser-public-products-catalog',
   standalone: true,
@@ -80,8 +99,48 @@ export class ProductsCatalogComponent implements OnInit {
     return list.slice(start, start + this.pageSize);
   }
 
+  get pagedProductCards(): readonly CatalogProductCardViewModel[] {
+    return this.pagedProducts.map(p => this.toProductCardViewModel(p));
+  }
+
+  private toProductCardViewModel(product: Product): CatalogProductCardViewModel {
+    const badge = this.getAvailabilityBadge(product);
+    const images: readonly string[] = product.images && product.images.length > 0
+      ? product.images
+      : (product.imageUrl ? [product.imageUrl] : []);
+
+    return {
+      id: product.id,
+      sku: product.sku,
+      name: product.name,
+      amharicName: product.amharicName,
+      category: product.category,
+      categoryLabel: product.categoryLabel,
+      description: product.description,
+      unit: product.unit,
+      unitPrice: product.unitPrice,
+      isFixedPrice: product.pricingType === 'FIXED',
+      badge: product.badge,
+      badgeClass: badge.badgeClass,
+      badgeTextKey: badge.textKey,
+      badgeDefaultText: badge.defaultText,
+      images,
+      rawProduct: product
+    };
+  }
+
   onFilterChange(): void {
     this.currentPage = 1;
+  }
+
+  onSearchChange(q: string): void {
+    this.searchQuery = q;
+    this.onFilterChange();
+  }
+
+  onAvailabilityFilterChange(filter: string): void {
+    this.availabilityFilter = filter;
+    this.onFilterChange();
   }
 
   selectCategory(cat: string): void {

@@ -11,6 +11,23 @@ import { ToastService } from '../../../../core/services/toast.service';
 import { StockBalance } from '../../../../core/models/inventory.model';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 
+export interface StockBalanceRowViewModel {
+  readonly id: string;
+  readonly productName: string;
+  readonly productSku: string;
+  readonly category: string;
+  readonly branchName: string;
+  readonly warehouseName: string;
+  readonly onHandDisplay: string;
+  readonly reservedDisplay: string;
+  readonly availableDisplay: string;
+  readonly weightedAvgCost: number;
+  readonly totalValuation: number;
+  readonly status: string;
+  readonly statusBadgeClass: string;
+  readonly rawBalance: StockBalance;
+}
+
 @Component({
   selector: 'aser-admin-inventory',
   standalone: true,
@@ -59,6 +76,25 @@ export class InventoryComponent {
     return list.slice(start, start + this.balancesPageSize);
   }
 
+  get pagedBalanceRows(): readonly StockBalanceRowViewModel[] {
+    return this.pagedBalances.map(b => ({
+      id: b.id,
+      productName: b.productName,
+      productSku: b.productSku,
+      category: b.category,
+      branchName: b.branchName,
+      warehouseName: b.warehouseName,
+      onHandDisplay: `${b.onHandQty} ${b.unit}`,
+      reservedDisplay: `${b.reservedQty} ${b.unit}`,
+      availableDisplay: `${b.availableQty} ${b.unit}`,
+      weightedAvgCost: b.weightedAvgCost,
+      totalValuation: b.totalValuation,
+      status: b.status,
+      statusBadgeClass: this.getStockStatusBadgeClass(b.status),
+      rawBalance: b
+    }));
+  }
+
   get pagedMovements() {
     const list = this.state.stockMovements();
     const start = (this.movementsPage - 1) * this.movementsPageSize;
@@ -67,6 +103,16 @@ export class InventoryComponent {
 
   onFilterChange(): void {
     this.balancesPage = 1;
+  }
+
+  onSearchChange(val: string): void {
+    this.searchQuery = val;
+    this.onFilterChange();
+  }
+
+  onStatusChange(val: string): void {
+    this.statusFilter = val;
+    this.onFilterChange();
   }
 
   setActiveTab(tab: 'BALANCES' | 'MOVEMENTS' | 'ALERTS'): void {

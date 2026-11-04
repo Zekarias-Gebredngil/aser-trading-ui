@@ -124,7 +124,8 @@ export class ServicesMgmtComponent {
     { value: 'lucide:layers', label: 'Layers / Materials' }
   ];
 
-  onCategoryChange(cat: ServiceCategory) {
+  onCategoryChange(cat: ServiceCategory): void {
+    this.serviceForm.category = cat;
     const opt = this.categoryOptions.find(o => o.key === cat);
     if (opt) {
       this.serviceForm.categoryLabel = opt.label;

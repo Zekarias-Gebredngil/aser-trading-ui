@@ -42,21 +42,21 @@
       </a>
 
       <!-- Stock Inventory (Warehouse & Storekeepers) -->
-      @if (state.hasPermission('VIEW_INVENTORY')) {
+      @if (canViewInventory()) {
       <a class="admin-nav-item" routerLink="/app/inventory" routerLinkActive="active" (click)="closeSidebar()"
         [title]="'NAV.STOCK_INVENTORY' | translate:'Stock Inventory'">
         <aser-icon name="lucide:layers" [size]="18"></aser-icon>
         <span>{{ 'NAV.STOCK_INVENTORY' | translate:'Stock Inventory' }}</span>
-        @if (state.lowStockCount() > 0) {
+        @if (lowStockCount() > 0) {
         <span class="badge badge-out-of-stock nav-item-badge">
-          {{ state.lowStockCount() }}
+          {{ lowStockCount() }}
         </span>
         }
       </a>
       }
 
       <!-- Product Catalog (Admin & Inventory Manager) -->
-      @if (state.hasPermission('MANAGE_PRODUCTS') || state.currentRole() === 'SYSTEM_ADMINISTRATOR') {
+      @if (canManageProducts()) {
       <a class="admin-nav-item" routerLink="/app/products" routerLinkActive="active" (click)="closeSidebar()"
         [title]="'NAV.PRODUCT_CATALOG' | translate:'Product Catalog'">
         <aser-icon name="lucide:package" [size]="18"></aser-icon>
@@ -65,7 +65,7 @@
       }
 
       <!-- Commercial Services (Admin & Marketing) -->
-      @if (state.hasPermission('MANAGE_SERVICES') || state.currentRole() === 'SYSTEM_ADMINISTRATOR') {
+      @if (canManageServices()) {
       <a class="admin-nav-item" routerLink="/app/services" routerLinkActive="active" (click)="closeSidebar()"
         [title]="'NAV.COMMERCIAL_SERVICES' | translate:'Commercial Services'">
         <aser-icon name="lucide:sparkles" [size]="18"></aser-icon>
@@ -74,65 +74,64 @@
       }
 
       <!-- Branch Transfers (Managers & Storekeepers) -->
-      @if (state.hasPermission('REQUEST_TRANSFER') || state.hasPermission('DISPATCH_TRANSFER') ||
-      state.hasPermission('APPROVE_TRANSFER')) {
+      @if (canManageTransfers()) {
       <a class="admin-nav-item" routerLink="/app/transfers" routerLinkActive="active" (click)="closeSidebar()"
         [title]="'NAV.BRANCH_TRANSFERS' | translate:'Branch Transfers'">
         <aser-icon name="lucide:arrow-left-right-arrows" [size]="18"></aser-icon>
         <span>{{ 'NAV.BRANCH_TRANSFERS' | translate:'Branch Transfers' }}</span>
-        @if (state.pendingTransfersCount() > 0) {
+        @if (pendingTransfersCount() > 0) {
         <span class="badge badge-transit nav-item-badge">
-          {{ state.pendingTransfersCount() }}
+          {{ pendingTransfersCount() }}
         </span>
         }
       </a>
       }
 
       <!-- Online Orders (Sales & Storekeepers) -->
-      @if (state.hasPermission('MANAGE_ORDERS')) {
+      @if (canManageOrders()) {
       <a class="admin-nav-item" routerLink="/app/orders" routerLinkActive="active" (click)="closeSidebar()"
         [title]="'NAV.ONLINE_ORDERS' | translate:'Online Orders'">
         <aser-icon name="lucide:shopping-cart" [size]="18"></aser-icon>
         <span>{{ 'NAV.ONLINE_ORDERS' | translate:'Online Orders' }}</span>
         <span class="badge badge-quote-only nav-item-badge">
-          {{ state.orders().length }}
+          {{ ordersCount() }}
         </span>
       </a>
       }
 
       <!-- Administrative & Configuration Section -->
-      @if (state.hasPermission('MANAGE_BRANCHES') || state.hasPermission('MANAGE_EMPLOYEES')) {
+      @if (canManageAdministration()) {
       <div class="nav-section-title" style="margin-top:14px;">
         {{ 'NAV.ADMINISTRATION' | translate:'Administration' }}
       </div>
 
       <!-- Branch Network Directory -->
-      @if (state.hasPermission('MANAGE_BRANCHES')) {
+      @if (canManageBranches()) {
       <a class="admin-nav-item" routerLink="/app/branches" routerLinkActive="active" (click)="closeSidebar()"
         [title]="'NAV.BRANCH_NETWORK' | translate:'Branch Network'">
         <aser-icon name="lucide:network" [size]="18"></aser-icon>
         <span>{{ 'NAV.BRANCH_NETWORK' | translate:'Branch Network' }}</span>
         <span class="badge nav-item-badge" style="background:var(--blue-soft); color:var(--blue);">
-          {{ state.branches().length }}
+          {{ branchesCount() }}
         </span>
       </a>
       }
 
       <!-- Staff & Permissions Management -->
-      @if (state.hasPermission('MANAGE_EMPLOYEES')) {
+      @if (canManageEmployees()) {
       <a class="admin-nav-item" routerLink="/app/employees" routerLinkActive="active" (click)="closeSidebar()"
         [title]="'NAV.STAFF_PERMISSIONS' | translate:'Staff & Permissions'">
         <aser-icon name="lucide:shield-check" [size]="18"></aser-icon>
         <span>{{ 'NAV.STAFF_PERMISSIONS' | translate:'Staff & Permissions' }}</span>
         <span class="badge nav-item-badge" style="background:#ecfdf5; color:#065f46;">
-          {{ state.employees().length }}
+          {{ employeesCount() }}
         </span>
       </a>
       }
       }
 
       <!-- System Administrator Controls (Activity Log, Reports & Analytics, System Settings) -->
-      @if (state.currentRole() === 'SYSTEM_ADMINISTRATOR') {
+      @if (isSystemAdmin()) {
       <div class="nav-section-title" style="margin-top:14px;">
         {{ 'NAV.SYSTEM_ADMIN_CONTROLS' | translate:'System Admin Controls' }}
       </div>
@@ -186,23 +185,22 @@
 
 
         <!-- Branch Scope: Either Scoped/Locked or Multi-Branch Selector -->
-        @if (state.isBranchScopeLocked()) {
+        @if (isBranchScopeLocked()) {
         <div class="branch-select-pill locked"
           title="Account access is restricted to your assigned branch by the System Administrator">
           <aser-icon name="lucide:lock" [size]="13" color="#b45309"></aser-icon>
           <span class="branch-scope-tag" style="color:#b45309; font-weight:800;">Scoped:</span>
-          <span class="branch-scope-name" style="color:var(--ink); font-weight:700;">{{
-            state.currentUser()?.assignedBranchName || 'Assigned Branch' }}</span>
+          <span class="branch-scope-name" style="color:var(--ink); font-weight:700;">{{ userAssignedBranch() }}</span>
         </div>
         } @else {
         <div class="branch-select-pill">
           <aser-icon name="lucide:map-pin" [size]="14" color="var(--blue)"></aser-icon>
           <span class="branch-scope-tag">{{ 'COMMON.BRANCH' | translate:'Branch' }}:</span>
-          <select class="branch-scope-select" [ngModel]="state.selectedBranchFilter()"
+          <select class="branch-scope-select" [ngModel]="branchFilter()"
             (ngModelChange)="onBranchFilterChange($event)">
             <option value="ALL">{{ 'DASHBOARD.ALL_BRANCHES' | translate:'All Branches (Consolidated System View)' }}
             </option>
-            @for (b of state.branches(); track b.id) {
+            @for (b of branchList(); track b.id) {
             <option [value]="b.id">{{ b.name }}</option>
             }
           </select>
@@ -217,8 +215,8 @@
               <aser-icon name="lucide:user" [size]="16" color="#ffffff"></aser-icon>
             </div>
             <div class="topbar-user-info">
-              <span class="topbar-user-name">{{ state.currentUser()?.fullName || 'Signed In' }}</span>
-              <span class="topbar-user-role">{{ state.currentUser()?.roleLabel || 'Staff' }}</span>
+              <span class="topbar-user-name">{{ currentUserName() }}</span>
+              <span class="topbar-user-role">{{ currentUserRole() }}</span>
             </div>
             <aser-icon name="lucide:chevron-down" [size]="13"
               [color]="profileMenuOpen() ? 'var(--blue)' : 'var(--muted)'"></aser-icon>
@@ -237,10 +235,10 @@
               </div>
               <div class="profile-menu-meta">
                 <div class="profile-menu-name">
-                  <span>{{ state.currentUser()?.fullName || 'Staff User' }}</span>
+                  <span>{{ currentUserName() }}</span>
                   <!-- <span class="amharic-tag">ኣሰር</span> -->
                 </div>
-                <div class="profile-menu-sub">{{ state.currentUser()?.email || state.currentUser()?.username }}</div>
+                <div class="profile-menu-sub">{{ currentUserEmail() }}</div>
                 <div class="logo-dots-rainbow" style="margin-top: 6px;">
                   <span class="logo-dot c-blue"></span>
                   <span class="logo-dot c-amber"></span>
@@ -277,25 +275,23 @@
               <div class="profile-section-details">
                 <div class="detail-row">
                   <span class="detail-label">{{ 'PROFILE.FULL_NAME' | translate:'Full Name' }}</span>
-                  <span class="detail-val">{{ state.currentUser()?.fullName || '-' }}</span>
+                  <span class="detail-val">{{ currentUserName() }}</span>
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">{{ 'PROFILE.USERNAME' | translate:'Username' }}</span>
-                  <span class="detail-val">{{ state.currentUser()?.username || '-' }}</span>
+                  <span class="detail-val">{{ currentUserUsername() }}</span>
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">{{ 'PROFILE.EMAIL' | translate:'Email' }}</span>
-                  <span class="detail-val">{{ state.currentUser()?.email || '-' }}</span>
+                  <span class="detail-val">{{ currentUserEmail() }}</span>
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">{{ 'PROFILE.ROLE' | translate:'Role' }}</span>
-                  <span class="detail-val badge-role">{{ state.currentUser()?.roleLabel || state.currentUser()?.role ||
-                    'Staff' }}</span>
+                  <span class="detail-val badge-role">{{ currentUserRole() }}</span>
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">{{ 'PROFILE.BRANCH' | translate:'Branch' }}</span>
-                  <span class="detail-val">{{ state.currentUser()?.assignedBranchName || 'Global HQ / Consolidated'
-                    }}</span>
+                  <span class="detail-val">{{ currentUserBranchName() }}</span>
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">{{ 'PROFILE.STATUS' | translate:'Status' }}</span>
@@ -306,7 +302,7 @@
 
               <!-- Tab 2: Change Password -->
               @if (activeProfileTab() === 'password') {
-              <form class="profile-password-form" (submit)="$event.preventDefault(); submitChangePassword()">
+              <form class="profile-password-form" (submit)="onSubmitPassword($event)">
                 @if (passwordError()) {
                 <div class="form-alert error">{{ passwordError() }}</div>
                 }

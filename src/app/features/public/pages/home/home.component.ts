@@ -15,6 +15,25 @@ import { QuoteModalComponent } from '../../components/quote-modal/quote-modal.co
 import { ProductDetailModalComponent } from '../../components/product-detail-modal/product-detail-modal.component';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 
+export interface ProductCardViewModel {
+  readonly id: string;
+  readonly sku: string;
+  readonly name: string;
+  readonly amharicName?: string;
+  readonly category: ProductCategory;
+  readonly categoryLabel: string;
+  readonly description: string;
+  readonly unit: string;
+  readonly unitPrice: number;
+  readonly isFixedPrice: boolean;
+  readonly badge?: string;
+  readonly badgeClass: string;
+  readonly badgeTextKey: string;
+  readonly badgeDefaultText: string;
+  readonly images: readonly string[];
+  readonly rawProduct: Product;
+}
+
 @Component({
   selector: 'aser-public-home',
   standalone: true,
@@ -56,6 +75,36 @@ export class HomeComponent {
       const matchesQuery = !q || `${p.name} ${p.sku} ${p.categoryLabel} ${p.description} ${p.amharicName || ''}`.toLowerCase().includes(q);
       return matchesCat && matchesQuery && p.isPublished;
     });
+  }
+
+  get productCards(): readonly ProductCardViewModel[] {
+    return this.filteredProducts.map(p => this.toProductCardViewModel(p));
+  }
+
+  private toProductCardViewModel(product: Product): ProductCardViewModel {
+    const badge = this.getAvailabilityBadge(product);
+    const images: readonly string[] = product.images && product.images.length > 0
+      ? product.images
+      : (product.imageUrl ? [product.imageUrl] : []);
+
+    return {
+      id: product.id,
+      sku: product.sku,
+      name: product.name,
+      amharicName: product.amharicName,
+      category: product.category,
+      categoryLabel: product.categoryLabel,
+      description: product.description,
+      unit: product.unit,
+      unitPrice: product.unitPrice,
+      isFixedPrice: product.pricingType === 'FIXED',
+      badge: product.badge,
+      badgeClass: badge.badgeClass,
+      badgeTextKey: badge.textKey,
+      badgeDefaultText: badge.defaultText,
+      images,
+      rawProduct: product
+    };
   }
 
   openCart(): void {

@@ -28,9 +28,9 @@
   <section class="section">
     <div class="container">
       <div class="services-grid" style="grid-template-columns:repeat(2, 1fr); gap:30px;">
-        @for (svc of state.activeServices(); track svc.id) {
+        @for (svc of serviceCards(); track svc.id) {
         <div class="service-card-item">
-          @if (svc.images && svc.images.length > 0) {
+          @if (svc.hasImages) {
             <div style="margin-bottom: 16px; border-radius: var(--radius-sm); overflow: hidden;">
               <aser-image-slider 
                 [images]="svc.images" 
@@ -41,7 +41,7 @@
             </div>
           }
           <div class="service-card-icon">
-            <aser-icon [name]="svc.icon || 'lucide:printer'" [size]="32" color="var(--blue)"></aser-icon>
+            <aser-icon [name]="svc.iconName" [size]="32" color="var(--blue)"></aser-icon>
           </div>
           <div style="font-size:11px; font-weight:800; color:var(--blue); letter-spacing:0.5px; text-transform:uppercase; margin-bottom:4px;">
             {{ svc.categoryLabel }}
@@ -99,7 +99,7 @@
 
   @if (isQuoteOpen()) {
     <aser-quote-modal 
-      [initialCategory]="selectedCategory"
+      [initialCategory]="selectedCategory()"
       (close)="closeQuote()">
     </aser-quote-modal>
   }

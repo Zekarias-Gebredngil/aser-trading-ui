@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, inject, signal } from '@angular/core';
+import { Component, Input, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -33,6 +33,38 @@ export class AdminShellComponent implements OnInit {
   sidebarCollapsed = signal(this.getInitialSidebarCollapsed());
   profileMenuOpen = signal(false);
   activeProfileTab = signal<'details' | 'password' | 'language'>('details');
+
+  // Strongly-typed reactive computed View Models
+  readonly lowStockCount = computed<number>(() => this.state.lowStockCount());
+  readonly pendingTransfersCount = computed<number>(() => this.state.pendingTransfersCount());
+  readonly ordersCount = computed<number>(() => this.state.orders().length);
+  readonly branchesCount = computed<number>(() => this.state.branches().length);
+  readonly employeesCount = computed<number>(() => this.state.employees().length);
+  readonly canAccessAllBranches = computed<boolean>(() => this.state.hasPermission('ACCESS_ALL_BRANCHES'));
+  readonly isBranchScopeLocked = computed<boolean>(() => this.state.isBranchScopeLocked());
+  readonly userAssignedBranch = computed<string>(() => this.state.currentUser()?.assignedBranchName || 'Assigned Branch');
+  readonly currentUserName = computed<string>(() => this.state.currentUser()?.fullName || 'Signed In');
+  readonly currentUserRole = computed<string>(() => this.state.currentUser()?.roleLabel || 'Staff');
+  readonly currentUserEmail = computed<string>(() => this.state.currentUser()?.email || this.state.currentUser()?.username || '-');
+  readonly currentUserUsername = computed<string>(() => this.state.currentUser()?.username || '-');
+  readonly currentUserBranchName = computed<string>(() => this.state.currentUser()?.assignedBranchName || 'Global HQ / Consolidated');
+  readonly branchFilter = computed<string>(() => this.state.selectedBranchFilter());
+  readonly branchList = computed(() => this.state.branches());
+
+  // Permissions & Role Computeds
+  readonly canViewInventory = computed<boolean>(() => this.state.hasPermission('VIEW_INVENTORY'));
+  readonly canManageProducts = computed<boolean>(() => this.state.hasPermission('MANAGE_PRODUCTS') || this.state.currentRole() === 'SYSTEM_ADMINISTRATOR');
+  readonly canManageServices = computed<boolean>(() => this.state.hasPermission('MANAGE_SERVICES') || this.state.currentRole() === 'SYSTEM_ADMINISTRATOR');
+  readonly canManageTransfers = computed<boolean>(() =>
+    this.state.hasPermission('REQUEST_TRANSFER') ||
+    this.state.hasPermission('DISPATCH_TRANSFER') ||
+    this.state.hasPermission('APPROVE_TRANSFER')
+  );
+  readonly canManageOrders = computed<boolean>(() => this.state.hasPermission('MANAGE_ORDERS'));
+  readonly canManageAdministration = computed<boolean>(() => this.state.hasPermission('MANAGE_BRANCHES') || this.state.hasPermission('MANAGE_EMPLOYEES'));
+  readonly canManageBranches = computed<boolean>(() => this.state.hasPermission('MANAGE_BRANCHES'));
+  readonly canManageEmployees = computed<boolean>(() => this.state.hasPermission('MANAGE_EMPLOYEES'));
+  readonly isSystemAdmin = computed<boolean>(() => this.state.currentRole() === 'SYSTEM_ADMINISTRATOR');
 
   private getInitialSidebarCollapsed(): boolean {
     if (typeof window !== 'undefined') {
@@ -103,6 +135,11 @@ export class AdminShellComponent implements OnInit {
       'Language Updated',
       `Interface language set to ${meta?.nativeName || lang}`
     );
+  }
+
+  onSubmitPassword(event: Event): void {
+    event.preventDefault();
+    this.submitChangePassword();
   }
 
   submitChangePassword(): void {

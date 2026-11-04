@@ -119,7 +119,7 @@
           <div class="form-group">
             <label class="form-label">Service Category *</label>
             <select [ngModel]="serviceForm.category"
-              (ngModelChange)="serviceForm.category = $event; onCategoryChange($event)" class="form-select">
+              (ngModelChange)="onCategoryChange($event)" class="form-select">
               @for (cat of categoryOptions; track cat.key) {
               <option [value]="cat.key">{{ cat.label }}</option>
               }
@@ -268,7 +268,7 @@
           <div class="form-group">
             <label class="form-label">Service Category *</label>
             <select [ngModel]="serviceForm.category"
-              (ngModelChange)="serviceForm.category = $event; onCategoryChange($event)" class="form-select">
+              (ngModelChange)="onCategoryChange($event)" class="form-select">
               @for (cat of categoryOptions; track cat.key) {
               <option [value]="cat.key">{{ cat.label }}</option>
               }

@@ -6,7 +6,7 @@
         {{ 'BRANCHES.SUBTITLE' | translate:'Dynamically register regional hubs, production plants, and local distribution depots across Ethiopia.' }}
       </p>
     </div>
-    @if (state.hasPermission('MANAGE_BRANCHES')) {
+    @if (canManageBranches()) {
     <button class="btn btn-primary" (click)="openCreateModal()">
       <aser-icon name="lucide:plus" [size]="16"></aser-icon>
       <span>{{ 'BRANCHES.REGISTER_BRANCH' | translate:'Register New Branch' }}</span>
@@ -16,7 +16,7 @@
 
   <!-- Branch Cards Grid -->
   <div class="branches-grid">
-    @for (branch of pagedBranches; track branch.id) {
+    @for (branch of pagedBranchCards(); track branch.id) {
     <div class="branch-card" [class.is-hq]="branch.isHeadOffice">
       <div class="branch-card-header">
         <div>
@@ -33,13 +33,13 @@
           </div>
         </div>
 
-        @if (state.hasPermission('MANAGE_BRANCHES')) {
+        @if (canManageBranches()) {
         <div class="branch-actions">
-          <button class="btn-icon" title="Edit Branch" (click)="openEditModal(branch)">
+          <button class="btn-icon" title="Edit Branch" (click)="openEditModal(branch.raw)">
             <aser-icon name="lucide:pencil" [size]="15"></aser-icon>
           </button>
           @if (!branch.isHeadOffice) {
-          <button class="btn-icon text-danger" title="Delete Branch" (click)="deleteBranch(branch)">
+          <button class="btn-icon text-danger" title="Delete Branch" (click)="deleteBranch(branch.raw)">
             <aser-icon name="lucide:trash-2" [size]="15"></aser-icon>
           </button>
           }
@@ -61,9 +61,9 @@
 
         <div class="warehouses-section">
           <div class="warehouses-header">
-            <span class="wh-title">{{ 'BRANCHES.WAREHOUSES' | translate:'Storage Warehouses' }} ({{ branch.warehouses.length }})</span>
-            @if (state.hasPermission('MANAGE_BRANCHES')) {
-            <button class="btn-link" (click)="openAddWarehouseModal(branch)">+ {{ 'BRANCHES.REGISTER_WAREHOUSE' | translate:'Add Warehouse' }}</button>
+            <span class="wh-title">{{ 'BRANCHES.WAREHOUSES' | translate:'Storage Warehouses' }} ({{ branch.warehouseCount }})</span>
+            @if (canManageBranches()) {
+            <button class="btn-link" (click)="openAddWarehouseModal(branch.raw)">+ {{ 'BRANCHES.REGISTER_WAREHOUSE' | translate:'Add Warehouse' }}</button>
             }
           </div>
 
@@ -85,12 +85,12 @@
     }
   </div>
 
-  @if (state.branches().length > 0) {
+  @if (totalBranchesCount() > 0) {
     <div style="margin-top:20px;">
       <aser-paginator
-        [totalItems]="state.branches().length"
-        [pageSize]="pageSize"
-        [currentPage]="currentPage"
+        [totalItems]="totalBranchesCount()"
+        [pageSize]="pageSize()"
+        [currentPage]="currentPage()"
         (pageChange)="onPageChange($event)"
         (pageSizeChange)="onPageSizeChange($event)">
       </aser-paginator>

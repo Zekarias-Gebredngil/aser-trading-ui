@@ -1,11 +1,34 @@
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Input, Output, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IconComponent } from '../../../../core/components/icon/icon.component';
 import { ImageSliderComponent } from '../../../../core/components/image-slider/image-slider.component';
-import { Product, ProductCategory } from '../../../../core/models/product.model';
+import { Product } from '../../../../core/models/product.model';
 import { AserStateService } from '../../../../core/services/aser-state.service';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
+
+export interface ProductSpecEntry {
+  readonly key: string;
+  readonly value: string;
+}
+
+export interface CategoryIconDescriptor {
+  readonly name: string;
+  readonly color: string;
+  readonly size: number;
+}
+
+export interface AvailabilityStatusDescriptor {
+  readonly textKey: string;
+  readonly defaultText: string;
+  readonly badgeClass: string;
+}
+
+export interface BranchAvailabilityViewModel {
+  readonly id: string;
+  readonly branchName: string;
+  readonly isAvailable: boolean;
+}
 
 @Component({
   selector: 'aser-product-detail-modal',
@@ -15,7 +38,7 @@ import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
   styleUrl: './product-detail-modal.component.css'
 })
 export class ProductDetailModalComponent {
-  readonly state = inject(AserStateService);
+  private readonly state = inject(AserStateService);
 
   @Input() product: Product | null = null;
   @Output() close = new EventEmitter<void>();
@@ -23,12 +46,20 @@ export class ProductDetailModalComponent {
 
   qty = 1;
 
-  get specEntries(): { key: string; value: string }[] {
+  readonly branchStockList = computed<readonly BranchAvailabilityViewModel[]>(() => {
+    return this.state.branches().map(b => ({
+      id: b.id,
+      branchName: this.getCleanBranchName(b.name),
+      isAvailable: true
+    }));
+  });
+
+  get specEntries(): readonly ProductSpecEntry[] {
     if (!this.product?.specifications) return [];
     return Object.entries(this.product.specifications).map(([key, value]) => ({ key, value }));
   }
 
-  get productImages(): string[] {
+  get productImages(): readonly string[] {
     if (!this.product) return [];
     if (this.product.images && this.product.images.length > 0) {
       return this.product.images;
@@ -40,7 +71,7 @@ export class ProductDetailModalComponent {
     return this.productImages.length > 0;
   }
 
-  get categoryIcon(): { name: string; color: string; size: number } {
+  get categoryIcon(): CategoryIconDescriptor {
     switch (this.product?.category) {
       case 'GARMENT_MATERIALS':
         return { name: 'lucide:scissors', color: 'var(--magenta)', size: 64 };
@@ -59,7 +90,7 @@ export class ProductDetailModalComponent {
     return this.availabilityStatus.badgeClass;
   }
 
-  get availabilityStatus(): { textKey: string; defaultText: string; badgeClass: string } {
+  get availabilityStatus(): AvailabilityStatusDescriptor {
     if (!this.product) return { textKey: '', defaultText: '', badgeClass: '' };
     if (this.product.pricingType === 'QUOTATION') {
       return { textKey: 'PRODUCT_DETAIL.QUOTATION_ONLY', defaultText: 'Quotation Only', badgeClass: 'badge-quote-only' };

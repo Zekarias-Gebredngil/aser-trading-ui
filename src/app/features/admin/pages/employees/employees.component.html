@@ -67,11 +67,11 @@
         </tr>
       </thead>
       <tbody>
-        @for (emp of pagedEmployees(); track emp.id) {
+        @for (emp of pagedEmployeeRows; track emp.id) {
         <tr>
           <td>
             <div class="user-cell">
-              <div class="avatar">{{ emp.fullName.charAt(0) }}</div>
+              <div class="avatar">{{ emp.initial }}</div>
               <div>
                 <div class="emp-name">{{ emp.fullName }}</div>
                 <div class="emp-username">&#64;{{ emp.username }}</div>
@@ -86,7 +86,7 @@
           <td>
             <div class="branch-cell">
               <aser-icon name="lucide:map-pin" [size]="13" color="var(--blue)"></aser-icon>
-              <span>{{ emp.assignedBranchName || 'Consolidated HQ / All' }}</span>
+              <span>{{ emp.branchDisplay }}</span>
             </div>
           </td>
           <td>
@@ -102,15 +102,15 @@
               class="status-pill" 
               [class.active]="emp.isActive" 
               [class.inactive]="!emp.isActive"
-              (click)="toggleStatus(emp)"
+              (click)="toggleStatus(emp.rawEmployee)"
               title="Click to toggle status">
               <span class="dot"></span>
-              <span>{{ emp.isActive ? ('COMMON.ACTIVE' | translate:'Active') : ('COMMON.INACTIVE' | translate:'Suspended') }}</span>
+              <span>{{ emp.statusTextKey | translate:emp.statusDefaultText }}</span>
             </button>
           </td>
           @if (state.hasPermission('MANAGE_EMPLOYEES')) {
           <td style="text-align:right;">
-            <button class="btn btn-outline btn-sm" (click)="openEditModal(emp)">
+            <button class="btn btn-outline btn-sm" (click)="openEditModal(emp.rawEmployee)">
               <aser-icon name="lucide:pencil" [size]="13"></aser-icon>
               <span>{{ 'COMMON.EDIT' | translate:'Edit' }}</span>
             </button>

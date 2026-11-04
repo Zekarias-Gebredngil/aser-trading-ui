@@ -6,7 +6,7 @@
         {{ 'DASHBOARD.SUBHEADER' | translate:'CENTRALIZED MULTI-BRANCH OPERATIONS' }}
       </div>
       <h1>
-        {{ greetingKey | translate:greetingDefault }}, {{ state.currentUser()?.fullName || state.currentRole() }}
+        {{ greetingKey | translate:greetingDefault }}, {{ userGreetingName() }}
       </h1>
       <p>
         {{ 'DASHBOARD.DESCRIPTION' | translate:'Real-time branch inventory, weighted-average valuation, logistics transfers, and online sales.' }}
@@ -30,11 +30,15 @@
       <span>
         {{ 'DASHBOARD.ACTIVE_SCOPE' | translate:'Active Scope' }}: 
         <strong>
-          {{ state.selectedBranchFilter() === 'ALL' ? ('DASHBOARD.ALL_BRANCHES' | translate:'All Branches (Consolidated System View)') : getBranchName(state.selectedBranchFilter()) }}
+          @if (isAllBranchesScope()) {
+            {{ 'DASHBOARD.ALL_BRANCHES' | translate:'All Branches (Consolidated System View)' }}
+          } @else {
+            {{ activeScopeName() }}
+          }
         </strong>
       </span>
     </div>
-    <span class="badge badge-in-stock">{{ state.branches().length }} {{ 'DASHBOARD.BRANCHES_CONNECTED' | translate:'Branches Connected' }}</span>
+    <span class="badge badge-in-stock">{{ connectedBranchesCount() }} {{ 'DASHBOARD.BRANCHES_CONNECTED' | translate:'Branches Connected' }}</span>
   </div>
 
   <!-- Key Performance Metrics (KPIs) -->
@@ -45,7 +49,7 @@
         <div class="kpi-icon" style="background:var(--blue-soft); color:var(--blue); font-weight:800;">ETB</div>
       </div>
       <div class="kpi-value" style="color:var(--blue);">
-        ETB {{ state.totalValuation() | number:'1.2-2' }}
+        ETB {{ totalValuation() | number:'1.2-2' }}
       </div>
       <span class="kpi-sub">{{ 'DASHBOARD.VALUATION_SUB' | translate:'Weighted-Average Cost Valuation (SRS 7)' }}</span>
     </div>
@@ -58,7 +62,7 @@
         </div>
       </div>
       <div class="kpi-value">
-        {{ state.filteredInventory().length }} {{ 'COMMON.ITEMS' | translate:'Items' }}
+        {{ activeLocationsCount() }} {{ 'COMMON.ITEMS' | translate:'Items' }}
       </div>
       <span class="kpi-sub">{{ 'DASHBOARD.LOCATIONS_SUB' | translate:'Across branch warehouses' }}</span>
     </div>
@@ -70,8 +74,8 @@
           <aser-icon name="lucide:alert-triangle" [size]="16" color="var(--amber)"></aser-icon>
         </div>
       </div>
-      <div class="kpi-value" [style.color]="state.lowStockCount() > 0 ? 'var(--red)' : 'var(--ink)'">
-        {{ state.lowStockCount() }}
+      <div class="kpi-value" [style.color]="lowStockColor()">
+        {{ lowStockCount() }}
       </div>
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <span class="kpi-sub">{{ 'DASHBOARD.LOW_STOCK_SUB' | translate:'Below reorder threshold' }}</span>
@@ -87,7 +91,7 @@
         </div>
       </div>
       <div class="kpi-value">
-        {{ state.pendingTransfersCount() }}
+        {{ pendingTransfersCount() }}
       </div>
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <span class="kpi-sub">{{ 'DASHBOARD.PENDING_TRANSFERS_SUB' | translate:'Awaiting approval / in transit' }}</span>
@@ -109,26 +113,26 @@
       </div>
 
       <div style="padding:10px 20px;">
-        @for (mov of state.stockMovements(); track mov.id) {
+        @for (mov of recentStockMovements(); track mov.id) {
           <div style="display:flex; align-items:flex-start; gap:14px; padding:14px 0; border-bottom:1px solid var(--line);">
             <div style="width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0;"
-              [style.background]="getMovementVisual(mov.type).background"
-              [style.color]="getMovementVisual(mov.type).color">
-              <aser-icon [name]="getMovementVisual(mov.type).icon" [size]="18"></aser-icon>
+              [style.background]="mov.visualBackground"
+              [style.color]="mov.visualColor">
+              <aser-icon [name]="mov.visualIcon" [size]="18"></aser-icon>
             </div>
 
             <div style="flex:1;">
               <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
                 <strong style="font-size:13px; color:var(--ink);">{{ mov.productName }}</strong>
-                <strong style="font-size:13px;" [style.color]="mov.quantityDelta > 0 ? 'var(--green)' : 'var(--red)'">
-                  {{ formatQuantityDelta(mov.quantityDelta, mov.unit) }}
+                <strong style="font-size:13px;" [style.color]="mov.deltaColor">
+                  {{ mov.formattedDelta }}
                 </strong>
               </div>
               <div style="font-size:11px; color:var(--muted); margin-bottom:4px;">
                 {{ mov.branchName }} · {{ mov.warehouseName }}
               </div>
               <div style="font-size:11px; color:var(--slate);">
-                {{ mov.notes || 'Routine transaction' }} · <em>By {{ mov.actor }}</em>
+                {{ mov.notes }} · <em>By {{ mov.actor }}</em>
               </div>
             </div>
           </div>
@@ -149,17 +153,17 @@
         </div>
 
         <div style="padding:10px 20px;">
-          @for (order of state.orders().slice(0, 3); track order.id) {
+          @for (order of recentOrders(); track order.id) {
             <div style="padding:12px 0; border-bottom:1px solid var(--line);">
               <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
                 <strong style="font-size:12px; color:var(--blue);">{{ order.orderNumber }}</strong>
-                <span class="badge" [class.badge-paid]="order.paymentStatus === 'PAID'" [class.badge-pending]="order.paymentStatus === 'PENDING'">
-                  {{ order.paymentStatus === 'PAID' ? ('ORDERS.PAID' | translate:'Paid ✓') : ('ORDERS.PENDING' | translate:'Payment Pending') }}
+                <span class="badge" [class.badge-paid]="order.isPaid" [class.badge-pending]="order.isPending">
+                  {{ order.paymentStatusKey | translate:order.paymentStatusDefault }}
                 </span>
               </div>
               <div style="font-size:12px; font-weight:700; color:var(--ink);">{{ order.customerName }}</div>
               <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:4px;">
-                <span>{{ order.items.length }} {{ 'COMMON.ITEMS' | translate:'items' }}</span>
+                <span>{{ order.itemCount }} {{ 'COMMON.ITEMS' | translate:'items' }}</span>
                 <strong>ETB {{ order.totalAmount | number:'1.2-2' }}</strong>
               </div>
             </div>
@@ -168,17 +172,17 @@
       </div>
 
       <!-- Branch Valuation Breakdown -->
-      @if (state.stockSummaryReport()?.branchSummaries?.length) {
+      @if (hasBranchSummaries()) {
         <div class="panel-card" style="margin-bottom:20px;">
           <div class="panel-card-header">
             <div>
               <h2>{{ 'DASHBOARD.BRANCH_VALUATION_BREAKDOWN' | translate:'Branch Valuation Breakdown' }}</h2>
               <p>{{ 'DASHBOARD.BRANCH_VALUATION_SUB' | translate:'Live inventory value distributed across warehouses' }}</p>
             </div>
-            <span class="badge badge-in-stock">ETB {{ state.totalValuation() | number:'1.2-2' }}</span>
+            <span class="badge badge-in-stock">ETB {{ totalValuation() | number:'1.2-2' }}</span>
           </div>
           <div style="padding:12px 20px;">
-            @for (br of state.stockSummaryReport()?.branchSummaries; track br.branchId) {
+            @for (br of branchSummaries(); track br.branchId) {
               <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line);">
                 <div>
                   <strong style="font-size:13px; color:var(--ink);">{{ br.branchName }}</strong>

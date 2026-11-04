@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IconComponent } from '../../../../core/components/icon/icon.component';
 import { ImageSliderComponent } from '../../../../core/components/image-slider/image-slider.component';
@@ -10,6 +10,20 @@ import { QuoteModalComponent } from '../../components/quote-modal/quote-modal.co
 import { ServiceCategory } from '../../../../core/models/quote.model';
 import { AserStateService } from '../../../../core/services/aser-state.service';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
+
+export interface ServiceCardViewModel {
+  readonly id: string;
+  readonly code: string;
+  readonly title: string;
+  readonly category: ServiceCategory;
+  readonly categoryLabel: string;
+  readonly description: string;
+  readonly iconName: string;
+  readonly images: readonly string[];
+  readonly hasImages: boolean;
+  readonly features: readonly string[];
+  readonly requiresQuotation: boolean;
+}
 
 @Component({
   selector: 'aser-public-services',
@@ -29,15 +43,31 @@ import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
   styleUrl: './services.component.css'
 })
 export class ServicesComponent {
-  readonly state = inject(AserStateService);
+  private readonly state = inject(AserStateService);
 
-  isCartOpen = signal(false);
-  isCheckoutOpen = signal(false);
-  isQuoteOpen = signal(false);
-  selectedCategory: ServiceCategory = 'PRINTING_PRESS';
+  readonly isCartOpen = signal<boolean>(false);
+  readonly isCheckoutOpen = signal<boolean>(false);
+  readonly isQuoteOpen = signal<boolean>(false);
+  readonly selectedCategory = signal<ServiceCategory>('PRINTING_PRESS');
 
-  openQuote(cat: ServiceCategory) {
-    this.selectedCategory = cat;
+  readonly serviceCards = computed<readonly ServiceCardViewModel[]>(() => {
+    return this.state.activeServices().map(s => ({
+      id: s.id,
+      code: s.code,
+      title: s.title,
+      category: s.category,
+      categoryLabel: s.categoryLabel,
+      description: s.description,
+      iconName: s.icon || 'lucide:printer',
+      images: s.images || [],
+      hasImages: !!(s.images && s.images.length > 0),
+      features: s.features || [],
+      requiresQuotation: s.requiresQuotation
+    }));
+  });
+
+  openQuote(cat: ServiceCategory): void {
+    this.selectedCategory.set(cat);
     this.isQuoteOpen.set(true);
   }
 

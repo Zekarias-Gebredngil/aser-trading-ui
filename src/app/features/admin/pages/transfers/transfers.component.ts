@@ -11,6 +11,25 @@ import { ToastService } from '../../../../core/services/toast.service';
 import { StockTransfer, TransferStatus } from '../../../../core/models/transfer.model';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 
+export interface TransferItemViewModel {
+  readonly requestedQty: number;
+  readonly unit: string;
+  readonly productName: string;
+}
+
+export interface TransferRowViewModel {
+  readonly id: string;
+  readonly referenceNumber: string;
+  readonly date: string;
+  readonly fromDisplayName: string;
+  readonly toDisplayName: string;
+  readonly items: readonly TransferItemViewModel[];
+  readonly requestedBy: string;
+  readonly status: TransferStatus;
+  readonly statusBadgeClass: string;
+  readonly rawTransfer: StockTransfer;
+}
+
 @Component({
   selector: 'aser-admin-transfers',
   standalone: true,
@@ -40,8 +59,32 @@ export class TransfersComponent {
     return list.slice(start, start + this.pageSize);
   }
 
+  get pagedTransferRows(): readonly TransferRowViewModel[] {
+    return this.pagedTransfers.map(t => ({
+      id: t.id,
+      referenceNumber: t.referenceNumber,
+      date: t.date,
+      fromDisplayName: this.getBranchDisplayName(t.fromBranchName, t.fromWarehouseName),
+      toDisplayName: this.getBranchDisplayName(t.toBranchName, t.toWarehouseName),
+      items: (t.items || []).map(i => ({
+        requestedQty: i.requestedQty,
+        unit: i.unit,
+        productName: i.productName
+      })),
+      requestedBy: t.requestedBy || '—',
+      status: t.status,
+      statusBadgeClass: this.getStatusBadgeClass(t.status),
+      rawTransfer: t
+    }));
+  }
+
   onFilterChange(): void {
     this.currentPage = 1;
+  }
+
+  onStatusFilterChange(val: string): void {
+    this.statusFilter = val;
+    this.onFilterChange();
   }
 
   onPageChange(page: number): void {

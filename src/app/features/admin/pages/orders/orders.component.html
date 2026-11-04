@@ -68,76 +68,76 @@
           </tr>
         </thead>
         <tbody>
-          @for (order of pagedOrders; track order.id) {
+          @for (order of pagedOrderRows; track order.id) {
             <tr>
               <td>
                 <strong style="color:var(--blue); font-family:monospace; font-size:13px;">{{ order.orderNumber }}</strong>
               </td>
-              <td style="font-size:11px; color:var(--muted);">{{ order.createdAt }}</td>
+              <td style="font-size:11px; color:var(--muted);">{{ order.createdAtFormatted }}</td>
               <td>
                 <strong style="color:var(--ink); display:block;">{{ order.customerName }}</strong>
                 <small style="color:var(--muted);">{{ order.customerPhone }}</small>
               </td>
               <td>
-                @if (order.fulfillment === 'BRANCH_PICKUP') {
+                @if (order.isPickup) {
                   <span style="font-weight:600; color:var(--ink); font-size:12px; display:inline-flex; align-items:center; gap:4px;">
-                    <aser-icon name="lucide:building-2" [size]="14" color="var(--blue)"></aser-icon> {{ 'ORDERS.PICKUP' | translate:'Pickup' }}
+                    <aser-icon name="lucide:building-2" [size]="14" color="var(--blue)"></aser-icon> {{ 'ORDERS.PICKUP' | translate:order.fulfillmentLabel }}
                   </span>
-                  <small style="display:block; color:var(--muted);">{{ order.pickupBranchName }}</small>
+                  <small style="display:block; color:var(--muted);">{{ order.fulfillmentDetail }}</small>
                 } @else {
                   <span style="font-weight:600; color:var(--ink); font-size:12px; display:inline-flex; align-items:center; gap:4px;">
-                    <aser-icon name="lucide:truck" [size]="14" color="var(--magenta)"></aser-icon> {{ 'ORDERS.DELIVERY' | translate:'Delivery' }}
+                    <aser-icon name="lucide:truck" [size]="14" color="var(--magenta)"></aser-icon> {{ 'ORDERS.DELIVERY' | translate:order.fulfillmentLabel }}
                   </span>
-                  <small style="display:block; color:var(--muted);">{{ order.deliveryAddress }}</small>
+                  <small style="display:block; color:var(--muted);">{{ order.fulfillmentDetail }}</small>
                 }
               </td>
               <td>
-                <span class="badge badge-quote-only">{{ order.items.length }} {{ 'COMMON.ITEMS' | translate:'items' }}</span>
+                <span class="badge badge-quote-only">{{ order.itemsCount }} {{ 'COMMON.ITEMS' | translate:'items' }}</span>
               </td>
               <td>
                 <strong style="font-size:14px; color:var(--ink);">ETB {{ order.totalAmount | number:'1.2-2' }}</strong>
               </td>
               <td>
                 <div style="margin-bottom:4px; font-size:11px; font-weight:600; display:flex; align-items:center; gap:4px;">
-                  @if (order.paymentMethod === 'MANUAL_BANK_TRANSFER') {
-                    <aser-icon name="lucide:landmark" [size]="13" color="var(--blue)"></aser-icon> {{ 'ORDERS.BANK_TRANSFER' | translate:'Bank Transfer' }}
+                  @if (order.isBankTransfer) {
+                    <aser-icon name="lucide:landmark" [size]="13" color="var(--blue)"></aser-icon> {{ 'ORDERS.BANK_TRANSFER' | translate:order.paymentMethodLabel }}
                   } @else {
-                    <aser-icon name="lucide:banknote" [size]="13" color="var(--green)"></aser-icon> {{ 'ORDERS.CASH' | translate:'Cash in Hand' }}
+                    <aser-icon name="lucide:banknote" [size]="13" color="var(--green)"></aser-icon> {{ 'ORDERS.CASH' | translate:order.paymentMethodLabel }}
                   }
                 </div>
-                <span class="badge" [class]="getPaymentStatusBadgeClass(order.paymentStatus)">
-                  {{ order.paymentStatus === 'PAID' ? ('ORDERS.PAID' | translate:'Paid ✓') : ('ORDERS.PENDING' | translate:'Pending') }}
+                <span class="badge" [class]="order.paymentStatusBadgeClass">
+                  {{ order.paymentStatusTextKey | translate:order.paymentStatusDefaultText }}
                 </span>
                 @if (order.paymentReference) {
                   <div style="font-family:monospace; font-size:10px; color:var(--muted); margin-top:2px;">Ref: {{ order.paymentReference }}</div>
                 }
               </td>
               <td>
-                <span class="badge" [class]="getOrderStatusBadgeClass(order.status)">
+                <span class="badge" [class]="order.statusBadgeClass">
                   {{ order.status }}
                 </span>
               </td>
               <td>
                 <div style="display:flex; gap:6px;">
-                  <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:4px;" (click)="openOrderDetails($event, order)">
+                  <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:4px;" (click)="openOrderDetails($event, order.rawOrder)">
                     {{ 'PROFILE.DETAILS' | translate:'Details' }} <aser-icon name="lucide:clipboard-list" [size]="13"></aser-icon>
                   </button>
 
                   @if (order.paymentStatus === 'PENDING') {
-                    <button type="button" class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:4px;" (click)="updateStatus($event, order, 'PROCESSING', 'PAID')" title="Verify bank transfer or cash deposit">
+                    <button type="button" class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:4px;" (click)="updateStatus($event, order.rawOrder, 'PROCESSING', 'PAID')" title="Verify bank transfer or cash deposit">
                       {{ 'ORDERS.CONFIRM_ORDER' | translate:'Verify Paid' }} <aser-icon name="lucide:check" [size]="13"></aser-icon>
                     </button>
                   } @else if (order.status === 'PROCESSING') {
-                    <button type="button" class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:4px;" (click)="updateStatus($event, order, 'READY_FOR_DISPATCH')">
+                    <button type="button" class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:4px;" (click)="updateStatus($event, order.rawOrder, 'READY_FOR_DISPATCH')">
                       {{ 'ORDERS.READY_FOR_PICKUP' | translate:'Ready' }} <aser-icon name="lucide:arrow-right" [size]="13"></aser-icon>
                     </button>
                   } @else if (order.status === 'READY_FOR_DISPATCH') {
-                    <button type="button" class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:4px;" (click)="updateStatus($event, order, 'DELIVERED')">
+                    <button type="button" class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:4px;" (click)="updateStatus($event, order.rawOrder, 'DELIVERED')">
                       {{ 'ORDERS.COMPLETE_ORDER' | translate:'Delivered' }} <aser-icon name="lucide:check-circle" [size]="13"></aser-icon>
                     </button>
                   }
                   @if (order.status !== 'CANCELLED' && order.status !== 'DELIVERED') {
-                    <button type="button" class="btn btn-outline btn-sm" style="color:var(--red); border-color:#fca5a5;" (click)="cancelOrder($event, order)" title="Cancel Order">
+                    <button type="button" class="btn btn-outline btn-sm" style="color:var(--red); border-color:#fca5a5;" (click)="cancelOrder($event, order.rawOrder)" title="Cancel Order">
                       <aser-icon name="lucide:x" [size]="13"></aser-icon>
                     </button>
                   }

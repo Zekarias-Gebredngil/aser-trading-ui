@@ -10,7 +10,7 @@ import { IconComponent } from '../icon/icon.component';
   styleUrl: './image-slider.component.css'
 })
 export class ImageSliderComponent {
-  @Input() images: string[] = [];
+  @Input() images: readonly string[] = [];
   @Input() alt = 'Aser Product / Service Image';
   @Input() height = '200px';
   @Input() fallbackCategory = 'PRINTING_SUPPLIES';
@@ -20,7 +20,7 @@ export class ImageSliderComponent {
   currentIndex = signal(0);
   failedImages = signal<Set<string>>(new Set());
 
-  get validImages(): string[] {
+  get validImages(): readonly string[] {
     if (!this.images || this.images.length === 0) return [];
     const failed = this.failedImages();
     return this.images.filter(img => !!img && !failed.has(img));

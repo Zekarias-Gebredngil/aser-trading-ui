@@ -24,28 +24,28 @@
           <button class="btn btn-secondary btn-sm" (click)="onClose()">{{ 'STOREFRONT.EXPLORE_SHOP' | translate:'Explore Catalog' }}</button>
         </div>
       } @else {
-        @for (item of cart(); track item.product.id) {
+        @for (item of items(); track item.productId) {
           <div class="cart-item-row">
             <div class="cart-item-info">
               <div style="display:flex; align-items:center; gap:6px; margin-bottom:2px;">
-                <span class="category-tag" style="font-size:9px; padding:2px 5px;">{{ item.product.categoryLabel }}</span>
+                <span class="category-tag" style="font-size:9px; padding:2px 5px;">{{ item.categoryLabel }}</span>
               </div>
-              <h4 class="cart-item-title">{{ item.product.name }}</h4>
+              <h4 class="cart-item-title">{{ item.name }}</h4>
               <div class="cart-item-price">
-                ETB {{ item.product.unitPrice | number:'1.2-2' }} / {{ item.product.unit }}
+                ETB {{ item.unitPrice | number:'1.2-2' }} / {{ item.unit }}
               </div>
               <div class="cart-qty-control">
-                <button class="cart-qty-btn" (click)="decreaseQuantity(item.product.id, item.quantity)" aria-label="Decrease quantity">
+                <button class="cart-qty-btn" (click)="decreaseQuantity(item.productId, item.quantity)" aria-label="Decrease quantity">
                   <aser-icon name="lucide:minus" [size]="12"></aser-icon>
                 </button>
                 <span class="cart-qty-val">{{ item.quantity }}</span>
-                <button class="cart-qty-btn" (click)="increaseQuantity(item.product.id, item.quantity)" aria-label="Increase quantity">
+                <button class="cart-qty-btn" (click)="increaseQuantity(item.productId, item.quantity)" aria-label="Increase quantity">
                   <aser-icon name="lucide:plus" [size]="12"></aser-icon>
                 </button>
               </div>
             </div>
             <div class="cart-item-total">
-              <button (click)="removeItem(item.product.id)" class="cart-remove-btn" title="Remove item">
+              <button (click)="removeItem(item.productId)" class="cart-remove-btn" title="Remove item">
                 <aser-icon name="lucide:x" [size]="14"></aser-icon>
               </button>
               <strong style="font-size:14px; font-weight:800; color:var(--ink);">

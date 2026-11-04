@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IconComponent } from '../../../../core/components/icon/icon.component';
@@ -11,6 +11,29 @@ import { ExcelExportService } from '../../../../core/services/excel-export.servi
 import { ToastService } from '../../../../core/services/toast.service';
 import { Product } from '../../../../core/models/product.model';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
+
+export interface AdminProductRowViewModel {
+  readonly id: string;
+  readonly sku: string;
+  readonly name: string;
+  readonly amharicName?: string;
+  readonly categoryLabel: string;
+  readonly unit: string;
+  readonly pricingType: string;
+  readonly isFixedPrice: boolean;
+  readonly unitPrice: number;
+  readonly reorderThreshold: number;
+  readonly isPublished: boolean;
+  readonly pricingBadgeClass: string;
+  readonly pricingLabelKey: string;
+  readonly pricingLabelDefault: string;
+  readonly storefrontBadgeClass: string;
+  readonly storefrontLabelKey: string;
+  readonly storefrontLabelDefault: string;
+  readonly toggleActionLabelKey: string;
+  readonly toggleActionLabelDefault: string;
+  readonly raw: Product;
+}
 
 @Component({
   selector: 'aser-admin-products',
@@ -25,13 +48,58 @@ export class ProductsComponent {
   private readonly excelService = inject(ExcelExportService);
   private readonly toast = inject(ToastService);
 
-  searchQuery = '';
-  selectedCategory = 'ALL';
-  currentPage = 1;
-  pageSize = 10;
-  isAddModalOpen = signal(false);
-  isEditModalOpen = signal(false);
-  selectedProduct = signal<Product | null>(null);
+  readonly searchQuery = signal<string>('');
+  readonly selectedCategory = signal<string>('ALL');
+  readonly currentPage = signal<number>(1);
+  readonly pageSize = signal<number>(10);
+  readonly isAddModalOpen = signal(false);
+  readonly isEditModalOpen = signal(false);
+  readonly selectedProduct = signal<Product | null>(null);
+
+  readonly canManageProducts = computed<boolean>(() => this.state.hasPermission('MANAGE_PRODUCTS'));
+
+  readonly filteredProducts = computed<readonly Product[]>(() => {
+    const q = this.searchQuery().toLowerCase().trim();
+    const cat = this.selectedCategory();
+
+    return this.state.products().filter(p => {
+      const matchesCat = cat === 'ALL' || p.category === cat;
+      const matchesSearch = !q || `${p.name} ${p.sku} ${p.categoryLabel} ${p.amharicName || ''}`.toLowerCase().includes(q);
+      return matchesCat && matchesSearch;
+    });
+  });
+
+  readonly filteredCount = computed<number>(() => this.filteredProducts().length);
+
+  readonly pagedProductRows = computed<readonly AdminProductRowViewModel[]>(() => {
+    const list = this.filteredProducts();
+    const start = (this.currentPage() - 1) * this.pageSize();
+    return list.slice(start, start + this.pageSize()).map(p => {
+      const isFixed = p.pricingType === 'FIXED';
+      return {
+        id: p.id,
+        sku: p.sku,
+        name: p.name,
+        amharicName: p.amharicName,
+        categoryLabel: p.categoryLabel,
+        unit: p.unit,
+        pricingType: p.pricingType,
+        isFixedPrice: isFixed,
+        unitPrice: p.unitPrice,
+        reorderThreshold: p.reorderThreshold,
+        isPublished: p.isPublished,
+        pricingBadgeClass: isFixed ? 'badge-in-stock' : 'badge-quote-only',
+        pricingLabelKey: isFixed ? 'PRODUCTS.FIXED_PRICE' : 'PRODUCTS.QUOTATION_ONLY',
+        pricingLabelDefault: isFixed ? 'Fixed Price' : 'Quotation Only',
+        storefrontBadgeClass: p.isPublished ? 'badge-in-stock' : 'badge-limited',
+        storefrontLabelKey: p.isPublished ? 'PRODUCTS.PUBLISHED' : 'PRODUCTS.HIDDEN',
+        storefrontLabelDefault: p.isPublished ? 'Published' : 'Hidden (Draft)',
+        toggleActionLabelKey: p.isPublished ? 'COMMON.CLOSE' : 'PRODUCTS.PUBLISHED',
+        toggleActionLabelDefault: p.isPublished ? 'Hide' : 'Publish',
+        raw: p
+      };
+    });
+  });
 
   editForm = {
     name: '',
@@ -46,7 +114,7 @@ export class ProductsComponent {
 
   editImageUrlInput = '';
 
-  onEditFilesSelected(event: Event) {
+  onEditFilesSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       Array.from(input.files).forEach(file => {
@@ -73,7 +141,7 @@ export class ProductsComponent {
     }
   }
 
-  addEditImageUrl() {
+  addEditImageUrl(): void {
     const url = this.editImageUrlInput.trim();
     if (url) {
       this.editForm.images.push(url);
@@ -81,40 +149,29 @@ export class ProductsComponent {
     }
   }
 
-  removeEditImage(index: number) {
+  removeEditImage(index: number): void {
     if (index >= 0 && index < this.editForm.images.length) {
       this.editForm.images.splice(index, 1);
     }
   }
 
-  get filteredProducts(): Product[] {
-    const q = this.searchQuery.toLowerCase().trim();
-    const cat = this.selectedCategory;
-
-    return this.state.products().filter(p => {
-      const matchesCat = cat === 'ALL' || p.category === cat;
-      const matchesSearch = !q || `${p.name} ${p.sku} ${p.categoryLabel} ${p.amharicName || ''}`.toLowerCase().includes(q);
-      return matchesCat && matchesSearch;
-    });
+  onSearchChange(query: string): void {
+    this.searchQuery.set(query);
+    this.currentPage.set(1);
   }
 
-  get pagedProducts(): Product[] {
-    const list = this.filteredProducts;
-    const start = (this.currentPage - 1) * this.pageSize;
-    return list.slice(start, start + this.pageSize);
-  }
-
-  onFilterChange(): void {
-    this.currentPage = 1;
+  onCategoryChange(cat: string): void {
+    this.selectedCategory.set(cat);
+    this.currentPage.set(1);
   }
 
   onPageChange(page: number): void {
-    this.currentPage = page;
+    this.currentPage.set(page);
   }
 
   onPageSizeChange(size: number): void {
-    this.pageSize = size;
-    this.currentPage = 1;
+    this.pageSize.set(size);
+    this.currentPage.set(1);
   }
 
   openAddModal(): void {
@@ -173,7 +230,7 @@ export class ProductsComponent {
   }
 
   exportCatalogToExcel(): void {
-    const list = this.filteredProducts;
+    const list = this.filteredProducts();
     if (list.length === 0) {
       this.toast.error('No products found to export.');
       return;

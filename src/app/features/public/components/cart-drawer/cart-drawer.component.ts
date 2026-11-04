@@ -4,6 +4,16 @@ import { IconComponent } from '../../../../core/components/icon/icon.component';
 import { AserStateService } from '../../../../core/services/aser-state.service';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 
+export interface CartItemViewModel {
+  readonly productId: string;
+  readonly name: string;
+  readonly categoryLabel: string;
+  readonly unitPrice: number;
+  readonly unit: string;
+  readonly quantity: number;
+  readonly lineTotal: number;
+}
+
 @Component({
   selector: 'aser-cart-drawer',
   standalone: true,
@@ -17,10 +27,22 @@ export class CartDrawerComponent {
   @Output() close = new EventEmitter<void>();
   @Output() checkout = new EventEmitter<void>();
 
-  readonly cart = this.state.cart;
   readonly cartCount = this.state.cartCount;
   readonly cartSubtotal = this.state.cartSubtotal;
-  readonly isEmpty = computed(() => this.cart().length === 0);
+
+  readonly items = computed<readonly CartItemViewModel[]>(() => {
+    return this.state.cart().map(item => ({
+      productId: item.product.id,
+      name: item.product.name,
+      categoryLabel: item.product.categoryLabel || item.product.category,
+      unitPrice: item.product.unitPrice,
+      unit: item.product.unit,
+      quantity: item.quantity,
+      lineTotal: item.lineTotal
+    }));
+  });
+
+  readonly isEmpty = computed<boolean>(() => this.items().length === 0);
 
   increaseQuantity(productId: string, currentQty: number): void {
     this.state.updateCartQuantity(productId, currentQty + 1);
