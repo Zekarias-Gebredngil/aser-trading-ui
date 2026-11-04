@@ -12,6 +12,7 @@ export interface CartItemViewModel {
   readonly unit: string;
   readonly quantity: number;
   readonly lineTotal: number;
+  readonly isOutOfStock: boolean;
 }
 
 @Component({
@@ -38,11 +39,16 @@ export class CartDrawerComponent {
       unitPrice: item.product.unitPrice,
       unit: item.product.unit,
       quantity: item.quantity,
-      lineTotal: item.lineTotal
+      lineTotal: item.lineTotal,
+      isOutOfStock: item.product.availability === 'OUT_OF_STOCK'
     }));
   });
 
   readonly isEmpty = computed<boolean>(() => this.items().length === 0);
+
+  readonly hasOutOfStockItems = computed<boolean>(() => {
+    return this.items().some(i => i.isOutOfStock);
+  });
 
   increaseQuantity(productId: string, currentQty: number): void {
     this.state.updateCartQuantity(productId, currentQty + 1);

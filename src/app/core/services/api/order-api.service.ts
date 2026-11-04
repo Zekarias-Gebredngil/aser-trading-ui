@@ -118,8 +118,10 @@ export class OrderApiService {
     return this.http.post<ApiResponse<BackendOrderDto>>(`${environment.apiUrl}/orders/${id}/confirm`, {});
   }
 
-  cancelOrder(id: number): Observable<ApiResponse<BackendOrderDto>> {
-    return this.http.post<ApiResponse<BackendOrderDto>>(`${environment.apiUrl}/orders/${id}/cancel`, {});
+  cancelOrder(id: number, reason?: string): Observable<ApiResponse<BackendOrderDto>> {
+    let params = new HttpParams();
+    if (reason) params = params.set('reason', reason);
+    return this.http.post<ApiResponse<BackendOrderDto>>(`${environment.apiUrl}/orders/${id}/cancel`, {}, { params });
   }
 
   initiatePayment(request: { orderId: number; paymentMethod: string; amount: number }): Observable<ApiResponse<any>> {

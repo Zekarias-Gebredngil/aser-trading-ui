@@ -27,6 +27,8 @@ export class CheckoutModalComponent {
   paymentMethod: PaymentMethod = 'MANUAL_BANK_TRANSFER';
 
   confirmedOrder = signal<Order | null>(null);
+  isSubmitting = signal<boolean>(false);
+  orderError = signal<string | null>(null);
 
   get isFormValid(): boolean {
     if (!this.customerName.trim() || !this.customerPhone.trim() || !this.customerEmail.trim()) {
@@ -39,9 +41,12 @@ export class CheckoutModalComponent {
   }
 
   submitOrder() {
-    if (!this.isFormValid) return;
+    if (!this.isFormValid || this.isSubmitting()) return;
 
-    const order = this.state.placeOrder({
+    this.isSubmitting.set(true);
+    this.orderError.set(null);
+
+    this.state.placeOrder({
       customerName: this.customerName,
       customerPhone: this.customerPhone,
       customerEmail: this.customerEmail,
@@ -51,8 +56,24 @@ export class CheckoutModalComponent {
       deliveryAddress: this.deliveryAddress || undefined,
       paymentMethod: this.paymentMethod,
       notes: `Order placed via online storefront. Phone: ${this.customerPhone}`
+    }, {
+      onSuccess: (order) => {
+        this.isSubmitting.set(false);
+        this.confirmedOrder.set(order);
+      },
+      onError: (errMsg) => {
+        this.isSubmitting.set(false);
+        this.orderError.set(errMsg);
+      }
     });
+  }
 
-    this.confirmedOrder.set(order);
+  cancelConfirmedOrder() {
+    const order = this.confirmedOrder();
+    if (order) {
+      this.state.cancelOrder(order.id, 'Customer requested immediate cancellation after checkout');
+      this.confirmedOrder.set(null);
+      this.close.emit();
+    }
   }
 }

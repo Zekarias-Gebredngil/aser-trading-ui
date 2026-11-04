@@ -228,10 +228,16 @@
                 {{ 'COMMON.VIEW' | translate:'Details' }}
               </button>
               @if (item.isFixedPrice) {
-              <button class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;"
-                (click)="addToCart(item.rawProduct)">
-                {{ 'STOREFRONT.ADD_TO_CART' | translate:'Add' }} <aser-icon name="lucide:shopping-cart" [size]="13"></aser-icon>
-              </button>
+                @if (item.rawProduct.availability === 'OUT_OF_STOCK') {
+                  <button class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px; opacity:0.6; cursor:not-allowed;" disabled title="Currently Out of Stock">
+                    {{ 'PRODUCT_DETAIL.OUT_OF_STOCK' | translate:'Out of Stock' }}
+                  </button>
+                } @else {
+                  <button class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;"
+                    (click)="addToCart(item.rawProduct)">
+                    {{ 'STOREFRONT.ADD_TO_CART' | translate:'Add' }} <aser-icon name="lucide:shopping-cart" [size]="13"></aser-icon>
+                  </button>
+                }
               } @else {
               <button class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:5px;"
                 (click)="openQuoteModal('EQUIPMENT_DISTRIBUTION')">

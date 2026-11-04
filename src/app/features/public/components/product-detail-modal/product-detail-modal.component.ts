@@ -47,11 +47,26 @@ export class ProductDetailModalComponent {
   qty = 1;
 
   readonly branchStockList = computed<readonly BranchAvailabilityViewModel[]>(() => {
-    return this.state.branches().map(b => ({
-      id: b.id,
-      branchName: this.getCleanBranchName(b.name),
-      isAvailable: true
-    }));
+    const isOut = this.product?.availability === 'OUT_OF_STOCK';
+    const balances = this.state.inventoryBalances();
+    const pid = this.product?.id;
+
+    return this.state.branches().map(b => {
+      let isAvailable = !isOut;
+      if (balances.length > 0 && pid) {
+        const bal = balances.find(item => item.productId === pid && item.branchId === b.id);
+        if (bal) {
+          isAvailable = bal.availableQty > 0;
+        } else if (isOut) {
+          isAvailable = false;
+        }
+      }
+      return {
+        id: b.id,
+        branchName: this.getCleanBranchName(b.name),
+        isAvailable
+      };
+    });
   });
 
   get specEntries(): readonly ProductSpecEntry[] {
@@ -95,6 +110,9 @@ export class ProductDetailModalComponent {
     if (this.product.pricingType === 'QUOTATION') {
       return { textKey: 'PRODUCT_DETAIL.QUOTATION_ONLY', defaultText: 'Quotation Only', badgeClass: 'badge-quote-only' };
     }
+    if (this.product.availability === 'OUT_OF_STOCK') {
+      return { textKey: 'PRODUCT_DETAIL.OUT_OF_STOCK', defaultText: 'Out of Stock', badgeClass: 'badge-out-of-stock' };
+    }
     if (this.product.availability === 'IN_STOCK') {
       return { textKey: 'PRODUCT_DETAIL.IN_STOCK_READY', defaultText: 'In Stock (Ready)', badgeClass: 'badge-in-stock' };
     }
@@ -102,6 +120,10 @@ export class ProductDetailModalComponent {
       return { textKey: 'PRODUCT_DETAIL.LIMITED_STOCK', defaultText: 'Limited Stock', badgeClass: 'badge-limited' };
     }
     return { textKey: 'PRODUCT_DETAIL.QUOTATION_ONLY', defaultText: 'Quotation Only', badgeClass: 'badge-quote-only' };
+  }
+
+  get isOutOfStock(): boolean {
+    return this.product?.availability === 'OUT_OF_STOCK';
   }
 
   get isQuotationOnly(): boolean {

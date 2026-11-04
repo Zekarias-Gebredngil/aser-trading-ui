@@ -151,8 +151,8 @@ export class AserStateService {
     if (this.lowStockAlerts().length > 0) {
       return this.lowStockAlerts().length;
     }
-    return this.inventoryBalances().filter(i => 
-      (i.status as string)?.toLowerCase().includes('low') || 
+    return this.inventoryBalances().filter(i =>
+      (i.status as string)?.toLowerCase().includes('low') ||
       (i.status as string)?.toLowerCase().includes('out')
     ).length;
   });
@@ -222,7 +222,17 @@ export class AserStateService {
     this.syncStatus.set('syncing');
     this.systemStatusMessage.set('Synchronizing branch network & commercial catalog...');
 
-    // 1. Fetch Real Master Branches & Real Database Warehouses from Backend
+    this.fetchBranches();
+    this.refreshPublicProducts();
+    this.fetchServices();
+    this.fetchCategoriesAndUnits();
+
+    if (this.isAuthenticated()) {
+      this.syncProtectedData();
+    }
+  }
+
+  fetchBranches(): void {
     this.branchApi.getPublicBranches().subscribe({
       next: (res) => {
         if (res.success && res.data && res.data.length > 0) {
@@ -261,6 +271,8 @@ export class AserStateService {
                 };
               });
               this.branches.set(mappedBranches);
+              this.syncStatus.set('synced');
+              this.lastSyncTimestamp.set(new Date());
             },
             error: () => {
               const mappedBranches: Branch[] = rawBranches.map(b => ({
@@ -283,188 +295,132 @@ export class AserStateService {
                 ]
               }));
               this.branches.set(mappedBranches);
+              this.syncStatus.set('synced');
             }
           });
-
-          // 2. Fetch Real Product Catalog from Backend with Image Slideshow
-          this.catalogApi.getPublicProducts({ size: 100 }).subscribe({
-            next: (prodRes) => {
-              if (prodRes.success && prodRes.data?.content?.length) {
-                const mappedProducts: Product[] = prodRes.data.content.map(p => {
-                  let cat: ProductCategory = 'PRINTING_SUPPLIES';
-                  const cName = (p.categoryName || '').toLowerCase();
-                  if (cName.includes('garment')) cat = 'GARMENT_MATERIALS';
-                  else if (cName.includes('brand')) cat = 'BRANDING_PROMOTION';
-                  else if (cName.includes('press') || cName.includes('service')) cat = 'PRINTING_SERVICES';
-                  else if (cName.includes('equip')) cat = 'EQUIPMENT';
-
-                  // High-quality showcase image slides for products
-                  let defaultSlides: string[] = [];
-                  if (cat === 'GARMENT_MATERIALS') {
-                    defaultSlides = [
-                      'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=600&auto=format&fit=crop&q=80',
-                      'https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=600&auto=format&fit=crop&q=80'
-                    ];
-                  } else if (cat === 'PRINTING_SUPPLIES') {
-                    defaultSlides = [
-                      'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=600&auto=format&fit=crop&q=80',
-                      'https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=600&auto=format&fit=crop&q=80'
-                    ];
-                  } else if (cat === 'BRANDING_PROMOTION') {
-                    defaultSlides = [
-                      'https://images.unsplash.com/photo-1542744094-3a31f272c490?w=600&auto=format&fit=crop&q=80',
-                      'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=600&auto=format&fit=crop&q=80'
-                    ];
-                  } else if (cat === 'EQUIPMENT') {
-                    defaultSlides = [
-                      'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600&auto=format&fit=crop&q=80',
-                      'https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=600&auto=format&fit=crop&q=80'
-                    ];
-                  } else {
-                    defaultSlides = [
-                      'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600&auto=format&fit=crop&q=80',
-                      'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?w=600&auto=format&fit=crop&q=80'
-                    ];
-                  }
-
-                  const isSeededLocal = p.imageUrl && p.imageUrl.startsWith('/assets/images/');
-                  let productImages: string[];
-                  if (p.imageUrl && !isSeededLocal) {
-                    productImages = [p.imageUrl, ...defaultSlides];
-                  } else {
-                    productImages = defaultSlides;
-                  }
-
-                  return {
-                    id: `PRD-${p.id}`,
-                    sku: p.sku,
-                    name: p.name,
-                    category: cat,
-                    categoryLabel: p.categoryName || 'Printing Supplies',
-                    description: p.description || '',
-                    unit: (p.baseUnitName?.toLowerCase() || 'piece') as any,
-                    pricingType: p.isQuotationOnly ? 'QUOTATION' : 'FIXED',
-                    unitPrice: p.sellingPrice || 0,
-                    baseCost: (p.sellingPrice || 0) * 0.75,
-                    availability: p.availability === 'IN_STOCK' ? 'IN_STOCK' : p.availability === 'LIMITED' ? 'LIMITED' : 'ON_REQUEST',
-                    minOrderQty: 1,
-                    reorderThreshold: 10,
-                    isPublished: true,
-                    featured: true,
-                    imageUrl: productImages[0],
-                    images: productImages,
-                    specifications: {
-                      'Specifications': p.specifications || 'Standard Commercial Grade'
-                    },
-                    eligibleBranches: rawBranches.map(mb => `BR-0${mb.id}`)
-                  };
-                });
-                this.products.set(mappedProducts);
-              }
-            }
-          });
-
-          // 3. Fetch Real Commercial Services with Image Slideshow
-          this.catalogApi.getPublicServices().subscribe({
-            next: (srvRes) => {
-              if (srvRes.success && srvRes.data?.length) {
-                const mappedServices: AserServiceItem[] = srvRes.data.map(s => {
-                  let cat: ServiceCategory = 'PRINTING_PRESS';
-                  const c = (s.category || '').toLowerCase();
-                  if (c.includes('brand')) cat = 'BRANDING_PROMOTION';
-                  else if (c.includes('garment') || c.includes('textile')) cat = 'GARMENT_MATERIALS';
-                  else if (c.includes('equip') || c.includes('maint')) cat = 'EQUIPMENT_DISTRIBUTION';
-
-                  const icon = s.serviceCode.includes('EQUIP')
-                    ? 'lucide:wrench'
-                    : s.serviceCode.includes('GARMENT')
-                    ? 'lucide:shirt'
-                    : s.serviceCode.includes('BRAND')
-                    ? 'lucide:sparkles'
-                    : 'lucide:printer';
-
-                  let serviceSlides: string[] = [];
-                  if (cat === 'PRINTING_PRESS') {
-                    serviceSlides = [
-                      'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600&auto=format&fit=crop&q=80',
-                      'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=600&auto=format&fit=crop&q=80'
-                    ];
-                  } else if (cat === 'BRANDING_PROMOTION') {
-                    serviceSlides = [
-                      'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=600&auto=format&fit=crop&q=80',
-                      'https://images.unsplash.com/photo-1542744094-3a31f272c490?w=600&auto=format&fit=crop&q=80'
-                    ];
-                  } else if (cat === 'GARMENT_MATERIALS') {
-                    serviceSlides = [
-                      'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=600&auto=format&fit=crop&q=80',
-                      'https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=600&auto=format&fit=crop&q=80'
-                    ];
-                  } else {
-                    serviceSlides = [
-                      'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600&auto=format&fit=crop&q=80',
-                      'https://images.unsplash.com/photo-1581092335397-9583fe92d232?w=600&auto=format&fit=crop&q=80'
-                    ];
-                  }
-
-                  const isServiceSeededLocal = s.imageUrl && s.imageUrl.startsWith('/assets/images/');
-                  let finalServiceImages: string[];
-                  if (s.imageUrl && !isServiceSeededLocal) {
-                    finalServiceImages = [s.imageUrl, ...serviceSlides];
-                  } else {
-                    finalServiceImages = serviceSlides;
-                  }
-
-                  return {
-                    id: `SVC-${s.serviceCode}`,
-                    code: s.serviceCode,
-                    title: s.title,
-                    category: cat,
-                    categoryLabel: s.category || 'Printing Press',
-                    description: s.description || '',
-                    icon,
-                    imageUrl: finalServiceImages[0],
-                    images: finalServiceImages,
-                    features: s.features || [],
-                    requiresQuotation: s.requiresQuotation ?? true,
-                    isActive: true
-                  };
-                });
-                this.services.set(mappedServices);
-              }
-            }
-          });
-
-          // 4. Fetch Master Categories & Units
-          this.categoryApi.getAllCategories().subscribe({
-            next: (catRes) => {
-              if (catRes.success && catRes.data) {
-                this.backendCategories.set(catRes.data);
-              }
-            }
-          });
-
-          this.unitApi.getAllUnits().subscribe({
-            next: (unitRes) => {
-              if (unitRes.success && unitRes.data) {
-                this.backendUnits.set(unitRes.data);
-              }
-            }
-          });
-
-          this.syncStatus.set('synced');
-          this.lastSyncTimestamp.set(new Date());
-          this.systemStatusMessage.set('Enterprise cloud ledger synchronized · Central ERP Connected');
-
-          // If session is authenticated, fetch authorized staff datasets
-          if (this.isAuthenticated()) {
-            this.syncProtectedData();
-          }
         }
       },
       error: () => {
         this.syncStatus.set('synced');
-        this.lastSyncTimestamp.set(new Date());
-        this.systemStatusMessage.set('Operational mode active · Central ledger records verified');
+      }
+    });
+  }
+
+  refreshPublicProducts(): void {
+    this.catalogApi.getPublicProducts({ size: 100 }).subscribe({
+      next: (prodRes) => {
+        if (prodRes.success && prodRes.data?.content?.length) {
+          const rawBranches = this.branches();
+          const mappedProducts: Product[] = prodRes.data.content.map(p => {
+            let cat: ProductCategory = 'PRINTING_SUPPLIES';
+            const cName = (p.categoryName || '').toLowerCase();
+            if (cName.includes('garment')) cat = 'GARMENT_MATERIALS';
+            else if (cName.includes('brand')) cat = 'BRANDING_PROMOTION';
+            else if (cName.includes('press') || cName.includes('service')) cat = 'PRINTING_SERVICES';
+            else if (cName.includes('equip') || cName.includes('materials & equip')) cat = 'EQUIPMENT';
+
+            const finalImage = p.imageUrl || '/assets/images/Aser-trading.png';
+            const productImages = [finalImage];
+
+            let avail: ProductAvailability = 'IN_STOCK';
+            const rawAvail = (p.availability as string) || '';
+            if (rawAvail === 'OUT_OF_STOCK') {
+              avail = 'OUT_OF_STOCK';
+            } else if (rawAvail === 'LIMITED_AVAILABILITY' || rawAvail === 'LIMITED') {
+              avail = 'LIMITED';
+            } else if (rawAvail === 'AVAILABLE_ON_REQUEST' || rawAvail === 'ON_REQUEST' || p.isQuotationOnly) {
+              avail = 'ON_REQUEST';
+            } else {
+              avail = 'IN_STOCK';
+            }
+
+            return {
+              id: `PRD-${p.id}`,
+              sku: p.sku,
+              name: p.name,
+              category: cat,
+              categoryLabel: p.categoryName || 'Printing Supplies',
+              description: p.description || '',
+              unit: (p.baseUnitName?.toLowerCase() || p.baseUnitSymbol?.toLowerCase() || 'piece') as any,
+              pricingType: p.isQuotationOnly ? 'QUOTATION' : 'FIXED',
+              unitPrice: p.sellingPrice || 0,
+              baseCost: (p.sellingPrice || 0) * 0.75,
+              availability: avail,
+              minOrderQty: 1,
+              reorderThreshold: 10,
+              isPublished: true,
+              featured: true,
+              imageUrl: finalImage,
+              images: productImages,
+              specifications: {
+                'Specifications': p.specifications || 'Standard Commercial Grade'
+              },
+              eligibleBranches: rawBranches.map(mb => mb.id)
+            };
+          });
+          this.products.set(mappedProducts);
+        }
+      }
+    });
+  }
+
+  fetchServices(): void {
+    this.catalogApi.getPublicServices().subscribe({
+      next: (srvRes) => {
+        if (srvRes.success && srvRes.data?.length) {
+          const mappedServices: AserServiceItem[] = srvRes.data.map(s => {
+            let cat: ServiceCategory = 'PRINTING_PRESS';
+            const c = (s.category || '').toLowerCase();
+            if (c.includes('brand')) cat = 'BRANDING_PROMOTION';
+            else if (c.includes('garment') || c.includes('textile')) cat = 'GARMENT_MATERIALS';
+            else if (c.includes('equip') || c.includes('maint')) cat = 'EQUIPMENT_DISTRIBUTION';
+
+            const icon = s.serviceCode.includes('EQUIP')
+              ? 'lucide:wrench'
+              : s.serviceCode.includes('GARMENT')
+                ? 'lucide:shirt'
+                : s.serviceCode.includes('BRAND')
+                  ? 'lucide:sparkles'
+                  : 'lucide:printer';
+
+            const finalImage = s.imageUrl || '/assets/images/Aser-trading.png';
+            const finalServiceImages = [finalImage];
+
+            return {
+              id: `SVC-${s.serviceCode}`,
+              code: s.serviceCode,
+              title: s.title,
+              category: cat,
+              categoryLabel: s.category || 'Printing Press',
+              description: s.description || '',
+              icon,
+              imageUrl: finalImage,
+              images: finalServiceImages,
+              features: s.features || (s as any).capabilities || [],
+              requiresQuotation: s.requiresQuotation ?? true,
+              isActive: (s as any).isActive ?? true
+            };
+          });
+          this.services.set(mappedServices);
+        }
+      }
+    });
+  }
+
+  fetchCategoriesAndUnits(): void {
+    this.categoryApi.getAllCategories().subscribe({
+      next: (catRes) => {
+        if (catRes.success && catRes.data) {
+          this.backendCategories.set(catRes.data);
+        }
+      }
+    });
+
+    this.unitApi.getAllUnits().subscribe({
+      next: (unitRes) => {
+        if (unitRes.success && unitRes.data) {
+          this.backendUnits.set(unitRes.data);
+        }
       }
     });
   }
@@ -527,7 +483,7 @@ export class AserStateService {
     this.orders.set([]);
     this.quotations.set([]);
     this.employees.set([]);
-    this.toastService.info('Session Ended', 'You have been safely signed out of the enterprise system.');
+    this.toastService.info('Session Ended', 'You have been  signed out of the system.');
     this.router.navigate(['/app/login']);
   }
 
@@ -651,14 +607,14 @@ export class AserStateService {
               paymentMethod: (o.paymentMethod === 'MANUAL_BANK_TRANSFER' || (o.paymentMethod as string) === 'MANUAL_TRANSFER') ? 'MANUAL_BANK_TRANSFER' : 'IN_HAND_CASH',
               paymentStatus: o.paymentStatus as any,
               status: o.status as any,
-              items: o.items.map(it => ({
+              items: (o.items || []).map(it => ({
                 productId: `PRD-${it.productId}`,
                 productSku: it.productSku,
                 productName: it.productName,
                 unitPrice: it.unitPrice,
                 quantity: it.quantity,
                 unit: (it.unitSymbol?.toLowerCase() || 'piece') as any,
-                lineTotal: it.lineTotal
+                lineTotal: (it as any).totalPrice ?? (it as any).lineTotal ?? (it.unitPrice * it.quantity)
               })),
               subtotal: o.subtotal,
               deliveryFee: o.deliveryFee,
@@ -876,15 +832,20 @@ export class AserStateService {
   }
 
   cancelOrder(orderId: string, reason?: string) {
-    const numId = parseInt(orderId.replace('ORD-', '').replace('AS-', ''), 10);
+    const numId = parseInt(orderId.replace('ORD-0', '').replace('ORD-', '').replace('AS-', ''), 10);
     if (!isNaN(numId) && numId > 0) {
-      this.orderApi.cancelOrder(numId).subscribe({
+      this.orderApi.cancelOrder(numId, reason || 'Order cancelled by user').subscribe({
         next: () => {
-          this.toastService.warning('Order Cancelled', `Order ${orderId} has been cancelled.`);
-          this.syncProtectedData();
+          this.toastService.warning('Order Cancelled', `Order ${orderId} has been cancelled and stock released.`);
+          this.orders.update(orders => orders.map(o => o.id === orderId ? { ...o, status: 'CANCELLED' as OrderStatus } : o));
+          this.refreshPublicProducts();
+          if (this.isAuthenticated()) {
+            this.syncProtectedData();
+          }
         },
         error: (err) => {
-          this.toastService.error('Cancellation Failed', err?.error?.message || 'Could not cancel order');
+          this.toastService.error('Cancellation Failed', err?.error?.detail || err?.error?.message || 'Could not cancel order');
+          this.syncProtectedData();
         }
       });
     }
@@ -908,9 +869,14 @@ export class AserStateService {
     });
   }
 
-    // Cart actions
+  // Cart actions
   addToCart(product: Product, quantity = 1) {
     if (product.pricingType === 'QUOTATION') {
+      this.toastService.info('Quotation Required', `${product.name} requires custom pricing. Please request a quotation.`);
+      return;
+    }
+    if (product.availability === 'OUT_OF_STOCK') {
+      this.toastService.warning('Out of Stock', `${product.name} is currently out of stock and cannot be added to cart.`);
       return;
     }
     const current = [...this.cart()];
@@ -931,7 +897,6 @@ export class AserStateService {
       });
     }
     this.cart.set(current);
-    this.toastService.success('Item Added to Cart', `${product.name} (Qty: ${quantity} ${product.unit}) is in your cart.`);
   }
 
   updateCartQuantity(productId: string, quantity: number) {
@@ -950,7 +915,6 @@ export class AserStateService {
       return item;
     });
     this.cart.set(current);
-    this.toastService.info('Cart Updated', `Quantity updated to ${quantity}.`);
   }
 
   removeFromCart(productId: string) {
@@ -961,95 +925,39 @@ export class AserStateService {
     this.cart.set([]);
   }
 
-  // Create Order from Cart
-  placeOrder(orderData: {
-    customerName: string;
-    customerPhone: string;
-    customerEmail: string;
-    companyName?: string;
-    fulfillment: FulfillmentType;
-    pickupBranchId?: string;
-    deliveryAddress?: string;
-    paymentMethod: PaymentMethod;
-    notes?: string;
-  }): Order {
-    const subtotal = this.cartSubtotal();
-    const deliveryFee = orderData.fulfillment === 'DELIVERY' ? 250 : 0;
-    const totalAmount = subtotal + deliveryFee;
-    const orderNumber = `AS-${1049 + this.orders().length}`;
-
-    let pickupBranchName: string | undefined;
-    if (orderData.fulfillment === 'BRANCH_PICKUP' && orderData.pickupBranchId) {
-      pickupBranchName = this.branches().find(b => b.id === orderData.pickupBranchId)?.name;
+  // Create Order from Cart (Fully Synchronized with Central Database)
+  placeOrder(
+    orderData: {
+      customerName: string;
+      customerPhone: string;
+      customerEmail: string;
+      companyName?: string;
+      fulfillment: FulfillmentType;
+      pickupBranchId?: string;
+      deliveryAddress?: string;
+      paymentMethod: PaymentMethod;
+      notes?: string;
+    },
+    callbacks?: {
+      onSuccess?: (order: Order) => void;
+      onError?: (errorMsg: string) => void;
     }
-
-    const orderItems: OrderItem[] = this.cart().map(ci => ({
-      productId: ci.product.id,
-      productSku: ci.product.sku,
-      productName: ci.product.name,
-      unitPrice: ci.product.unitPrice,
-      quantity: ci.quantity,
-      unit: ci.product.unit,
-      lineTotal: ci.lineTotal
-    }));
-
-    const newOrder: Order = {
-      id: `ORD-${Date.now()}`,
-      orderNumber,
-      createdAt: 'Just now',
-      customerName: orderData.customerName,
-      customerPhone: orderData.customerPhone,
-      customerEmail: orderData.customerEmail,
-      companyName: orderData.companyName,
-      fulfillment: orderData.fulfillment,
-      pickupBranchId: orderData.pickupBranchId,
-      pickupBranchName,
-      deliveryAddress: orderData.deliveryAddress,
-      paymentMethod: orderData.paymentMethod,
-      paymentStatus: 'PENDING',
-      status: 'PENDING_PAYMENT',
-      items: orderItems,
-      subtotal,
-      deliveryFee,
-      totalAmount,
-      notes: orderData.notes,
-      reservedStock: true
-    };
-
-    // Atomically reserve stock across inventory balances
-    const balances = [...this.inventoryBalances()];
-    for (const item of orderItems) {
-      const balIndex = balances.findIndex(b => b.productId === item.productId);
-      if (balIndex > -1) {
-        const bal = balances[balIndex];
-        const newReserved = bal.reservedQty + item.quantity;
-        const newAvailable = Math.max(0, bal.onHandQty - newReserved);
-        balances[balIndex] = {
-          ...bal,
-          reservedQty: newReserved,
-          availableQty: newAvailable
-        };
-      }
-    }
-    this.inventoryBalances.set(balances);
-
-    // Prepend order
-    this.orders.set([newOrder, ...this.orders()]);
-    this.clearCart();
-    this.toastService.success('Order Placed Successfully', `Order ${orderNumber} confirmed. Stock temporarily reserved.`);
-
-    // Backend Cloud Dispatch
-    const backendItems = orderItems.map(ci => ({
-      productId: parseInt(ci.productId.replace('PRD-0', '').replace('PRD-', ''), 10) || 1,
+  ): void {
+    const backendItems = this.cart().map(ci => ({
+      productId: parseInt(ci.product.id.replace('PRD-0', '').replace('PRD-', ''), 10) || 1,
       quantity: ci.quantity
     }));
 
+    const collectionBranchNum = orderData.pickupBranchId
+      ? (parseInt(orderData.pickupBranchId.replace('BR-0', '').replace('BR-', ''), 10) || undefined)
+      : undefined;
+
     const backendPayload: BackendCreateOrderRequest = {
-      customerName: orderData.customerName,
-      customerEmail: orderData.customerEmail,
-      customerPhone: orderData.customerPhone,
+      customerName: orderData.customerName.trim(),
+      customerEmail: orderData.customerEmail.trim(),
+      customerPhone: orderData.customerPhone.trim(),
       deliveryType: orderData.fulfillment === 'BRANCH_PICKUP' ? 'STORE_PICKUP' : 'STANDARD_DELIVERY',
-      collectionBranchId: orderData.pickupBranchId ? (parseInt(orderData.pickupBranchId.replace('BR-0', '').replace('BR-', ''), 10) || 1) : undefined,
+      collectionBranchId: collectionBranchNum,
       deliveryAddress: orderData.deliveryAddress,
       paymentMethod: orderData.paymentMethod === 'MANUAL_BANK_TRANSFER' ? 'MANUAL_BANK_TRANSFER' : 'CASH_ON_DELIVERY',
       notes: orderData.notes,
@@ -1060,21 +968,67 @@ export class AserStateService {
       next: (res) => {
         if (res.success && res.data) {
           const backendOrder = res.data;
-          this.orders.update(orders => orders.map(o => o.id === newOrder.id ? {
-            ...o,
+          const pickupBranchName = this.branches().find(b => b.id === orderData.pickupBranchId)?.name;
+
+          const confirmedOrder: Order = {
             id: `ORD-${backendOrder.id}`,
             orderNumber: backendOrder.orderNumber,
-            totalAmount: backendOrder.totalAmount
-          } : o));
-          this.toastService.success('Order Synced with Backend', `Order registered as ${backendOrder.orderNumber} in database.`);
+            createdAt: backendOrder.createdAt ? new Date(backendOrder.createdAt).toLocaleDateString() : 'Just now',
+            customerName: backendOrder.customerName,
+            customerPhone: backendOrder.customerPhone || orderData.customerPhone,
+            customerEmail: backendOrder.customerEmail,
+            companyName: orderData.companyName,
+            fulfillment: orderData.fulfillment,
+            pickupBranchId: orderData.pickupBranchId,
+            pickupBranchName,
+            deliveryAddress: backendOrder.deliveryAddress || orderData.deliveryAddress,
+            paymentMethod: orderData.paymentMethod,
+            paymentStatus: (backendOrder.paymentStatus as any) || 'PENDING',
+            status: (backendOrder.status as any) || 'PENDING_PAYMENT',
+            items: (backendOrder.items || []).map(it => ({
+              productId: `PRD-${it.productId}`,
+              productSku: it.productSku,
+              productName: it.productName,
+              unitPrice: it.unitPrice,
+              quantity: it.quantity,
+              unit: (it.unitSymbol?.toLowerCase() || 'piece') as any,
+              lineTotal: (it as any).totalPrice ?? (it as any).lineTotal ?? (it.unitPrice * it.quantity)
+            })),
+            subtotal: backendOrder.subtotal,
+            deliveryFee: backendOrder.deliveryFee,
+            totalAmount: backendOrder.totalAmount,
+            notes: backendOrder.notes || orderData.notes,
+            reservedStock: true
+          };
+
+          this.orders.update(orders => [confirmedOrder, ...orders.filter(o => o.id !== confirmedOrder.id)]);
+          this.clearCart();
+          this.toastService.success('Order Placed Successfully', `Order ${backendOrder.orderNumber} confirmed. Stock reserved.`);
+
+          this.refreshPublicProducts();
+          if (this.isAuthenticated()) {
+            this.syncProtectedData();
+          }
+
+          if (callbacks?.onSuccess) {
+            callbacks.onSuccess(confirmedOrder);
+          }
+        } else {
+          const errMsg = res.message || 'Failed to place order';
+          this.toastService.error('Order Placement Failed', errMsg);
+          if (callbacks?.onError) {
+            callbacks.onError(errMsg);
+          }
         }
       },
       error: (err) => {
-        console.warn('[AserState] Backend order sync failed, retained in local mode:', err);
+        const errMsg = err?.error?.detail || err?.error?.message || 'Failed to place order. Please verify item quantities and stock availability.';
+        this.toastService.error('Order Placement Failed', errMsg);
+        if (callbacks?.onError) {
+          callbacks.onError(errMsg);
+        }
       }
     });
-
-    return newOrder;
   }
 
   // Submit Customer Quotation Request
@@ -1160,90 +1114,6 @@ export class AserStateService {
 
   // Weighted-Average Costing & Stock Receipt
   receiveStock(cmd: StockReceiptCommand) {
-    const balances = [...this.inventoryBalances()];
-    const cmdPid = parseInt(cmd.productId.replace('PRD-0', '').replace('PRD-', ''), 10);
-    const cmdBid = parseInt((cmd.branchId || '').replace('BR-0', '').replace('BR-', ''), 10);
-    const cmdWid = parseInt((cmd.warehouseId || '').replace('WH-0', '').replace('WH-', ''), 10);
-
-    const index = balances.findIndex(b => {
-      const bPid = parseInt(b.productId.replace('PRD-0', '').replace('PRD-', ''), 10);
-      const bWid = parseInt(b.warehouseId.replace('WH-0', '').replace('WH-', ''), 10);
-      const bBid = parseInt(b.branchId.replace('BR-0', '').replace('BR-', ''), 10);
-      return bPid === cmdPid && (cmdWid > 0 ? bWid === cmdWid : bBid === cmdBid);
-    });
-
-    const product = this.products().find(p => parseInt(p.id.replace('PRD-0', '').replace('PRD-', ''), 10) === cmdPid);
-    const branch = this.branches().find(b => parseInt(b.id.replace('BR-0', '').replace('BR-', ''), 10) === cmdBid);
-    const warehouse = branch?.warehouses.find(w => parseInt(w.id.replace('WH-0', '').replace('WH-', ''), 10) === cmdWid) || branch?.warehouses[0];
-
-    if (index > -1) {
-      const bal = balances[index];
-      const oldQty = bal.onHandQty;
-      const oldCost = bal.weightedAvgCost;
-      const newQty = oldQty + cmd.quantity;
-
-      // SRS Section 7.1 Formula: (Existing stock * existing avg + received qty * received cost) / total stock
-      const newWeightedCost = newQty > 0 ? ((oldQty * oldCost) + (cmd.quantity * cmd.unitCost)) / newQty : cmd.unitCost;
-      const newAvailable = newQty - bal.reservedQty;
-      const status = newAvailable <= 0 ? 'Out of stock' : newAvailable <= bal.reorderPoint ? 'Low stock' : 'In stock';
-
-      balances[index] = {
-        ...bal,
-        onHandQty: newQty,
-        availableQty: newAvailable,
-        weightedAvgCost: Math.round(newWeightedCost * 100) / 100,
-        totalValuation: Math.round(newQty * newWeightedCost * 100) / 100,
-        status
-      };
-    } else if (product && branch) {
-      const newQty = cmd.quantity;
-      balances.push({
-        id: `SB-${Date.now()}`,
-        productId: product.id,
-        productSku: product.sku,
-        productName: product.name,
-        category: product.categoryLabel,
-        branchId: branch.id,
-        branchName: branch.name,
-        warehouseId: warehouse?.id || 'WH-DEF',
-        warehouseName: warehouse?.name || 'Main Warehouse',
-        onHandQty: newQty,
-        reservedQty: 0,
-        availableQty: newQty,
-        unit: product.unit,
-        weightedAvgCost: cmd.unitCost,
-        totalValuation: newQty * cmd.unitCost,
-        reorderPoint: product.reorderThreshold,
-        status: newQty <= product.reorderThreshold ? 'Low stock' : 'In stock'
-      });
-    }
-
-    this.inventoryBalances.set(balances);
-
-    // Record Stock Movement Ledger Entry
-    const movement: StockMovement = {
-      id: `MOV-${Date.now()}`,
-      timestamp: 'Just now',
-      type: 'RECEIPT',
-      productId: cmd.productId,
-      productSku: product?.sku || '',
-      productName: product?.name || '',
-      branchId: cmd.branchId,
-      branchName: branch?.name || '',
-      warehouseName: warehouse?.name || '',
-      quantityDelta: cmd.quantity,
-      unit: product?.unit || 'piece',
-      unitCost: cmd.unitCost,
-      totalCost: cmd.quantity * cmd.unitCost,
-      referenceType: 'PURCHASE_ORDER',
-      referenceNumber: cmd.referenceNumber,
-      actor: cmd.actor,
-      notes: `Supplier: ${cmd.supplierName}. ${cmd.notes || ''}`
-    };
-    this.stockMovements.set([movement, ...this.stockMovements()]);
-    this.toastService.success('Stock Receipt Posted', `Received ${cmd.quantity} units. Weighted-average cost recalculated.`);
-
-    // Backend Cloud Dispatch
     const numProductId = parseInt(cmd.productId.replace('PRD-0', '').replace('PRD-', ''), 10) || 1;
     const numWarehouseId = parseInt(cmd.warehouseId.replace('WH-0', '').replace('WH-', ''), 10) || 1;
 
@@ -1258,12 +1128,16 @@ export class AserStateService {
     }).subscribe({
       next: (res) => {
         if (res.success) {
+          this.toastService.success('Stock Receipt Posted', `Received ${cmd.quantity} units into warehouse.`);
           this.syncProtectedData();
-          this.toastService.success('Receipt Synced', 'Central ledger & valuation updated on backend.');
+          this.refreshPublicProducts();
+        } else {
+          this.toastService.error('Stock Receipt Failed', res.message || 'Could not record stock receipt');
         }
       },
-      error: () => {
-        // Stock receipt recorded in local inventory
+      error: (err) => {
+        this.toastService.error('Stock Receipt Failed', err?.error?.detail || err?.error?.message || 'Could not post stock receipt');
+        this.syncProtectedData();
       }
     });
   }
@@ -1274,53 +1148,19 @@ export class AserStateService {
     toBranchId: string;
     items: { productId: string; requestedQty: number }[];
     notes?: string;
-  }): StockTransfer {
+  }): void {
+    const fromBranchNum = parseInt(transferData.fromBranchId.replace('BR-0', '').replace('BR-', ''), 10) || 1;
+    const toBranchNum = parseInt(transferData.toBranchId.replace('BR-0', '').replace('BR-', ''), 10) || 2;
+
     const fromBranch = this.branches().find(b => b.id === transferData.fromBranchId);
     const toBranch = this.branches().find(b => b.id === transferData.toBranchId);
-    const refNum = `TR-2026-${String(242 + this.transfers().length).padStart(5, '0')}`;
 
-    const items = transferData.items.map(it => {
-      const p = this.products().find(prod => prod.id === it.productId);
-      return {
-        productId: it.productId,
-        productSku: p?.sku || '',
-        productName: p?.name || '',
-        unit: p?.unit || ('piece' as UnitOfMeasure),
-        requestedQty: it.requestedQty
-      };
-    });
-
-    const newTransfer: StockTransfer = {
-      id: `TR-${Date.now()}`,
-      referenceNumber: refNum,
-      date: 'Today',
-      fromBranchId: transferData.fromBranchId,
-      fromBranchName: fromBranch?.name || '',
-      fromWarehouseName: fromBranch?.warehouses[0]?.name || '',
-      toBranchId: transferData.toBranchId,
-      toBranchName: toBranch?.name || '',
-      toWarehouseName: toBranch?.warehouses[0]?.name || '',
-      items,
-      status: 'PENDING_APPROVAL',
-      requestedBy: 'Branch Manager',
-      timeline: [
-        {
-          id: `EV-${Date.now()}`,
-          timestamp: 'Just now',
-          actor: 'Branch Manager',
-          role: 'Branch Manager',
-          action: 'Transfer requested',
-          notes: transferData.notes || 'Routine stock rebalancing'
-        }
-      ],
-      notes: transferData.notes
-    };
-
-    this.transfers.set([newTransfer, ...this.transfers()]);
-
-    // Backend Cloud Dispatch
-    const fromWhId = parseInt(transferData.fromBranchId.replace('BR-0', '').replace('BR-', ''), 10) || 1;
-    const toWhId = parseInt(transferData.toBranchId.replace('BR-0', '').replace('BR-', ''), 10) || 2;
+    const fromWhId = fromBranch?.warehouses[0]?.id
+      ? (parseInt(fromBranch.warehouses[0].id.replace('WH-0', '').replace('WH-', ''), 10) || fromBranchNum)
+      : fromBranchNum;
+    const toWhId = toBranch?.warehouses[0]?.id
+      ? (parseInt(toBranch.warehouses[0].id.replace('WH-0', '').replace('WH-', ''), 10) || toBranchNum)
+      : toBranchNum;
 
     this.transferApi.createTransfer({
       sourceWarehouseId: fromWhId,
@@ -1334,21 +1174,23 @@ export class AserStateService {
       next: (res) => {
         if (res.success && res.data) {
           const backendTransfer = res.data;
-          this.transferApi.submitTransfer(backendTransfer.id).subscribe();
-          this.transfers.update(transfers => transfers.map(t => t.id === newTransfer.id ? {
-            ...t,
-            id: `TR-${backendTransfer.id}`,
-            referenceNumber: backendTransfer.transferNumber
-          } : t));
-          this.toastService.success('Transfer Synced', `Transfer ${backendTransfer.transferNumber} created in backend.`);
+          this.transferApi.submitTransfer(backendTransfer.id).subscribe({
+            next: () => {
+              this.toastService.success('Transfer Requisition Created', `Transfer ${backendTransfer.transferNumber} submitted for authorization.`);
+              this.syncProtectedData();
+            },
+            error: () => {
+              this.toastService.success('Transfer Created', `Transfer ${backendTransfer.transferNumber} registered.`);
+              this.syncProtectedData();
+            }
+          });
         }
       },
-      error: () => {
-        // Transfer requisition registered in local system
+      error: (err) => {
+        this.toastService.error('Transfer Creation Failed', err?.error?.detail || err?.error?.message || 'Could not create transfer request');
+        this.syncProtectedData();
       }
     });
-
-    return newTransfer;
   }
 
   approveTransfer(transferId: string, actor: string) {
@@ -1364,91 +1206,23 @@ export class AserStateService {
           this.syncProtectedData();
         }
       });
-    } else {
-      const current = this.transfers().map(t => {
-        if (t.id === transferId) {
-          return {
-            ...t,
-            status: 'APPROVED' as TransferStatus,
-            approvedBy: actor,
-            timeline: [
-              ...t.timeline,
-              {
-                id: `EV-${Date.now()}`,
-                timestamp: 'Just now',
-                actor,
-                role: 'System Administrator / Owner',
-                action: 'Approved transfer',
-                notes: 'Authorized per SRS separation of duties'
-              }
-            ]
-          };
-        }
-        return t;
-      });
-      this.transfers.set(current);
-      this.toastService.success('Transfer Approved', `Transfer ${transferId} approved.`);
     }
   }
 
   dispatchTransfer(transferId: string, actor: string) {
-    const transfer = this.transfers().find(t => t.id === transferId);
-    if (!transfer) return;
-
     const numId = parseInt(transferId.replace('TR-00', '').replace('TR-0', '').replace('TR-', ''), 10);
     if (!isNaN(numId) && numId > 0) {
       this.transferApi.dispatchTransfer(numId).subscribe({
         next: () => {
           this.toastService.warning('Stock Dispatched', `Transfer ${transferId} is now In-Transit.`);
           this.syncProtectedData();
+          this.refreshPublicProducts();
         },
         error: (err) => {
           this.toastService.error('Dispatch Failed', err?.error?.detail || err?.error?.message || 'Could not dispatch transfer in backend');
           this.syncProtectedData();
         }
       });
-    } else {
-      // Deduct stock from source branch atomically and set in-transit
-      const balances = [...this.inventoryBalances()];
-      for (const item of transfer.items) {
-        const idx = balances.findIndex(b => b.productId === item.productId && b.branchId === transfer.fromBranchId);
-        if (idx > -1) {
-          const bal = balances[idx];
-          const newOnHand = Math.max(0, bal.onHandQty - item.requestedQty);
-          balances[idx] = {
-            ...bal,
-            onHandQty: newOnHand,
-            availableQty: Math.max(0, newOnHand - bal.reservedQty),
-            totalValuation: Math.round(newOnHand * bal.weightedAvgCost * 100) / 100
-          };
-        }
-      }
-      this.inventoryBalances.set(balances);
-
-      const current = this.transfers().map(t => {
-        if (t.id === transferId) {
-          return {
-            ...t,
-            status: 'IN_TRANSIT' as TransferStatus,
-            dispatchedBy: actor,
-            items: t.items.map(i => ({ ...i, dispatchedQty: i.requestedQty })),
-            timeline: [
-              ...t.timeline,
-              {
-                id: `EV-${Date.now()}`,
-                timestamp: 'Just now',
-                actor,
-                role: 'Storekeeper (Source)',
-                action: 'Goods dispatched',
-                notes: 'Items packed and loaded into transit logistics'
-              }
-            ]
-          };
-        }
-        return t;
-      });
-      this.transfers.set(current);
-      this.toastService.warning('Stock Dispatched', `Transfer ${transferId} is now In-Transit.`);
     }
   }
 
@@ -1464,98 +1238,46 @@ export class AserStateService {
       }));
       this.transferApi.receiveTransfer(numId, { items: itemsPayload, notes: 'Goods received and inspected.' }).subscribe({
         next: () => {
-          this.toastService.success('Transfer Completed', `Transfer ${transferId} received at ${transfer.toBranchName}.`);
+          this.toastService.success('Transfer Completed', `Transfer ${transferId} received at destination warehouse.`);
           this.syncProtectedData();
+          this.refreshPublicProducts();
         },
         error: (err) => {
           this.toastService.error('Receipt Failed', err?.error?.detail || err?.error?.message || 'Could not record transfer receipt in backend');
           this.syncProtectedData();
         }
       });
-    } else {
-      const balances = [...this.inventoryBalances()];
-      let hasDiscrepancy = false;
-
-      const updatedItems = transfer.items.map(item => {
-        const receivedQty = itemReceipts?.[item.productId] ?? item.dispatchedQty ?? item.requestedQty;
-        if (receivedQty !== item.dispatchedQty) {
-          hasDiscrepancy = true;
-        }
-
-        // Add to destination branch
-        const destIndex = balances.findIndex(b => b.productId === item.productId && b.branchId === transfer.toBranchId);
-        if (destIndex > -1) {
-          const bal = balances[destIndex];
-          const newOnHand = bal.onHandQty + receivedQty;
-          balances[destIndex] = {
-            ...bal,
-            onHandQty: newOnHand,
-            availableQty: newOnHand - bal.reservedQty,
-            totalValuation: Math.round(newOnHand * bal.weightedAvgCost * 100) / 100
-          };
-        }
-        return {
-          ...item,
-          receivedQty,
-          discrepancyNote: hasDiscrepancy ? `Discrepancy: Dispatched ${item.dispatchedQty}, Received ${receivedQty}` : undefined
-        };
-      });
-
-      this.inventoryBalances.set(balances);
-
-      const finalStatus: TransferStatus = hasDiscrepancy ? 'DISCREPANCY_REVIEW' : 'RECEIVED';
-
-      const current = this.transfers().map(t => {
-        if (t.id === transferId) {
-          return {
-            ...t,
-            status: finalStatus,
-            receivedBy: actor,
-            items: updatedItems,
-            timeline: [
-              ...t.timeline,
-              {
-                id: `EV-${Date.now()}`,
-                timestamp: 'Just now',
-                actor,
-                role: 'Storekeeper (Destination)',
-                action: hasDiscrepancy ? 'Received with discrepancy' : 'Goods verified & received',
-                notes: hasDiscrepancy ? 'Quantity mismatch flagged for management audit' : 'Physical count matched manifest exactly.'
-              }
-            ]
-          };
-        }
-        return t;
-      });
-      this.transfers.set(current);
-      this.toastService.success('Transfer Completed', `Transfer ${transferId} received at ${transfer.toBranchName}.`);
     }
   }
 
   // Update Order Status
   updateOrderStatus(orderId: string, status: OrderStatus, paymentStatus?: PaymentStatus) {
-    const current = this.orders().map(o => {
-      if (o.id === orderId) {
-        return {
-          ...o,
-          status,
-          paymentStatus: paymentStatus || o.paymentStatus
-        };
-      }
-      return o;
-    });
-    this.orders.set(current);
+    if (status === 'CANCELLED') {
+      this.cancelOrder(orderId, 'Order cancelled by staff action');
+      return;
+    }
 
-    const numId = parseInt(orderId.replace('ORD-', '').replace('AS-', ''), 10);
+    const numId = parseInt(orderId.replace('ORD-0', '').replace('ORD-', '').replace('AS-', ''), 10);
     if (!isNaN(numId) && numId > 0) {
       this.orderApi.updateOrderStatus(numId, status).subscribe({
         next: () => {
           if (paymentStatus === 'PAID') {
-            this.orderApi.confirmOrder(numId).subscribe();
+            this.orderApi.confirmOrder(numId).subscribe({
+              next: () => {
+                this.syncProtectedData();
+                this.refreshPublicProducts();
+              }
+            });
+          } else {
+            this.syncProtectedData();
+            this.refreshPublicProducts();
           }
-          this.syncProtectedData();
+          this.toastService.success('Order Status Updated', `Order ${orderId} marked as ${status}.`);
         },
-        error: () => console.warn('[AserState] Backend updateOrderStatus skipped')
+        error: (err) => {
+          this.toastService.error('Update Failed', err?.error?.detail || err?.error?.message || 'Could not update order status');
+          this.syncProtectedData();
+        }
       });
     }
   }
@@ -1649,59 +1371,30 @@ export class AserStateService {
     phone?: string;
     email?: string;
     isHeadOffice?: boolean;
-  }): Branch {
-    const newId = `BR-0${this.branches().length + 1}`;
-    const newBranch: Branch = {
-      id: newId,
+  }) {
+    this.branchApi.createBranch({
       name: data.name,
       code: data.code.toUpperCase(),
       address: data.address || '',
       city: data.city || 'Addis Ababa',
       phone: data.phone || '+251 11 000 0000',
       email: data.email || 'branch@asertrading.et',
-      isHeadOffice: !!data.isHeadOffice,
-      warehouses: [
-        {
-          id: `WH-0${this.branches().length + 1}`,
-          branchId: newId,
-          name: `${data.name} Main Depot`,
-          code: `WH-${data.code.toUpperCase()}-MAIN`,
-          isDefault: true
-        }
-      ]
-    };
-
-    this.branches.update(bList => [...bList, newBranch]);
-    this.toastService.success('Branch Added', `${newBranch.name} (${newBranch.code}) created successfully.`);
-
-    // Backend dispatch
-    this.branchApi.createBranch({
-      name: newBranch.name,
-      code: newBranch.code,
-      address: newBranch.address,
-      city: newBranch.city,
-      phone: newBranch.phone,
-      email: newBranch.email,
       isActive: true
     }).subscribe({
       next: (res) => {
-        if (res.success && res.data) {
-          this.branches.update(bList => bList.map(b => b.id === newBranch.id ? {
-            ...b,
-            id: `BR-0${res.data.id}`
-          } : b));
+        if (res.success) {
+          this.toastService.success('Branch Added', `${data.name} (${data.code.toUpperCase()}) created successfully.`);
+          this.fetchBranches();
         }
       },
-      error: () => console.warn('[AserState] Branch created locally')
+      error: (err) => {
+        this.toastService.error('Branch Creation Failed', err?.error?.message || 'Could not create branch');
+        this.fetchBranches();
+      }
     });
-
-    return newBranch;
   }
 
   updateBranch(id: string, updates: Partial<Branch>) {
-    this.branches.update(bList => bList.map(b => b.id === id ? { ...b, ...updates } : b));
-    this.toastService.success('Branch Updated', 'Branch details saved.');
-
     const numId = parseInt(id.replace('BR-0', '').replace('BR-', ''), 10);
     if (!isNaN(numId) && numId > 0) {
       this.branchApi.updateBranch(numId, {
@@ -1713,7 +1406,14 @@ export class AserStateService {
         email: updates.email,
         isActive: true
       }).subscribe({
-        error: () => console.warn('[AserState] Branch updated locally')
+        next: () => {
+          this.toastService.success('Branch Updated', 'Branch details saved.');
+          this.fetchBranches();
+        },
+        error: (err) => {
+          this.toastService.error('Branch Update Failed', err?.error?.message || 'Could not update branch');
+          this.fetchBranches();
+        }
       });
     }
   }
@@ -1729,35 +1429,28 @@ export class AserStateService {
   }
 
   addWarehouse(branchId: string, name: string, code: string) {
-    this.branches.update(bList => bList.map(b => {
-      if (b.id === branchId) {
-        const newWh = {
-          id: `WH-${Date.now()}`,
-          branchId,
-          name,
-          code: code.toUpperCase(),
-          isDefault: false
-        };
-        return {
-          ...b,
-          warehouses: [...b.warehouses, newWh]
-        };
+    const numBranchId = parseInt(branchId.replace('BR-0', '').replace('BR-', ''), 10) || 1;
+    this.branchApi.createWarehouse({
+      branchId: numBranchId,
+      name,
+      code: code.toUpperCase(),
+      isDefault: false
+    }).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.toastService.success('Warehouse Created', `Added warehouse ${name} (${code}).`);
+          this.fetchBranches();
+        }
+      },
+      error: (err) => {
+        this.toastService.error('Warehouse Creation Failed', err?.error?.message || 'Could not add warehouse');
+        this.fetchBranches();
       }
-      return b;
-    }));
-    this.toastService.success('Warehouse Created', `Added warehouse ${name} (${code}).`);
+    });
   }
 
   // === DYNAMIC COMMERCIAL SERVICES MANAGEMENT ===
-  createService(data: Omit<AserServiceItem, 'id' | 'isActive'>): AserServiceItem {
-    const newService: AserServiceItem = {
-      ...data,
-      id: `SVC-${Date.now()}`,
-      isActive: true
-    };
-    this.services.update(list => [...list, newService]);
-    this.toastService.success('Service Created', `${newService.title} added to company services.`);
-
+  createService(data: Omit<AserServiceItem, 'id' | 'isActive'>) {
     this.catalogApi.createAdminService({
       serviceCode: data.code,
       title: data.title,
@@ -1767,16 +1460,20 @@ export class AserStateService {
       keyOfferings: data.features?.join(';') || '',
       requiresQuotation: data.requiresQuotation
     }).subscribe({
-      error: () => console.warn('[AserState] Service created locally')
+      next: (res) => {
+        if (res.success) {
+          this.toastService.success('Service Created', `${data.title} added to company services.`);
+          this.fetchServices();
+        }
+      },
+      error: (err) => {
+        this.toastService.error('Service Creation Failed', err?.error?.message || 'Could not create service');
+        this.fetchServices();
+      }
     });
-
-    return newService;
   }
 
   updateService(id: string, updates: Partial<AserServiceItem>) {
-    this.services.update(list => list.map(s => s.id === id ? { ...s, ...updates } : s));
-    this.toastService.success('Service Updated', 'Service details modified.');
-
     const numId = parseInt(id.replace('SVC-0', '').replace('SVC-', ''), 10);
     if (!isNaN(numId) && numId > 0) {
       this.catalogApi.updateAdminService(numId, {
@@ -1787,7 +1484,14 @@ export class AserStateService {
         keyOfferings: updates.features?.join(';') || '',
         requiresQuotation: updates.requiresQuotation
       }).subscribe({
-        error: () => console.warn('[AserState] Service updated locally')
+        next: () => {
+          this.toastService.success('Service Updated', 'Service details modified.');
+          this.fetchServices();
+        },
+        error: (err) => {
+          this.toastService.error('Service Update Failed', err?.error?.message || 'Could not update service');
+          this.fetchServices();
+        }
       });
     }
   }
@@ -1801,14 +1505,17 @@ export class AserStateService {
   }
 
   deleteService(id: string) {
-    const svc = this.services().find(s => s.id === id);
-    this.services.update(list => list.filter(s => s.id !== id));
-    this.toastService.info('Service Deleted', `${svc?.title} removed from catalog.`);
-
     const numId = parseInt(id.replace('SVC-0', '').replace('SVC-', ''), 10);
     if (!isNaN(numId) && numId > 0) {
       this.catalogApi.deleteAdminService(numId).subscribe({
-        error: () => console.warn('[AserState] Service deleted locally')
+        next: () => {
+          this.toastService.info('Service Deleted', 'Removed from catalog.');
+          this.fetchServices();
+        },
+        error: (err) => {
+          this.toastService.error('Delete Failed', err?.error?.message || 'Could not delete service');
+          this.fetchServices();
+        }
       });
     }
   }
@@ -1822,56 +1529,31 @@ export class AserStateService {
     role: StaffRole;
     assignedBranchId?: string;
     password: string;
-  }): EmployeeUser {
-    const branchName = this.branches().find(b => b.id === data.assignedBranchId)?.name || 'Head Office & Printing Plant (Piassa)';
-    const newEmp: EmployeeUser = {
-      id: `USR-${Date.now()}`,
+  }) {
+    const numBranchId = data.assignedBranchId ? parseInt(data.assignedBranchId.replace('BR-0', '').replace('BR-', ''), 10) : undefined;
+    this.userApi.createUser({
       username: data.username.trim().toLowerCase(),
       email: data.email.trim(),
       fullName: data.fullName.trim(),
       phone: data.phone,
       role: data.role,
-      roleLabel: ROLE_LABELS[data.role] || data.role,
-      assignedBranchId: data.assignedBranchId,
-      assignedBranchName: branchName,
-      isActive: true,
-      createdAt: 'Just now'
-    };
-
-    this.employees.update(emps => [newEmp, ...emps]);
-
-    // Backend dispatch
-    const numBranchId = data.assignedBranchId ? parseInt(data.assignedBranchId.replace('BR-0', '').replace('BR-', ''), 10) : undefined;
-    this.userApi.createUser({
-      username: newEmp.username,
-      email: newEmp.email,
-      fullName: newEmp.fullName,
-      phone: newEmp.phone,
-      role: newEmp.role,
       assignedBranchId: numBranchId,
       password: data.password
     }).subscribe({
       next: (res) => {
-        if (res.success && res.data) {
-          this.employees.update(emps => emps.map(e => e.id === newEmp.id ? {
-            ...e,
-            id: `USR-${res.data.id}`
-          } : e));
-          this.toastService.success('Employee Registered', `${newEmp.fullName} (${newEmp.roleLabel}) successfully created in central directory.`);
+        if (res.success) {
+          this.toastService.success('Employee Registered', `${data.fullName} successfully created in central directory.`);
+          this.syncProtectedData();
         }
       },
-      error: () => {
-        this.toastService.success('Employee Registered (Local)', `${newEmp.fullName} recorded in local directory.`);
+      error: (err) => {
+        this.toastService.error('Registration Failed', err?.error?.message || 'Could not create employee');
+        this.syncProtectedData();
       }
     });
-
-    return newEmp;
   }
 
   updateEmployee(id: string, updates: Partial<EmployeeUser>) {
-    this.employees.update(emps => emps.map(e => e.id === id ? { ...e, ...updates } : e));
-    this.toastService.success('Employee Updated', 'Staff profile updated successfully.');
-
     const numId = parseInt(id.replace('USR-', ''), 10);
     if (!isNaN(numId) && numId > 0) {
       const numBranchId = updates.assignedBranchId ? parseInt(updates.assignedBranchId.replace('BR-0', '').replace('BR-', ''), 10) : undefined;
@@ -1882,7 +1564,16 @@ export class AserStateService {
         role: updates.role,
         assignedBranchId: numBranchId,
         isActive: updates.isActive
-      }).subscribe();
+      }).subscribe({
+        next: () => {
+          this.toastService.success('Employee Updated', 'Staff profile updated successfully.');
+          this.syncProtectedData();
+        },
+        error: (err) => {
+          this.toastService.error('Update Failed', err?.error?.message || 'Could not update employee');
+          this.syncProtectedData();
+        }
+      });
     }
   }
 

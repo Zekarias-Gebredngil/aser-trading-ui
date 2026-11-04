@@ -470,7 +470,9 @@
     "QUOTATION_PRICING_DESC": "Custom project specifications, bulk volume discounts, and machine installations require an official sales quote.",
     "REQUEST_CUSTOM_QUOTE": "Request Custom Quotation",
     "AVAILABILITY_BRANCHES": "Availability Status Across Branches",
-    "AVAILABLE": "Available"
+    "AVAILABLE": "Available",
+    "UNAVAILABLE": "Unavailable",
+    "OUT_OF_STOCK": "Out of Stock"
   },
   "QUOTE_MODAL": {
     "REQUEST_QUOTE_TITLE": "Request a Custom Quotation",

@@ -333,7 +333,15 @@
           }
         </div>
 
-        <div class="modal-footer">
+        <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            @if (selectedOrder()?.status !== 'CANCELLED' && selectedOrder()?.status !== 'DELIVERED') {
+              <button class="btn btn-outline" style="color:var(--red); border-color:#fca5a5; display:inline-flex; align-items:center; gap:6px;" (click)="cancelOrder($event, selectedOrder()!)">
+                <aser-icon name="lucide:x-circle" [size]="14"></aser-icon>
+                <span>Cancel Order & Release Stock</span>
+              </button>
+            }
+          </div>
           <button class="btn btn-outline" (click)="closeOrderModal()">{{ 'COMMON.CLOSE' | translate:'Close' }}</button>
         </div>
       </div>

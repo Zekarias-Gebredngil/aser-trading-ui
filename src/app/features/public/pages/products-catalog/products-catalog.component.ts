@@ -197,6 +197,9 @@ export class ProductsCatalogComponent implements OnInit {
     if (product.pricingType === 'QUOTATION') {
       return { badgeClass: 'badge-quote-only', textKey: 'PRODUCTS.QUOTATION_ONLY', defaultText: 'Quotation' };
     }
+    if (product.availability === 'OUT_OF_STOCK') {
+      return { badgeClass: 'badge-out-of-stock', textKey: 'PRODUCT_DETAIL.OUT_OF_STOCK', defaultText: 'Out of Stock' };
+    }
     if (product.availability === 'IN_STOCK') {
       return { badgeClass: 'badge-in-stock', textKey: 'STOREFRONT.IN_STOCK', defaultText: 'In Stock' };
     }

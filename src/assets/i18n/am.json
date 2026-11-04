@@ -470,7 +470,9 @@
     "QUOTATION_PRICING_DESC": "ልዩ የፕሮጀክት ዝርዝሮች፣ የጅምላ ቅናሾች እና የማሽን ተከላዎች ይፋዊ የሽያጭ ዋጋ ማቅረቢያ ይፈልጋሉ።",
     "REQUEST_CUSTOM_QUOTE": "ልዩ የዋጋ ማቅረቢያ ይጠይቁ",
     "AVAILABILITY_BRANCHES": "በቅርንጫፎች ውስጥ ያለው የክምችት ሁኔታ",
-    "AVAILABLE": "ይገኛል"
+    "AVAILABLE": "ይገኛል",
+    "UNAVAILABLE": "አይገኝም",
+    "OUT_OF_STOCK": "አልቋል"
   },
   "QUOTE_MODAL": {
     "REQUEST_QUOTE_TITLE": "ልዩ የዋጋ ማቅረቢያ ይጠይቁ",

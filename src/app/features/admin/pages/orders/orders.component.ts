@@ -186,8 +186,8 @@ export class OrdersComponent {
 
   cancelOrder(event: Event, order: Order) {
     event.stopPropagation();
-    if (confirm(`Are you sure you want to cancel order ${order.orderNumber}?`)) {
-      this.state.cancelOrder(order.id);
+    if (confirm(`Are you sure you want to cancel order ${order.orderNumber}? Stock reservation will be released.`)) {
+      this.state.cancelOrder(order.id, 'Cancelled by admin staff');
       if (this.selectedOrder()?.id === order.id) {
         this.selectedOrder.set(null);
       }
