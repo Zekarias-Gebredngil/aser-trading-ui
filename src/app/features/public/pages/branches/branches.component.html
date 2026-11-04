@@ -28,11 +28,11 @@
   <section class="section">
     <div class="container">
       <div class="branch-grid" style="grid-template-columns:repeat(2, 1fr); gap:28px;">
-        @for (branch of branches(); track branch.id) {
+        @for (branch of branchList(); track branch.id) {
           <div class="branch-card" style="padding:28px;">
             <div class="branch-card-header">
               <div>
-                <span class="category-tag" style="margin-bottom:6px; display:inline-block;">{{ getBranchCodeTag(branch) }}</span>
+                <span class="category-tag" style="margin-bottom:6px; display:inline-block;">{{ branch.codeTag }}</span>
                 <h2 class="branch-title" style="font-size:18px;">{{ branch.name }}</h2>
               </div>
               @if (branch.isHeadOffice) {
@@ -42,20 +42,20 @@
 
             <div class="branch-detail-row" style="font-size:13px; margin:14px 0 8px; display:flex; align-items:center; gap:8px;">
               <aser-icon name="lucide:map-pin" [size]="16" color="var(--blue)"></aser-icon>
-              <span><strong>{{ 'COMMON.ADDRESS' | translate:'Address' }}:</strong> {{ getFullAddress(branch) }}</span>
+              <span><strong>{{ 'COMMON.ADDRESS' | translate:'Address' }}:</strong> {{ branch.fullAddress }}</span>
             </div>
 
             <div class="branch-detail-row" style="font-size:13px; margin-bottom:8px; display:flex; align-items:center; gap:8px;">
               <aser-icon name="lucide:phone" [size]="16" color="var(--blue)"></aser-icon>
-              <span><strong>{{ 'COMMON.PHONE' | translate:'Telephone' }}:</strong> {{ branch.phone || '—' }}</span>
+              <span><strong>{{ 'COMMON.PHONE' | translate:'Telephone' }}:</strong> {{ branch.phoneDisplay }}</span>
             </div>
 
             <div class="branch-detail-row" style="font-size:13px; margin-bottom:18px; display:flex; align-items:center; gap:8px;">
               <aser-icon name="lucide:mail" [size]="16" color="var(--blue)"></aser-icon>
-              <span><strong>{{ 'COMMON.EMAIL' | translate:'Email' }}:</strong> {{ branch.email || '—' }}</span>
+              <span><strong>{{ 'COMMON.EMAIL' | translate:'Email' }}:</strong> {{ branch.emailDisplay }}</span>
             </div>
 
-            @if (hasWarehouses(branch)) {
+            @if (branch.hasWarehouses) {
               <div style="background:var(--bg-soft); border:1px solid var(--line); border-radius:var(--radius-md); padding:16px; margin-top:auto;">
                 <strong style="display:block; font-size:12px; color:var(--ink); margin-bottom:6px;">
                   {{ 'BRANCHES.WAREHOUSES' | translate:'Designated Storage Warehouses:' }}
@@ -70,7 +70,7 @@
             }
 
             <div style="display:flex; gap:10px; margin-top:20px;">
-              <a [href]="getTelHref(branch.phone)" class="btn btn-outline btn-sm" style="flex:1;">
+              <a [href]="branch.telHref" class="btn btn-outline btn-sm" style="flex:1;">
                 {{ 'COMMON.PHONE' | translate:'Call Branch' }}
               </a>
               <button class="btn btn-primary btn-sm" style="flex:1;" (click)="openQuote('PRINTING_PRESS')">

@@ -13,14 +13,14 @@
 
     <!-- Desktop Navigation Links -->
     <nav class="header-nav">
-      <a routerLink="/" [routerLinkActiveOptions]="{exact:true}" routerLinkActive="active" class="nav-link">{{
-        'STOREFRONT.NAV_HOME' | translate:'Home' }}</a>
-      <a routerLink="/services" routerLinkActive="active" class="nav-link">{{ 'STOREFRONT.NAV_SERVICES' |
-        translate:'Services' }}</a>
-      <a routerLink="/products" routerLinkActive="active" class="nav-link">{{ 'STOREFRONT.NAV_PRODUCTS' |
-        translate:'Products & Supplies' }}</a>
-      <a routerLink="/branches" routerLinkActive="active" class="nav-link">{{ 'STOREFRONT.NAV_BRANCHES' |
-        translate:'Branches & Warehouses' }}</a>
+      @for (item of navItems; track item.path) {
+        <a [routerLink]="item.path" 
+           [routerLinkActiveOptions]="item.exact ? { exact: true } : { exact: false }" 
+           routerLinkActive="active" 
+           class="nav-link">
+          {{ item.labelKey | translate:item.defaultLabel }}
+        </a>
+      }
     </nav>
 
     <div class="header-actions">
@@ -28,13 +28,13 @@
       <div class="lang-dropdown-wrapper">
         <button type="button" class="lang-toggle-btn" (click)="toggleLangDropdown()" title="Switch Language">
           <aser-icon name="lucide:globe" [size]="15" color="var(--blue)"></aser-icon>
-          <span style="text-transform:uppercase;">{{ i18n.currentLang() }}</span>
+          <span style="text-transform:uppercase;">{{ currentLang() }}</span>
         </button>
 
         @if (isLangDropdownOpen()) {
         <div class="lang-menu">
-          @for (l of supportedLanguages; track l.code) {
-          <button type="button" class="lang-option" [class.active]="i18n.currentLang() === l.code"
+          @for (l of languageOptions(); track l.code) {
+          <button type="button" class="lang-option" [class.active]="l.isCurrent"
             (click)="selectLanguage(l.code)">
             <span>{{ l.flag }}</span>
             <span>{{ l.nativeName }}</span>
@@ -53,13 +53,13 @@
       <!-- Cart Button with Live Counter Badge -->
       <button class="cart-button" (click)="onMobileOpenCart()" aria-label="Open Shopping Cart">
         <aser-icon name="lucide:shopping-cart" [size]="18"></aser-icon>
-        @if (state.cartCount() > 0) {
-        <span class="cart-badge">{{ state.cartCount() }}</span>
+        @if (hasCartItems()) {
+        <span class="cart-badge">{{ cartCount() }}</span>
         }
       </button>
 
       <!-- Staff Management Portal Link (Desktop) -->
-      @if (state.isAuthenticated()) {
+      @if (isAuthenticated()) {
       <a class="staff-link desktop-only" routerLink="/app" title="Access system">
         <aser-icon name="lucide:layout-dashboard" [size]="13"></aser-icon>
         <span>{{ 'STOREFRONT.PORTAL' | translate:'Portal' }}</span>
@@ -83,23 +83,16 @@
   @if (mobileNavOpen()) {
   <div class="mobile-nav-drawer">
     <div class="mobile-nav-links">
-      <a routerLink="/" [routerLinkActiveOptions]="{exact:true}" routerLinkActive="active" class="mobile-nav-item"
-        (click)="closeMobileNav()">
-        <aser-icon name="lucide:building-2" [size]="18"></aser-icon>
-        <span>{{ 'STOREFRONT.NAV_HOME' | translate:'Home' }}</span>
-      </a>
-      <a routerLink="/services" routerLinkActive="active" class="mobile-nav-item" (click)="closeMobileNav()">
-        <aser-icon name="lucide:sparkles" [size]="18"></aser-icon>
-        <span>{{ 'STOREFRONT.NAV_SERVICES' | translate:'Services' }}</span>
-      </a>
-      <a routerLink="/products" routerLinkActive="active" class="mobile-nav-item" (click)="closeMobileNav()">
-        <aser-icon name="lucide:package" [size]="18"></aser-icon>
-        <span>{{ 'STOREFRONT.NAV_PRODUCTS' | translate:'Products & Supplies' }}</span>
-      </a>
-      <a routerLink="/branches" routerLinkActive="active" class="mobile-nav-item" (click)="closeMobileNav()">
-        <aser-icon name="lucide:map-pin" [size]="18"></aser-icon>
-        <span>{{ 'STOREFRONT.NAV_BRANCHES' | translate:'Branches & Warehouses' }}</span>
-      </a>
+      @for (item of navItems; track item.path) {
+        <a [routerLink]="item.path" 
+           [routerLinkActiveOptions]="item.exact ? { exact: true } : { exact: false }" 
+           routerLinkActive="active" 
+           class="mobile-nav-item" 
+           (click)="closeMobileNav()">
+          <aser-icon [name]="item.icon" [size]="18"></aser-icon>
+          <span>{{ item.labelKey | translate:item.defaultLabel }}</span>
+        </a>
+      }
     </div>
 
     <div class="mobile-nav-footer">
@@ -108,10 +101,10 @@
         <span>{{ 'STOREFRONT.REQUEST_QUOTE' | translate:'Request Quote' }}</span>
       </button>
 
-      @if (state.isAuthenticated()) {
+      @if (isAuthenticated()) {
       <a class="btn btn-primary btn-block" routerLink="/app" (click)="closeMobileNav()">
         <aser-icon name="lucide:layout-dashboard" [size]="16"></aser-icon>
-        <span>{{ 'STOREFRONT.PORTAL' | translate:'Enterprise Portal' }} ({{ state.currentUser()?.roleLabel }})</span>
+        <span>{{ portalButtonText() }}</span>
       </a>
       <button type="button" class="btn btn-outline btn-block" (click)="onMobileLogout()">
         <aser-icon name="lucide:log-in" [size]="16"></aser-icon>
