@@ -28,7 +28,7 @@
 
         <div class="form-group">
           <label class="form-label">{{ 'MODALS.DEST_BRANCH' | translate:'Destination Branch' }} *</label>
-          <select class="form-select" [(ngModel)]="selectedBranchId" (change)="onBranchChange()">
+          <select class="form-select" [(ngModel)]="selectedBranchId" (change)="onBranchChange()" [disabled]="state.isBranchScopeLocked()">
             @for (branch of state.branches(); track branch.id) {
               <option [value]="branch.id">{{ branch.name }}</option>
             }

@@ -38,7 +38,9 @@
         </strong>
       </span>
     </div>
-    <span class="badge badge-in-stock">{{ connectedBranchesCount() }} {{ 'DASHBOARD.BRANCHES_CONNECTED' | translate:'Branches Connected' }}</span>
+    <span class="badge badge-in-stock">
+      {{ connectedBranchesCount() }} {{ isAllBranchesScope() ? ('DASHBOARD.BRANCHES_CONNECTED' | translate:'Branches Connected') : ('DASHBOARD.BRANCH_ASSIGNED' | translate:'Dedicated Branch Assigned') }}
+    </span>
   </div>
 
   <!-- Key Performance Metrics (KPIs) -->

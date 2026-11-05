@@ -1,7 +1,8 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdminShellComponent } from '../../layout/admin-shell/admin-shell.component';
 import { IconComponent } from '../../../../core/components/icon/icon.component';
+import { AserStateService } from '../../../../core/services/aser-state.service';
 import { 
   ReportApiService, 
   SalesReportDto, 
@@ -21,6 +22,7 @@ import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
   styleUrl: './reports.component.css'
 })
 export class ReportsComponent implements OnInit {
+  readonly state = inject(AserStateService);
   private readonly reportApi = inject(ReportApiService);
   private readonly excelService = inject(ExcelExportService);
   private readonly toast = inject(ToastService);
@@ -37,26 +39,41 @@ export class ReportsComponent implements OnInit {
   readonly valPage = signal(0);
   readonly valPageSize = signal(15);
 
+  constructor() {
+    effect(() => {
+      // Re-trigger report loading whenever the selected branch filter changes
+      this.state.selectedBranchFilter();
+      this.loadAllReports();
+    });
+  }
+
   setActiveTab(tab: 'sales' | 'valuation' | 'stock' | 'transfers'): void {
     this.activeTab.set(tab);
   }
 
   ngOnInit(): void {
-    this.loadAllReports();
+    // Initial load handled by effect
   }
 
   loadAllReports(): void {
     this.isLoading.set(true);
 
-    this.reportApi.getSalesReport().subscribe({
+    const filter = this.state.selectedBranchFilter();
+    const branchId = filter !== 'ALL'
+      ? parseInt(filter.replace('BR-0', '').replace('BR-', ''), 10)
+      : (this.state.isBranchScopeLocked() && this.state.currentUser()?.assignedBranchId
+          ? parseInt(this.state.currentUser()!.assignedBranchId!.replace('BR-0', '').replace('BR-', ''), 10)
+          : undefined);
+
+    this.reportApi.getSalesReport(branchId).subscribe({
       next: (res) => { if (res.success) this.salesData.set(res.data || null); }
     });
 
-    this.reportApi.getStockSummary().subscribe({
+    this.reportApi.getStockSummary(branchId).subscribe({
       next: (res) => { if (res.success) this.stockSummary.set(res.data || null); }
     });
 
-    this.reportApi.getStockValuation().subscribe({
+    this.reportApi.getStockValuation(branchId).subscribe({
       next: (res) => { 
         this.isLoading.set(false);
         if (res.success) this.valuationData.set(res.data || null); 
@@ -66,7 +83,7 @@ export class ReportsComponent implements OnInit {
       }
     });
 
-    this.reportApi.getTransferReport().subscribe({
+    this.reportApi.getTransferReport(branchId).subscribe({
       next: (res) => { if (res.success) this.transferData.set(res.data || null); }
     });
   }

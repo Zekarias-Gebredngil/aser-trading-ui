@@ -42,7 +42,9 @@ export class ReceiveStockModalComponent implements OnInit {
     if (this.state.products().length > 0) {
       this.selectedProductId = this.state.products()[0].id;
     }
-    if (this.state.branches().length > 0) {
+    if (this.state.isBranchScopeLocked() && this.state.currentUser()?.assignedBranchId) {
+      this.selectedBranchId = this.state.currentUser()!.assignedBranchId!;
+    } else if (this.state.branches().length > 0) {
       this.selectedBranchId = this.state.branches()[0].id;
     }
     const whs = this.availableWarehouses;

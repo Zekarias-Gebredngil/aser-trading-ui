@@ -125,7 +125,7 @@ export class AdminShellComponent implements OnInit {
   }
 
   onBranchFilterChange(branchId: string): void {
-    this.state.selectedBranchFilter.set(branchId);
+    this.state.setBranchFilter(branchId);
   }
 
   selectLanguage(lang: SupportedLanguage): void {

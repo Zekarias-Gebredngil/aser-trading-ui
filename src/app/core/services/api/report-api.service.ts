@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from './api-response.model';
@@ -62,19 +62,27 @@ export class ReportApiService {
   private http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/reports`;
 
-  getSalesReport(): Observable<ApiResponse<SalesReportDto>> {
-    return this.http.get<ApiResponse<SalesReportDto>>(`${this.baseUrl}/sales`);
+  getSalesReport(branchId?: number): Observable<ApiResponse<SalesReportDto>> {
+    let params = new HttpParams();
+    if (branchId !== undefined && branchId !== null) params = params.set('branchId', branchId.toString());
+    return this.http.get<ApiResponse<SalesReportDto>>(`${this.baseUrl}/sales`, { params });
   }
 
-  getStockSummary(): Observable<ApiResponse<StockSummaryReportDto>> {
-    return this.http.get<ApiResponse<StockSummaryReportDto>>(`${this.baseUrl}/stock-summary`);
+  getStockSummary(branchId?: number): Observable<ApiResponse<StockSummaryReportDto>> {
+    let params = new HttpParams();
+    if (branchId !== undefined && branchId !== null) params = params.set('branchId', branchId.toString());
+    return this.http.get<ApiResponse<StockSummaryReportDto>>(`${this.baseUrl}/stock-summary`, { params });
   }
 
-  getStockValuation(): Observable<ApiResponse<StockValuationReportDto>> {
-    return this.http.get<ApiResponse<StockValuationReportDto>>(`${this.baseUrl}/stock-valuation`);
+  getStockValuation(branchId?: number): Observable<ApiResponse<StockValuationReportDto>> {
+    let params = new HttpParams();
+    if (branchId !== undefined && branchId !== null) params = params.set('branchId', branchId.toString());
+    return this.http.get<ApiResponse<StockValuationReportDto>>(`${this.baseUrl}/stock-valuation`, { params });
   }
 
-  getTransferReport(): Observable<ApiResponse<TransferReportDto>> {
-    return this.http.get<ApiResponse<TransferReportDto>>(`${this.baseUrl}/transfer-history`);
+  getTransferReport(branchId?: number): Observable<ApiResponse<TransferReportDto>> {
+    let params = new HttpParams();
+    if (branchId !== undefined && branchId !== null) params = params.set('branchId', branchId.toString());
+    return this.http.get<ApiResponse<TransferReportDto>>(`${this.baseUrl}/transfer-history`, { params });
   }
 }

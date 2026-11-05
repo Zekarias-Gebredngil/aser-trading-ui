@@ -41,9 +41,11 @@ export interface BackendStockTransferDto {
   transferNumber: string;
   sourceWarehouseId: number;
   sourceWarehouseName: string;
+  sourceBranchId?: number;
   sourceBranchName: string;
   destinationWarehouseId: number;
   destinationWarehouseName: string;
+  destinationBranchId?: number;
   destinationBranchName: string;
   status: 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'IN_TRANSIT' | 'RECEIVED' | 'REJECTED' | 'DISCREPANCY_REVIEW';
   requestedBy: string;

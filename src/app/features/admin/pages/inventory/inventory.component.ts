@@ -96,7 +96,7 @@ export class InventoryComponent {
   }
 
   get pagedMovements() {
-    const list = this.state.stockMovements();
+    const list = this.state.filteredMovements();
     const start = (this.movementsPage - 1) * this.movementsPageSize;
     return list.slice(start, start + this.movementsPageSize);
   }
@@ -163,8 +163,10 @@ export class InventoryComponent {
   }
 
   get allWarehouses(): { id: number; name: string; branchName: string }[] {
+    const filter = this.state.selectedBranchFilter();
     const list: { id: number; name: string; branchName: string }[] = [];
     for (const b of this.state.branches()) {
+      if (filter !== 'ALL' && b.id !== filter) continue;
       for (const w of b.warehouses || []) {
         const numId = parseInt(w.id.replace('WH-0', '').replace('WH-', ''), 10);
         list.push({
@@ -227,7 +229,7 @@ export class InventoryComponent {
       this.excelService.exportJsonToExcel(data, 'Aser_Inventory_Stock_Balances', 'Stock Balances');
       this.toast.success(`Exported ${data.length} stock balance records to Excel.`);
     } else if (this.activeTab === 'MOVEMENTS') {
-      const movements = this.state.stockMovements();
+      const movements = this.state.filteredMovements();
       if (movements.length === 0) {
         this.toast.error('No stock movement records to export.');
         return;

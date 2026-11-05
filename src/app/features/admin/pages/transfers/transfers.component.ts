@@ -50,7 +50,7 @@ export class TransfersComponent {
 
   get filteredTransfers(): StockTransfer[] {
     const f = this.statusFilter;
-    return this.state.transfers().filter(t => f === 'ALL' || t.status === f);
+    return this.state.filteredTransfers().filter(t => f === 'ALL' || t.status === f);
   }
 
   get pagedTransfers(): StockTransfer[] {

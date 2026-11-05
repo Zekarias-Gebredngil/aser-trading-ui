@@ -56,6 +56,7 @@ export interface BackendLowStockAlertDto {
   productId: number;
   productSku: string;
   productName: string;
+  warehouseId?: number;
   warehouseName: string;
   currentStock: number;
   reorderThreshold: number;

@@ -78,6 +78,7 @@ export const ROLE_PERMISSIONS: Record<StaffRole, Permission[]> = {
     'APPROVE_TRANSFER',
     'MANAGE_ORDERS',
     'VIEW_FINANCIALS',
+    'VIEW_REPORTS',
     'ACCESS_ALL_BRANCHES'
   ],
   INVENTORY_MANAGER: [
@@ -89,6 +90,7 @@ export const ROLE_PERMISSIONS: Record<StaffRole, Permission[]> = {
     'DISPATCH_TRANSFER',
     'RECEIVE_TRANSFER',
     'VIEW_FINANCIALS',
+    'VIEW_REPORTS',
     'ACCESS_ALL_BRANCHES'
   ],
   BRANCH_MANAGER: [
@@ -96,7 +98,9 @@ export const ROLE_PERMISSIONS: Record<StaffRole, Permission[]> = {
     'RECEIVE_STOCK',
     'REQUEST_TRANSFER',
     'APPROVE_TRANSFER',
-    'MANAGE_ORDERS'
+    'MANAGE_ORDERS',
+    'VIEW_FINANCIALS',
+    'VIEW_REPORTS'
   ],
   STOREKEEPER: [
     'VIEW_INVENTORY',
@@ -117,6 +121,7 @@ export const ROLE_PERMISSIONS: Record<StaffRole, Permission[]> = {
   ACCOUNTANT_AUDITOR: [
     'VIEW_INVENTORY',
     'VIEW_FINANCIALS',
+    'VIEW_REPORTS',
     'ACCESS_ALL_BRANCHES'
   ],
   WEBSITE_MANAGER: [

@@ -71,7 +71,12 @@ export class DashboardComponent {
     if (filter === 'ALL') return '';
     return this.state.branches().find(b => b.id === filter)?.name || filter;
   });
-  readonly connectedBranchesCount = computed<number>(() => this.state.branches().length);
+  readonly connectedBranchesCount = computed<number>(() => {
+    if (!this.isAllBranchesScope()) {
+      return 1;
+    }
+    return this.state.branches().length;
+  });
   readonly totalValuation = computed<number>(() => this.state.totalValuation());
   readonly activeLocationsCount = computed<number>(() => this.state.filteredInventory().length);
   readonly lowStockCount = computed<number>(() => this.state.lowStockCount());
@@ -79,7 +84,7 @@ export class DashboardComponent {
   readonly lowStockColor = computed<string>(() => this.lowStockCount() > 0 ? 'var(--red)' : 'var(--ink)');
 
   readonly recentStockMovements = computed<readonly StockMovementRowViewModel[]>(() => {
-    return this.state.stockMovements().map(mov => {
+    return this.state.filteredMovements().map(mov => {
       const visual = this.getMovementVisual(mov.type);
       const prefix = mov.quantityDelta > 0 ? '+' : '';
       const formattedDelta = `${prefix}${mov.quantityDelta} ${mov.unit || ''}`.trim();
@@ -101,7 +106,13 @@ export class DashboardComponent {
   });
 
   readonly recentOrders = computed<readonly DashboardOrderViewModel[]>(() => {
-    return this.state.orders().slice(0, 3).map(order => ({
+    const filter = this.state.selectedBranchFilter();
+    const branch = this.state.branches().find(b => b.id === filter);
+    const orders = this.state.orders().filter(o => {
+      if (filter === 'ALL') return true;
+      return !o.pickupBranchName || (branch && o.pickupBranchName.toLowerCase().includes(branch.name.toLowerCase()));
+    });
+    return orders.slice(0, 3).map(order => ({
       id: order.id,
       orderNumber: order.orderNumber,
       customerName: order.customerName,
@@ -115,8 +126,32 @@ export class DashboardComponent {
   });
 
   readonly branchSummaries = computed<readonly BranchSummaryViewModel[]>(() => {
+    const filter = this.state.selectedBranchFilter();
     const summaries = this.state.stockSummaryReport()?.branchSummaries || [];
-    return summaries.map(s => ({
+    const filtered = filter === 'ALL'
+      ? summaries
+      : summaries.filter(s => {
+          const bIdStr = typeof s.branchId === 'number' ? `BR-0${s.branchId}` : String(s.branchId);
+          return bIdStr === filter || String(s.branchId) === filter;
+        });
+
+    if (filtered.length === 0 && filter !== 'ALL') {
+      const branch = this.state.branches().find(b => b.id === filter);
+      if (branch) {
+        const items = this.state.filteredInventory();
+        const distinctProducts = new Set(items.map(i => i.productId)).size;
+        const valuation = items.reduce((sum, i) => sum + i.totalValuation, 0);
+        return [{
+          branchId: branch.id,
+          branchName: branch.name,
+          warehouseCount: branch.warehouses?.length || 1,
+          totalProducts: distinctProducts,
+          totalValuationEtb: valuation
+        }];
+      }
+    }
+
+    return filtered.map(s => ({
       branchId: s.branchId,
       branchName: s.branchName,
       warehouseCount: s.warehouseCount,

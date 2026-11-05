@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, inject } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IconComponent } from '../../../../core/components/icon/icon.component';
@@ -12,7 +12,7 @@ import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
   templateUrl: './new-transfer-modal.component.html',
   styleUrl: './new-transfer-modal.component.css'
 })
-export class NewTransferModalComponent {
+export class NewTransferModalComponent implements OnInit {
   readonly state = inject(AserStateService);
   @Output() close = new EventEmitter<void>();
 
@@ -22,14 +22,30 @@ export class NewTransferModalComponent {
   requestedQty = 10;
   notes = 'Replenish showroom display and meet pending customer orders.';
 
+  ngOnInit(): void {
+    if (this.state.isBranchScopeLocked() && this.state.currentUser()?.assignedBranchId) {
+      this.fromBranchId = this.state.currentUser()!.assignedBranchId!;
+      const other = this.state.branches().find(b => b.id !== this.fromBranchId);
+      if (other) {
+        this.toBranchId = other.id;
+      }
+    }
+  }
+
   get isValid(): boolean {
-    return !!(
+    const basic = !!(
       this.fromBranchId &&
       this.toBranchId &&
       this.fromBranchId !== this.toBranchId &&
       this.productId &&
       this.requestedQty > 0
     );
+    if (!basic) return false;
+    if (this.state.isBranchScopeLocked()) {
+      const myBranch = this.state.currentUser()?.assignedBranchId;
+      return this.fromBranchId === myBranch || this.toBranchId === myBranch;
+    }
+    return true;
   }
 
   submitTransfer() {

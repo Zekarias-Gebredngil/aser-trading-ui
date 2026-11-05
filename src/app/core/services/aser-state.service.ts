@@ -141,34 +141,6 @@ export class AserStateService {
     return this.cart().reduce((sum, item) => sum + item.lineTotal, 0);
   });
 
-  readonly totalValuation = computed(() => {
-    if (this.stockValuationReport() && this.stockValuationReport()!.totalValuationEtb > 0) {
-      return this.stockValuationReport()!.totalValuationEtb;
-    }
-    return this.inventoryBalances().reduce((acc, curr) => acc + curr.totalValuation, 0);
-  });
-
-  readonly lowStockCount = computed(() => {
-    if (this.lowStockAlerts().length > 0) {
-      return this.lowStockAlerts().length;
-    }
-    return this.inventoryBalances().filter(i =>
-      (i.status as string)?.toLowerCase().includes('low') ||
-      (i.status as string)?.toLowerCase().includes('out')
-    ).length;
-  });
-
-  readonly pendingTransfersCount = computed(() => {
-    if (this.transferReport()) {
-      return this.transferReport()!.inTransitCount;
-    }
-    return this.transfers().filter(t => t.status === 'PENDING_APPROVAL' || t.status === 'IN_TRANSIT').length;
-  });
-
-  readonly ordersTodayCount = computed(() => {
-    return this.orders().length;
-  });
-
   // Filtered Inventory Balances by Scoped/Selected Branch
   readonly filteredInventory = computed(() => {
     const filter = this.selectedBranchFilter();
@@ -176,6 +148,83 @@ export class AserStateService {
       return this.inventoryBalances();
     }
     return this.inventoryBalances().filter(b => b.branchId === filter);
+  });
+
+  // Filtered Inter-Branch Transfers by Scoped/Selected Branch
+  readonly filteredTransfers = computed<StockTransfer[]>(() => {
+    const filter = this.selectedBranchFilter();
+    const all = this.transfers();
+    if (filter === 'ALL') {
+      return all;
+    }
+    return all.filter(t => t.fromBranchId === filter || t.toBranchId === filter);
+  });
+
+  // Filtered Stock Movements Ledger by Scoped/Selected Branch
+  readonly filteredMovements = computed<StockMovement[]>(() => {
+    const filter = this.selectedBranchFilter();
+    const all = this.stockMovements();
+    if (filter === 'ALL') {
+      return all;
+    }
+    const branch = this.branches().find(b => b.id === filter);
+    return all.filter(m => m.branchId === filter || (branch && m.branchName === branch.name));
+  });
+
+  // Filtered Low Stock Alerts by Scoped/Selected Branch
+  readonly filteredLowStockAlerts = computed<BackendLowStockAlertDto[]>(() => {
+    const filter = this.selectedBranchFilter();
+    const all = this.lowStockAlerts();
+    if (filter === 'ALL') {
+      return all;
+    }
+    const branch = this.branches().find(b => b.id === filter);
+    const branchWhIds = (branch?.warehouses || []).map(w => {
+      const num = parseInt(w.id.replace('WH-0', '').replace('WH-', ''), 10);
+      return isNaN(num) ? -1 : num;
+    });
+    const branchWhNames = (branch?.warehouses || []).map(w => w.name.toLowerCase());
+    return all.filter(a => {
+      if (a.warehouseId !== undefined) {
+        return branchWhIds.includes(a.warehouseId);
+      }
+      return branchWhNames.includes((a.warehouseName || '').toLowerCase());
+    });
+  });
+
+  readonly totalValuation = computed(() => {
+    const filter = this.selectedBranchFilter();
+    if (filter === 'ALL') {
+      if (this.stockValuationReport() && this.stockValuationReport()!.totalValuationEtb > 0) {
+        return this.stockValuationReport()!.totalValuationEtb;
+      }
+      return this.inventoryBalances().reduce((acc, curr) => acc + curr.totalValuation, 0);
+    }
+    return this.filteredInventory().reduce((acc, curr) => acc + curr.totalValuation, 0);
+  });
+
+  readonly lowStockCount = computed(() => {
+    const alerts = this.filteredLowStockAlerts();
+    if (alerts.length > 0) {
+      return alerts.length;
+    }
+    return this.filteredInventory().filter(i =>
+      (i.status as string)?.toLowerCase().includes('low') ||
+      (i.status as string)?.toLowerCase().includes('out')
+    ).length;
+  });
+
+  readonly pendingTransfersCount = computed(() => {
+    return this.filteredTransfers().filter(t => t.status === 'PENDING_APPROVAL' || t.status === 'IN_TRANSIT').length;
+  });
+
+  readonly ordersTodayCount = computed(() => {
+    const filter = this.selectedBranchFilter();
+    if (filter === 'ALL') {
+      return this.orders().length;
+    }
+    const branch = this.branches().find(b => b.id === filter);
+    return this.orders().filter(o => !o.pickupBranchName || (branch && o.pickupBranchName.toLowerCase().includes(branch.name.toLowerCase()))).length;
   });
 
   // Staff & Employees (Dynamically loaded from backend UserApiService)
@@ -695,14 +744,22 @@ export class AserStateService {
               const fromBranchName = t.sourceBranchName || fromBranch?.name || t.sourceWarehouseName || 'Source Branch';
               const toBranchName = t.destinationBranchName || toBranch?.name || t.destinationWarehouseName || 'Destination Branch';
 
+              const fromBranchId = t.sourceBranchId
+                ? (t.sourceBranchId < 10 ? `BR-0${t.sourceBranchId}` : `BR-${t.sourceBranchId}`)
+                : (fromBranch?.id || `BR-0${t.sourceWarehouseId}`);
+
+              const toBranchId = t.destinationBranchId
+                ? (t.destinationBranchId < 10 ? `BR-0${t.destinationBranchId}` : `BR-${t.destinationBranchId}`)
+                : (toBranch?.id || `BR-0${t.destinationWarehouseId}`);
+
               return {
                 id: `TR-${t.id}`,
                 referenceNumber: t.transferNumber,
                 date: t.createdAt ? new Date(t.createdAt).toLocaleDateString() : 'Recent',
-                fromBranchId: `BR-0${t.sourceWarehouseId}`,
+                fromBranchId,
                 fromBranchName,
                 fromWarehouseName: t.sourceWarehouseName || fromBranchName,
-                toBranchId: `BR-0${t.destinationWarehouseId}`,
+                toBranchId,
                 toBranchName,
                 toWarehouseName: t.destinationWarehouseName || toBranchName,
                 status: t.status,
@@ -797,40 +854,8 @@ export class AserStateService {
       });
     }
 
-    // 8. Management Reports
-    if (this.hasPermission('VIEW_REPORTS')) {
-      this.reportApi.getSalesReport().subscribe({
-        next: (res) => {
-          if (res.success && res.data) {
-            this.salesReport.set(res.data);
-          }
-        }
-      });
-
-      this.reportApi.getStockValuation().subscribe({
-        next: (res) => {
-          if (res.success && res.data) {
-            this.stockValuationReport.set(res.data);
-          }
-        }
-      });
-
-      this.reportApi.getStockSummary().subscribe({
-        next: (res) => {
-          if (res.success && res.data) {
-            this.stockSummaryReport.set(res.data);
-          }
-        }
-      });
-
-      this.reportApi.getTransferReport().subscribe({
-        next: (res) => {
-          if (res.success && res.data) {
-            this.transferReport.set(res.data);
-          }
-        }
-      });
-    }
+    // 8. Management Reports (Scoped to user dedicated branch or selected filter)
+    this.fetchReports();
 
     // 9. System Audit Logs
     if (this.hasPermission('SYSTEM_CONFIG') || this.hasPermission('VIEW_REPORTS')) {
@@ -841,6 +866,63 @@ export class AserStateService {
           }
         }
       });
+    }
+  }
+
+  fetchReports(branchId?: number): void {
+    if (!this.hasPermission('VIEW_REPORTS')) return;
+
+    const effectiveBranchId = branchId !== undefined
+      ? branchId
+      : (this.isBranchScopeLocked() && this.currentUser()?.assignedBranchId
+        ? parseInt(this.currentUser()!.assignedBranchId!.replace('BR-0', '').replace('BR-', ''), 10)
+        : undefined);
+
+    this.reportApi.getSalesReport(effectiveBranchId).subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.salesReport.set(res.data);
+        }
+      }
+    });
+
+    this.reportApi.getStockValuation(effectiveBranchId).subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.stockValuationReport.set(res.data);
+        }
+      }
+    });
+
+    this.reportApi.getStockSummary(effectiveBranchId).subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.stockSummaryReport.set(res.data);
+        }
+      }
+    });
+
+    this.reportApi.getTransferReport(effectiveBranchId).subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.transferReport.set(res.data);
+        }
+      }
+    });
+  }
+
+  setBranchFilter(branchId: string): void {
+    if (this.isBranchScopeLocked()) {
+      const lockedBranch = this.currentUser()?.assignedBranchId || 'BR-01';
+      this.selectedBranchFilter.set(lockedBranch);
+      return;
+    }
+    this.selectedBranchFilter.set(branchId);
+    if (this.hasPermission('VIEW_REPORTS')) {
+      const numId = branchId !== 'ALL'
+        ? parseInt(branchId.replace('BR-0', '').replace('BR-', ''), 10)
+        : undefined;
+      this.fetchReports(numId);
     }
   }
 

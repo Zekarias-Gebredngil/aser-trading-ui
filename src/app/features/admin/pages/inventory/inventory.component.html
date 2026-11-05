@@ -60,13 +60,13 @@
       [class.btn-primary]="activeTab === 'MOVEMENTS'" [class.btn-outline]="activeTab !== 'MOVEMENTS'"
       (click)="setActiveTab('MOVEMENTS')">
       <aser-icon name="lucide:clock" [size]="15"></aser-icon> {{ 'INVENTORY.TAB_MOVEMENTS' | translate:'Movement Ledger
-      & Audit Trail' }} ({{ state.stockMovements().length }})
+      & Audit Trail' }} ({{ state.filteredMovements().length }})
     </button>
     <button class="btn btn-sm" style="display:inline-flex; align-items:center; gap:6px;"
       [class.btn-primary]="activeTab === 'ALERTS'" [class.btn-outline]="activeTab !== 'ALERTS'"
       (click)="setActiveTab('ALERTS')">
       <aser-icon name="lucide:alert-triangle" [size]="15"></aser-icon> {{ 'INVENTORY.TAB_ALERTS' | translate:'Low Stock
-      Alerts & Reorders' }} ({{ state.lowStockAlerts().length }})
+      Alerts & Reorders' }} ({{ state.filteredLowStockAlerts().length }})
     </button>
   </div>
 
@@ -254,7 +254,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (alert of state.lowStockAlerts(); track alert.productId) {
+          @for (alert of state.filteredLowStockAlerts(); track alert.productId) {
           <tr>
             <td>
               <strong style="color:var(--blue); font-family:monospace;">{{ alert.productSku }}</strong>
@@ -279,7 +279,7 @@
       </table>
     </div>
 
-    @if (state.lowStockAlerts().length === 0) {
+    @if (state.filteredLowStockAlerts().length === 0) {
     <div style="text-align:center; padding:40px; color:var(--muted);">
       All inventory items are currently above their reorder thresholds. No urgent alerts.
     </div>
