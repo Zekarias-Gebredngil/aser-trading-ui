@@ -118,7 +118,7 @@ export class ProductsComponent {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       Array.from(input.files).forEach(file => {
-        this.catalogApi.uploadMedia(file).subscribe({
+        this.catalogApi.uploadMedia(file, 'products').subscribe({
           next: (res) => {
             if (res.success && res.data?.url) {
               this.editForm.images.push(res.data.url);
@@ -126,14 +126,7 @@ export class ProductsComponent {
           },
           error: (err) => {
             console.error('Failed to upload edit image:', err);
-            const reader = new FileReader();
-            reader.onload = (e: any) => {
-              const res = e.target.result as string;
-              if (res) {
-                this.editForm.images.push(res);
-              }
-            };
-            reader.readAsDataURL(file);
+            this.toast.error('Image Upload Failed', 'Could not upload image to cloud storage.');
           }
         });
       });
@@ -209,6 +202,7 @@ export class ProductsComponent {
   saveEdit() {
     const product = this.selectedProduct();
     if (!product) return;
+    const cleanImages = this.editForm.images.filter(img => !img.startsWith('data:'));
     this.state.updateProduct(product.id, {
       name: this.editForm.name,
       amharicName: this.editForm.amharicName,
@@ -217,8 +211,8 @@ export class ProductsComponent {
       reorderThreshold: Number(this.editForm.reorderThreshold),
       description: this.editForm.description,
       isPublished: this.editForm.isPublished,
-      imageUrl: this.editForm.images[0] || undefined,
-      images: this.editForm.images.length > 0 ? [...this.editForm.images] : undefined
+      imageUrl: cleanImages[0] || undefined,
+      images: cleanImages.length > 0 ? cleanImages : undefined
     });
     this.isEditModalOpen.set(false);
   }

@@ -70,22 +70,14 @@ export class ServicesMgmtComponent {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       Array.from(input.files).forEach(file => {
-        this.catalogApi.uploadMedia(file).subscribe({
+        this.catalogApi.uploadMedia(file, 'services').subscribe({
           next: (res) => {
             if (res.success && res.data?.url) {
               this.serviceForm.images.push(res.data.url);
             }
           },
           error: (err) => {
-            console.error('Failed to upload service image:', err);
-            const reader = new FileReader();
-            reader.onload = (e: any) => {
-              const res = e.target.result as string;
-              if (res) {
-                this.serviceForm.images.push(res);
-              }
-            };
-            reader.readAsDataURL(file);
+            console.error('Failed to upload service image to cloud storage:', err);
           }
         });
       });

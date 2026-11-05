@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Output, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IconComponent } from '../../../../core/components/icon/icon.component';
@@ -31,30 +31,31 @@ export class AddProductModalComponent {
   description = '';
   isPublished = true;
 
-  // Slide Images for Storefront
+  // Slide Images for Storefront (Cloud URLs stored in database)
   uploadedImages: string[] = [];
   imageUrlInput = '';
+  isUploading = signal<boolean>(false);
 
   onFilesSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
-      Array.from(input.files).forEach(file => {
-        this.catalogApi.uploadMedia(file).subscribe({
+      const files = Array.from(input.files);
+      this.isUploading.set(true);
+      let pending = files.length;
+
+      files.forEach(file => {
+        this.catalogApi.uploadMedia(file, 'products').subscribe({
           next: (res) => {
             if (res.success && res.data?.url) {
               this.uploadedImages.push(res.data.url);
             }
+            pending--;
+            if (pending <= 0) this.isUploading.set(false);
           },
           error: (err) => {
-            console.error('Failed to upload image to backend:', err);
-            const reader = new FileReader();
-            reader.onload = (e: any) => {
-              const res = e.target.result as string;
-              if (res) {
-                this.uploadedImages.push(res);
-              }
-            };
-            reader.readAsDataURL(file);
+            console.error('Failed to upload image to cloud storage:', err);
+            pending--;
+            if (pending <= 0) this.isUploading.set(false);
           }
         });
       });
@@ -76,12 +77,20 @@ export class AddProductModalComponent {
     }
   }
 
+  get isFormValid(): boolean {
+    return !!(
+      this.sku.trim() &&
+      this.name.trim() &&
+      (this.pricingType === 'QUOTATION' || this.unitPrice > 0)
+    );
+  }
+
   get isValid(): boolean {
-    return !!(this.sku.trim() && this.name.trim() && this.description.trim());
+    return this.isFormValid && !this.isUploading();
   }
 
   submitProduct() {
-    if (!this.isValid) return;
+    if (!this.isFormValid) return;
 
     const categoryLabels: Record<ProductCategory, string> = {
       'PRINTING_SERVICES': 'Printing Press Services',
@@ -89,6 +98,14 @@ export class AddProductModalComponent {
       'GARMENT_MATERIALS': 'Garment Materials',
       'PRINTING_SUPPLIES': 'Printing Supplies',
       'EQUIPMENT': 'Equipment Distribution'
+    };
+
+    const cleanImages = this.uploadedImages.filter(img => !img.startsWith('data:'));
+    const primaryImage = cleanImages[0] || undefined;
+    const specData: Record<string, any> = {
+      'Standard Unit': this.unit,
+      'Base Cost': `ETB ${this.baseCost}`,
+      '_galleryImages': cleanImages
     };
 
     this.state.addProduct({
@@ -107,12 +124,9 @@ export class AddProductModalComponent {
       reorderThreshold: Number(this.reorderThreshold),
       isPublished: this.isPublished,
       featured: false,
-      imageUrl: this.uploadedImages[0] || undefined,
-      images: this.uploadedImages.length > 0 ? [...this.uploadedImages] : undefined,
-      specifications: {
-        'Standard Unit': this.unit,
-        'Base Cost': `ETB ${this.baseCost}`
-      },
+      imageUrl: primaryImage,
+      images: cleanImages.length > 0 ? cleanImages : undefined,
+      specifications: specData,
       eligibleBranches: ['BR-01', 'BR-02', 'BR-03']
     });
 

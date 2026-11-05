@@ -1,5 +1,6 @@
 import { Injectable, computed, signal, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { environment } from '../../../environments/environment';
 import { ToastService } from './toast.service';
 import { AuthApiService, AuthResponse } from './api/auth-api.service';
 import { CatalogApiService } from './api/catalog-api.service';
@@ -306,6 +307,29 @@ export class AserStateService {
     });
   }
 
+  normalizeMediaUrl(url?: string): string {
+    if (!url) return '';
+    // If it's a full remote URL (S3 bucket, CloudFront, or remote CDN)
+    if (url.startsWith('https://') || (url.startsWith('http://') && !url.includes('localhost:') && !url.includes('127.0.0.1:'))) {
+      return url;
+    }
+    // If it's a localhost URL, replace hostname if accessed from another device on the network (e.g. mobile or tablet)
+    if (url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) {
+      if (typeof window !== 'undefined' && window.location.hostname && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        const port = url.split(':')[2]?.split('/')[0] || '8085';
+        const path = url.split(`:${port}`)[1] || '';
+        return `${window.location.protocol}//${window.location.hostname}:${port}${path}`;
+      }
+      return url;
+    }
+    // If it's a relative backend upload path like /uploads/...
+    if (url.startsWith('/uploads/')) {
+      const backendOrigin = environment.apiUrl.replace('/api/v1', '');
+      return `${backendOrigin}${url}`;
+    }
+    return url;
+  }
+
   refreshPublicProducts(): void {
     this.catalogApi.getPublicProducts({ size: 100 }).subscribe({
       next: (prodRes) => {
@@ -319,8 +343,34 @@ export class AserStateService {
             else if (cName.includes('press') || cName.includes('service')) cat = 'PRINTING_SERVICES';
             else if (cName.includes('equip') || cName.includes('materials & equip')) cat = 'EQUIPMENT';
 
-            const finalImage = p.imageUrl || '/assets/images/Aser-trading.png';
-            const productImages = [finalImage];
+            const finalImage = this.normalizeMediaUrl(p.imageUrl) || '/assets/images/Aser-trading.png';
+            let productImages = [finalImage];
+
+            let parsedSpecs: Record<string, string> = {
+              'Specifications': p.specifications || 'Standard Commercial Grade'
+            };
+
+            if (p.specifications) {
+              try {
+                const parsed = JSON.parse(p.specifications);
+                if (typeof parsed === 'object' && parsed !== null) {
+                  if (Array.isArray(parsed._galleryImages) && parsed._galleryImages.length > 0) {
+                    productImages = parsed._galleryImages.map((img: string) => this.normalizeMediaUrl(img));
+                  }
+                  const cleanSpecs: Record<string, string> = {};
+                  for (const [k, v] of Object.entries(parsed)) {
+                    if (!k.startsWith('_')) {
+                      cleanSpecs[k] = String(v);
+                    }
+                  }
+                  if (Object.keys(cleanSpecs).length > 0) {
+                    parsedSpecs = cleanSpecs;
+                  }
+                }
+              } catch {
+                parsedSpecs = { 'Specifications': p.specifications };
+              }
+            }
 
             let avail: ProductAvailability = 'IN_STOCK';
             const rawAvail = (p.availability as string) || '';
@@ -352,9 +402,7 @@ export class AserStateService {
               featured: true,
               imageUrl: finalImage,
               images: productImages,
-              specifications: {
-                'Specifications': p.specifications || 'Standard Commercial Grade'
-              },
+              specifications: parsedSpecs,
               eligibleBranches: rawBranches.map(mb => mb.id)
             };
           });
@@ -383,7 +431,7 @@ export class AserStateService {
                   ? 'lucide:sparkles'
                   : 'lucide:printer';
 
-            const finalImage = s.imageUrl || '/assets/images/Aser-trading.png';
+            const finalImage = this.normalizeMediaUrl(s.imageUrl) || '/assets/images/Aser-trading.png';
             const finalServiceImages = [finalImage];
 
             return {
@@ -1282,7 +1330,7 @@ export class AserStateService {
     }
   }
 
-  // Create Product in Catalog
+  // Create Product in Catalog (Fully Synced with Cloud Database)
   addProduct(product: Omit<Product, 'id'>): Product {
     const newProduct: Product = {
       ...product,
@@ -1296,6 +1344,16 @@ export class AserStateService {
     else if (product.category === 'PRINTING_SERVICES') categoryId = 4;
     else if (product.category === 'EQUIPMENT') categoryId = 5;
 
+    const cleanImages = (product.images || []).filter(img => !img.startsWith('data:'));
+    const primaryImage = product.imageUrl && !product.imageUrl.startsWith('data:')
+      ? product.imageUrl
+      : (cleanImages[0] || undefined);
+
+    const specPayload = {
+      ...(typeof product.specifications === 'object' ? product.specifications : { 'Specifications': String(product.specifications || '') }),
+      _galleryImages: cleanImages
+    };
+
     this.catalogApi.createProduct({
       sku: product.sku,
       name: product.name,
@@ -1308,8 +1366,8 @@ export class AserStateService {
       reorderThreshold: product.reorderThreshold,
       isQuotationOnly: product.pricingType === 'QUOTATION',
       isPublished: product.isPublished,
-      imageUrl: product.imageUrl,
-      specifications: JSON.stringify(product.specifications)
+      imageUrl: primaryImage,
+      specifications: JSON.stringify(specPayload)
     }).subscribe({
       next: (res) => {
         if (res.success && res.data) {
@@ -1320,9 +1378,13 @@ export class AserStateService {
             sku: bp.sku
           } : p));
           this.toastService.success('Catalog Updated', `${product.name} synchronized with central inventory.`);
+          this.refreshPublicProducts();
         }
       },
-      error: () => console.warn('[AserState] Product saved locally')
+      error: (err) => {
+        this.toastService.error('Product Creation Failed', err?.error?.message || 'Could not save product');
+        this.refreshPublicProducts();
+      }
     });
 
     return newProduct;
@@ -1335,6 +1397,19 @@ export class AserStateService {
 
     const numId = parseInt(id.replace('PRD-0', '').replace('PRD-', ''), 10);
     if (!isNaN(numId) && numId > 0) {
+      const cleanImages = updates.images ? updates.images.filter(img => !img.startsWith('data:')) : undefined;
+      const primaryImage = updates.imageUrl && !updates.imageUrl.startsWith('data:')
+        ? updates.imageUrl
+        : (cleanImages && cleanImages.length > 0 ? cleanImages[0] : undefined);
+
+      let specPayloadString: string | undefined;
+      if (cleanImages && cleanImages.length > 0) {
+        specPayloadString = JSON.stringify({
+          ...(typeof updates.specifications === 'object' ? updates.specifications : {}),
+          _galleryImages: cleanImages
+        });
+      }
+
       this.catalogApi.updateProduct(numId, {
         name: updates.name,
         sellingPrice: updates.unitPrice,
@@ -1342,9 +1417,16 @@ export class AserStateService {
         reorderThreshold: updates.reorderThreshold,
         isPublished: updates.isPublished,
         description: updates.description,
-        imageUrl: updates.imageUrl
+        imageUrl: primaryImage,
+        specifications: specPayloadString
       }).subscribe({
-        error: () => console.warn('[AserState] Product updated locally')
+        next: () => {
+          this.refreshPublicProducts();
+        },
+        error: (err) => {
+          console.warn('[AserState] Product update error in backend:', err);
+          this.refreshPublicProducts();
+        }
       });
     }
   }
