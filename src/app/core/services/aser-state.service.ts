@@ -1280,17 +1280,20 @@ export class AserStateService {
     items: { productId: string; requestedQty: number }[];
     notes?: string;
   }): void {
-    const fromBranchNum = parseInt(transferData.fromBranchId.replace('BR-0', '').replace('BR-', ''), 10) || 1;
-    const toBranchNum = parseInt(transferData.toBranchId.replace('BR-0', '').replace('BR-', ''), 10) || 2;
+    const fromBranchNum = parseInt(transferData.fromBranchId.replace(/\D/g, ''), 10) || 1;
+    const toBranchNum = parseInt(transferData.toBranchId.replace(/\D/g, ''), 10) || 2;
 
     const fromBranch = this.branches().find(b => b.id === transferData.fromBranchId);
     const toBranch = this.branches().find(b => b.id === transferData.toBranchId);
 
-    const fromWhId = fromBranch?.warehouses[0]?.id
-      ? (parseInt(fromBranch.warehouses[0].id.replace('WH-0', '').replace('WH-', ''), 10) || fromBranchNum)
+    const fromWh = fromBranch?.warehouses.find(w => w.isDefault) || fromBranch?.warehouses[0];
+    const toWh = toBranch?.warehouses.find(w => w.isDefault) || toBranch?.warehouses[0];
+
+    const fromWhId = fromWh?.id
+      ? (parseInt(fromWh.id.replace(/\D/g, ''), 10) || fromBranchNum)
       : fromBranchNum;
-    const toWhId = toBranch?.warehouses[0]?.id
-      ? (parseInt(toBranch.warehouses[0].id.replace('WH-0', '').replace('WH-', ''), 10) || toBranchNum)
+    const toWhId = toWh?.id
+      ? (parseInt(toWh.id.replace(/\D/g, ''), 10) || toBranchNum)
       : toBranchNum;
 
     this.transferApi.createTransfer({
