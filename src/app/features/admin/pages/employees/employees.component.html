@@ -3,7 +3,8 @@
     <div>
       <h1 class="page-title">{{ 'EMPLOYEES.TITLE' | translate:'Employee Registry & Role Access Control' }}</h1>
       <p class="page-subtitle">
-        {{ 'EMPLOYEES.SUBTITLE' | translate:'System Administrators can register personnel, allocate branch operating scope, and enforce strict separation-of-duties.' }}
+        {{ 'EMPLOYEES.SUBTITLE' | translate:'System Administrators can register personnel, allocate branch operating
+        scope, and enforce strict separation-of-duties.' }}
       </p>
     </div>
 
@@ -32,11 +33,8 @@
   <div class="toolbar-card">
     <div class="search-input-wrap">
       <aser-icon name="lucide:search" [size]="15" color="var(--muted)"></aser-icon>
-      <input 
-        type="text" 
-        [ngModel]="searchQuery()" 
-        (ngModelChange)="onSearchQueryChange($event)"
-        [placeholder]="'EMPLOYEES.SEARCH_PLACEHOLDER' | translate:'Search employees by name, username, email, or branch...'" 
+      <input type="text" [ngModel]="searchQuery()" (ngModelChange)="onSearchQueryChange($event)"
+        [placeholder]="'EMPLOYEES.SEARCH_PLACEHOLDER' | translate:'Search employees by name, username, email, or branch...'"
         class="search-input" />
     </div>
 
@@ -98,12 +96,8 @@
             </div>
           </td>
           <td>
-            <button 
-              class="status-pill" 
-              [class.active]="emp.isActive" 
-              [class.inactive]="!emp.isActive"
-              (click)="toggleStatus(emp.rawEmployee)"
-              title="Click to toggle status">
+            <button class="status-pill" [class.active]="emp.isActive" [class.inactive]="!emp.isActive"
+              (click)="toggleStatus(emp.rawEmployee)" title="Click to toggle status">
               <span class="dot"></span>
               <span>{{ emp.statusTextKey | translate:emp.statusDefaultText }}</span>
             </button>
@@ -128,13 +122,9 @@
     </table>
 
     @if (filteredEmployees().length > 0) {
-      <aser-paginator
-        [totalItems]="filteredEmployees().length"
-        [pageSize]="pageSize"
-        [currentPage]="currentPage"
-        (pageChange)="onPageChange($event)"
-        (pageSizeChange)="onPageSizeChange($event)">
-      </aser-paginator>
+    <aser-paginator [totalItems]="filteredEmployees().length" [pageSize]="pageSize" [currentPage]="currentPage"
+      (pageChange)="onPageChange($event)" (pageSizeChange)="onPageSizeChange($event)">
+    </aser-paginator>
     }
   </div>
   }
@@ -145,7 +135,8 @@
     <div class="matrix-info-banner">
       <aser-icon name="lucide:info" [size]="18" color="var(--blue)"></aser-icon>
       <div>
-        <strong>Separation of Duties (SRS Section 9):</strong> Branch Managers and Storekeepers are restricted to their assigned branch warehouse. Only System Administrators and Executives can access multi-branch consolidated data.
+        <strong>Separation of Duties :</strong> Branch Managers and Storekeepers are restricted to their assigned
+        branch warehouse. Only System Administrators and Executives can access multi-branch consolidated data.
       </div>
     </div>
 
@@ -195,12 +186,15 @@
     <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div style="display:flex; align-items:center; gap:12px;">
-          <div style="width:38px; height:38px; border-radius:10px; background:var(--blue-soft); display:flex; align-items:center; justify-content:center;">
+          <div
+            style="width:38px; height:38px; border-radius:10px; background:var(--blue-soft); display:flex; align-items:center; justify-content:center;">
             <aser-icon name="lucide:user-plus" [size]="20" color="var(--blue)"></aser-icon>
           </div>
           <div>
-            <h3 style="font-size:17px; font-weight:800; color:var(--ink); margin:0;">{{ 'EMPLOYEES.REGISTER_EMPLOYEE' | translate:'Register New Employee' }}</h3>
-            <p style="font-size:11px; color:var(--muted); margin:0;">Provision account credentials, assign enterprise role, and define branch scope.</p>
+            <h3 style="font-size:17px; font-weight:800; color:var(--ink); margin:0;">{{ 'EMPLOYEES.REGISTER_EMPLOYEE' |
+              translate:'Register New Employee' }}</h3>
+            <p style="font-size:11px; color:var(--muted); margin:0;">Provision account credentials, assign enterprise
+              role, and define branch scope.</p>
           </div>
         </div>
         <button class="modal-close-btn" (click)="closeRegisterModal()" aria-label="Close dialog">
@@ -222,7 +216,8 @@
 
           <div class="form-group">
             <label class="form-label">{{ 'PROFILE.EMAIL' | translate:'Work Email' }} *</label>
-            <input type="email" [(ngModel)]="regForm.email" placeholder="e.g. almaz@asertrading.et" class="form-input" />
+            <input type="email" [(ngModel)]="regForm.email" placeholder="e.g. almaz@asertrading.et"
+              class="form-input" />
           </div>
 
           <div class="form-group">
@@ -246,7 +241,8 @@
               <option [value]="b.id">{{ b.name }} ({{ b.city }})</option>
               }
             </select>
-            <p style="font-size:11px; color:var(--muted); margin:4px 0 0;">Staff will be scoped to view inventory, orders, and receive transfers only for this branch.</p>
+            <p style="font-size:11px; color:var(--muted); margin:4px 0 0;">Staff will be scoped to view inventory,
+              orders, and receive transfers only for this branch.</p>
           </div>
 
           <div class="form-group full-width" style="margin-top:14px;">
@@ -257,13 +253,13 @@
       </div>
 
       <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
-        <button class="btn btn-outline" (click)="closeRegisterModal()">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
-        <button 
-          class="btn btn-primary" 
-          style="display:inline-flex; align-items:center; gap:6px;"
-          (click)="saveEmployee()" 
+        <button class="btn btn-outline" (click)="closeRegisterModal()">{{ 'COMMON.CANCEL' | translate:'Cancel'
+          }}</button>
+        <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;"
+          (click)="saveEmployee()"
           [disabled]="!regForm.fullName || !regForm.username || !regForm.email || !regForm.password || regForm.password.length < 6">
-          <aser-icon name="lucide:check" [size]="14"></aser-icon> {{ 'EMPLOYEES.REGISTER_EMPLOYEE' | translate:'Register & Grant Permissions' }}
+          <aser-icon name="lucide:check" [size]="14"></aser-icon> {{ 'EMPLOYEES.REGISTER_EMPLOYEE' | translate:'Register
+          & Grant Permissions' }}
         </button>
       </div>
     </div>
@@ -276,12 +272,14 @@
     <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <div style="display:flex; align-items:center; gap:12px;">
-          <div style="width:38px; height:38px; border-radius:10px; background:var(--blue-soft); display:flex; align-items:center; justify-content:center;">
+          <div
+            style="width:38px; height:38px; border-radius:10px; background:var(--blue-soft); display:flex; align-items:center; justify-content:center;">
             <aser-icon name="lucide:pencil" [size]="20" color="var(--blue)"></aser-icon>
           </div>
           <div>
             <h3 style="font-size:17px; font-weight:800; color:var(--ink); margin:0;">Edit Staff Profile & Role</h3>
-            <p style="font-size:11px; color:var(--muted); margin:0;">Modify parameters for <strong>&#64;{{ selectedEmployee()?.username }}</strong></p>
+            <p style="font-size:11px; color:var(--muted); margin:0;">Modify parameters for <strong>&#64;{{
+                selectedEmployee()?.username }}</strong></p>
           </div>
         </div>
         <button class="modal-close-btn" (click)="closeEditModal()" aria-label="Close dialog">
@@ -325,7 +323,8 @@
           </div>
 
           <div class="form-group full-width" style="display:flex; align-items:center; gap:10px; margin-top:14px;">
-            <input type="checkbox" id="empActiveCheck" [(ngModel)]="editForm.isActive" style="width:18px; height:18px; accent-color:var(--blue); cursor:pointer;" />
+            <input type="checkbox" id="empActiveCheck" [(ngModel)]="editForm.isActive"
+              style="width:18px; height:18px; accent-color:var(--blue); cursor:pointer;" />
             <label for="empActiveCheck" style="font-size:13px; font-weight:700; color:var(--ink); cursor:pointer;">
               Account Status is Active (Permit login and system actions)
             </label>
@@ -335,7 +334,8 @@
 
       <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
         <button class="btn btn-outline" (click)="closeEditModal()">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
-        <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;" (click)="saveEdit()" [disabled]="!editForm.fullName || !editForm.email">
+        <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;" (click)="saveEdit()"
+          [disabled]="!editForm.fullName || !editForm.email">
           <aser-icon name="lucide:check" [size]="14"></aser-icon> {{ 'COMMON.SAVE' | translate:'Update Profile' }}
         </button>
       </div>

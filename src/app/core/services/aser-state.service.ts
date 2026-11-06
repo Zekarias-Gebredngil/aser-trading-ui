@@ -1563,28 +1563,50 @@ export class AserStateService {
     });
   }
 
-  updateBranch(id: string, updates: Partial<Branch>) {
-    const numId = parseInt(id.replace('BR-0', '').replace('BR-', ''), 10);
+  updateBranch(id: string, updates: Omit<Partial<Branch>, 'warehouses'> & { warehouses?: { id?: number; name: string; code: string; isDefault?: boolean; isActive?: boolean }[] }) {
+    const numId = parseInt(id.replace(/\D/g, ''), 10);
     if (!isNaN(numId) && numId > 0) {
       this.branchApi.updateBranch(numId, {
         name: updates.name || '',
-        code: updates.code || '',
+        code: (updates.code || '').toUpperCase(),
         address: updates.address,
         city: updates.city,
         phone: updates.phone,
         email: updates.email,
-        isActive: true
+        isActive: true,
+        warehouses: updates.warehouses
       }).subscribe({
         next: () => {
-          this.toastService.success('Branch Updated', 'Branch details saved.');
+          this.toastService.success('Branch & Warehouses Updated', 'Branch and warehouse configuration saved successfully.');
           this.fetchBranches();
         },
         error: (err) => {
-          this.toastService.error('Branch Update Failed', err?.error?.message || 'Could not update branch');
+          this.toastService.error('Branch Update Failed', err?.error?.detail || err?.error?.message || 'Could not update branch');
           this.fetchBranches();
         }
       });
     }
+  }
+
+  updateWarehouse(warehouseId: string | number, payload: { branchId: number; name: string; code: string; isDefault?: boolean }) {
+    const numId = typeof warehouseId === 'number' ? warehouseId : (parseInt(warehouseId.replace(/\D/g, ''), 10) || 1);
+    this.branchApi.updateWarehouse(numId, {
+      branchId: payload.branchId,
+      name: payload.name.trim(),
+      code: payload.code.trim().toUpperCase(),
+      isDefault: payload.isDefault
+    }).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.toastService.success('Warehouse Updated', `Storage warehouse ${payload.name} updated.`);
+          this.fetchBranches();
+        }
+      },
+      error: (err) => {
+        this.toastService.error('Warehouse Update Failed', err?.error?.detail || err?.error?.message || 'Could not update warehouse');
+        this.fetchBranches();
+      }
+    });
   }
 
   deleteBranch(id: string) {

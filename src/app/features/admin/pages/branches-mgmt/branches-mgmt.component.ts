@@ -8,6 +8,15 @@ import { AserStateService } from '../../../../core/services/aser-state.service';
 import { Branch } from '../../../../core/models/inventory.model';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 
+export interface EditableWarehouseItem {
+  id?: string;
+  numId?: number;
+  name: string;
+  code: string;
+  isDefault: boolean;
+  isNew?: boolean;
+}
+
 export interface AdminBranchWarehouseViewModel {
   readonly id: string;
   readonly name: string;
@@ -126,6 +135,8 @@ export class BranchesMgmtComponent {
     this.isCreateModalOpen.set(true);
   }
 
+  editableWarehouses: EditableWarehouseItem[] = [];
+
   openEditModal(branch: Branch) {
     this.selectedBranch.set(branch);
     this.branchForm = {
@@ -137,7 +148,54 @@ export class BranchesMgmtComponent {
       email: branch.email,
       isHeadOffice: !!branch.isHeadOffice
     };
+
+    this.editableWarehouses = (branch.warehouses || []).map(w => ({
+      id: w.id,
+      numId: parseInt(w.id.replace(/\D/g, ''), 10) || undefined,
+      name: w.name,
+      code: w.code,
+      isDefault: !!w.isDefault
+    }));
+
+    if (this.editableWarehouses.length === 0) {
+      this.editableWarehouses.push({
+        name: `${branch.name} Warehouse`,
+        code: `${(branch.code || 'BR').toUpperCase()}-WH`,
+        isDefault: true,
+        isNew: true
+      });
+    }
+
     this.isEditModalOpen.set(true);
+  }
+
+  addWarehouseInEdit(): void {
+    const branchCode = (this.branchForm.code || 'BR').trim().toUpperCase();
+    const suffix = this.editableWarehouses.length + 1;
+    this.editableWarehouses.push({
+      name: `${this.branchForm.name || 'Branch'} Depot ${suffix}`,
+      code: `${branchCode}-WH${suffix}`,
+      isDefault: this.editableWarehouses.length === 0,
+      isNew: true
+    });
+  }
+
+  removeWarehouseInEdit(index: number): void {
+    if (this.editableWarehouses.length <= 1) {
+      alert('A branch must have at least one storage warehouse.');
+      return;
+    }
+    const wasDefault = this.editableWarehouses[index].isDefault;
+    this.editableWarehouses.splice(index, 1);
+    if (wasDefault && this.editableWarehouses.length > 0) {
+      this.editableWarehouses[0].isDefault = true;
+    }
+  }
+
+  setDefaultWarehouseInEdit(index: number): void {
+    this.editableWarehouses.forEach((w, i) => {
+      w.isDefault = (i === index);
+    });
   }
 
   openAddWarehouseModal(branch: Branch) {
@@ -166,14 +224,29 @@ export class BranchesMgmtComponent {
 
   saveBranchEdit() {
     const branch = this.selectedBranch();
-    if (!branch || !this.branchForm.name) return;
+    if (!branch || !this.branchForm.name || !this.branchForm.code) return;
+
+    // Validate warehouse inputs
+    for (const wh of this.editableWarehouses) {
+      if (!wh.name.trim() || !wh.code.trim()) {
+        alert('All associated warehouses must have a name and code.');
+        return;
+      }
+    }
+
     this.state.updateBranch(branch.id, {
-      name: this.branchForm.name,
-      code: this.branchForm.code,
+      name: this.branchForm.name.trim(),
+      code: this.branchForm.code.trim().toUpperCase(),
       city: this.branchForm.city,
       address: this.branchForm.address,
       phone: this.branchForm.phone,
-      email: this.branchForm.email
+      email: this.branchForm.email,
+      warehouses: this.editableWarehouses.map(w => ({
+        id: w.numId,
+        name: w.name.trim(),
+        code: w.code.trim().toUpperCase(),
+        isDefault: w.isDefault
+      }))
     });
     this.isEditModalOpen.set(false);
   }

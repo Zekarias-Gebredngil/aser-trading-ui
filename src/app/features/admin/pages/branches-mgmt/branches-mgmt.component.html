@@ -69,7 +69,7 @@
 
           <div class="warehouses-list">
             @for (wh of branch.warehouses; track wh.id) {
-            <div class="warehouse-pill">
+            <div class="warehouse-pill" style="cursor:pointer;" (click)="openEditModal(branch.raw)" title="Click to modify branch & warehouses">
               <aser-icon name="lucide:box" [size]="13"></aser-icon>
               <span>{{ wh.name }}</span>
               <span class="wh-code">({{ wh.code }})</span>
@@ -194,12 +194,13 @@
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">Branch Name *</label>
-            <input type="text" [(ngModel)]="branchForm.name" class="form-input" />
+            <input type="text" [(ngModel)]="branchForm.name" class="form-input" placeholder="e.g. Bole Showroom" />
           </div>
 
           <div class="form-group">
             <label class="form-label">Branch Code *</label>
-            <input type="text" [(ngModel)]="branchForm.code" class="form-input" />
+            <input type="text" [(ngModel)]="branchForm.code" class="form-input" style="text-transform:uppercase;" placeholder="e.g. BOLE-01" />
+            <span style="font-size:10px; color:var(--muted); display:block; margin-top:2px;">Unique identifier code across systems and transfers</span>
           </div>
         </div>
 
@@ -226,11 +227,75 @@
             <input type="email" [(ngModel)]="branchForm.email" class="form-input" />
           </div>
         </div>
+
+        <!-- Associated Warehouses Section -->
+        <div style="margin-top:22px; border-top:1px solid var(--line); padding-top:18px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+            <div>
+              <h4 style="font-size:14px; font-weight:800; color:var(--ink); margin:0; display:flex; align-items:center; gap:8px;">
+                <aser-icon name="lucide:warehouse" [size]="16" color="var(--blue)"></aser-icon>
+                Associated Storage Warehouses & Depots ({{ editableWarehouses.length }})
+              </h4>
+              <p style="font-size:11px; color:var(--muted); margin:0;">
+                Modify warehouse names, codes, and designate the primary default warehouse for stock operations.
+              </p>
+            </div>
+            <button type="button" 
+                    class="btn btn-outline" 
+                    style="font-size:11px; padding:5px 12px; border-radius:var(--radius-md); display:inline-flex; align-items:center; gap:5px;"
+                    (click)="addWarehouseInEdit()">
+              <aser-icon name="lucide:plus" [size]="13"></aser-icon> Add Warehouse
+            </button>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            @for (wh of editableWarehouses; track $index) {
+            <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px; background:var(--bg-soft); border:1px solid var(--line); border-radius:var(--radius-md); padding:10px 14px;">
+              <div style="flex:2; min-width:180px;">
+                <label style="font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; display:block; margin-bottom:3px;">
+                  Warehouse Name *
+                </label>
+                <input type="text" [(ngModel)]="wh.name" class="form-input" style="padding:6px 10px; font-size:12px;" placeholder="e.g. Main Showroom Warehouse" />
+              </div>
+
+              <div style="flex:1.5; min-width:130px;">
+                <label style="font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; display:block; margin-bottom:3px;">
+                  Warehouse Code *
+                </label>
+                <input type="text" [(ngModel)]="wh.code" class="form-input" style="padding:6px 10px; font-size:12px; text-transform:uppercase;" placeholder="e.g. BOLE-WH" />
+              </div>
+
+              <div style="display:flex; align-items:center; gap:6px; min-width:100px; margin-top:16px;">
+                <input type="radio" 
+                       [name]="'defaultWhRadio'" 
+                       [id]="'defWh_' + $index" 
+                       [checked]="wh.isDefault" 
+                       (change)="setDefaultWarehouseInEdit($index)" 
+                       style="accent-color:var(--blue); cursor:pointer;" />
+                <label [for]="'defWh_' + $index" style="font-size:11px; font-weight:700; color:var(--ink); cursor:pointer;">
+                  {{ wh.isDefault ? 'Primary' : 'Set Default' }}
+                </label>
+              </div>
+
+              <div style="margin-top:16px;">
+                <button type="button" 
+                        class="btn btn-outline" 
+                        style="padding:6px 8px; color:var(--rose); border-color:var(--line); cursor:pointer;"
+                        [disabled]="editableWarehouses.length <= 1"
+                        (click)="removeWarehouseInEdit($index)"
+                        title="Remove warehouse">
+                  <aser-icon name="lucide:trash-2" [size]="14"></aser-icon>
+                </button>
+              </div>
+            </div>
+            }
+          </div>
+        </div>
       </div>
 
       <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
         <button class="btn btn-outline" (click)="closeEditModal()">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
-        <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;" (click)="saveBranchEdit()" [disabled]="!branchForm.name">
+        <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:6px;" (click)="saveBranchEdit()" [disabled]="!branchForm.name || !branchForm.code">
           <aser-icon name="lucide:check" [size]="14"></aser-icon> {{ 'COMMON.SAVE' | translate:'Save Changes' }}
         </button>
       </div>

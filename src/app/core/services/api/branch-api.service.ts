@@ -14,6 +14,7 @@ export interface BackendBranchDto {
   email: string;
   isActive: boolean;
   createdAt: string;
+  warehouses?: BackendWarehouseDto[];
 }
 
 export interface BackendWarehouseDto {
@@ -89,6 +90,13 @@ export class BranchApiService {
     phone?: string;
     email?: string;
     isActive?: boolean;
+    warehouses?: {
+      id?: number;
+      name: string;
+      code: string;
+      isDefault?: boolean;
+      isActive?: boolean;
+    }[];
   }): Observable<ApiResponse<BackendBranchDto>> {
     return this.http.put<ApiResponse<BackendBranchDto>>(`${environment.apiUrl}/branches/${id}`, request);
   }
