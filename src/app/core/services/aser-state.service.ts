@@ -1299,6 +1299,7 @@ export class AserStateService {
       notes: transferData.notes,
       items: transferData.items.map(it => ({
         productId: parseInt(it.productId.replace('PRD-0', '').replace('PRD-', ''), 10) || 1,
+        quantity: it.requestedQty,
         requestedQuantity: it.requestedQty
       }))
     }).subscribe({

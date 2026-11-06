@@ -6,7 +6,8 @@ import { ApiResponse, PagedResponse } from './api-response.model';
 
 export interface BackendTransferItemRequest {
   productId: number;
-  requestedQuantity: number;
+  quantity?: number;
+  requestedQuantity?: number;
 }
 
 export interface BackendCreateTransferRequest {
