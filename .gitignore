@@ -4,3 +4,11 @@
 /out-tsc
 *.log
 .env
+.env.*
+*.env
+!.env.example
+*.key
+*.pem
+*.crt
+*.p12
+
