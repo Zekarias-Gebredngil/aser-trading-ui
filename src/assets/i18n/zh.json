@@ -90,7 +90,7 @@
     "ALL_BRANCHES": "全部分支机构（合并系统总览）",
     "BRANCHES_CONNECTED": "已连通分部",
     "TOTAL_VALUATION": "全网库存总估值",
-    "VALUATION_SUB": "采用加权平均成本法自动核算 (SRS 7)",
+    "VALUATION_SUB": "采用加权平均成本法自动核算 ",
     "ACTIVE_LOCATIONS": "在库物料库位",
     "LOCATIONS_SUB": "分布于各分部仓库中",
     "LOW_STOCK_ALERTS": "低库存预警提示",
