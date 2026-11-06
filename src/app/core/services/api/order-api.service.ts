@@ -99,9 +99,10 @@ export class OrderApiService {
     return this.http.post<ApiResponse<BackendOrderDto>>(`${environment.apiUrl}/orders`, request);
   }
 
-  getOrders(status?: string, page = 0, size = 20): Observable<ApiResponse<PagedResponse<BackendOrderDto>>> {
+  getOrders(status?: string, branchId?: number, page = 0, size = 20): Observable<ApiResponse<PagedResponse<BackendOrderDto>>> {
     let params = new HttpParams().set('page', page.toString()).set('size', size.toString());
     if (status && status !== 'ALL') params = params.set('status', status);
+    if (branchId !== undefined && branchId !== null) params = params.set('branchId', branchId.toString());
 
     return this.http.get<ApiResponse<PagedResponse<BackendOrderDto>>>(`${environment.apiUrl}/orders`, { params });
   }

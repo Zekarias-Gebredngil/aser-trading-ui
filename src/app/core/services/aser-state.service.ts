@@ -699,6 +699,7 @@ export class AserStateService {
               customerPhone: o.customerPhone || '',
               customerEmail: o.customerEmail,
               fulfillment: (o.deliveryType === 'STORE_PICKUP' || (o.deliveryType as string) === 'COLLECTION') ? 'BRANCH_PICKUP' : 'DELIVERY',
+              pickupBranchId: o.collectionBranchId ? `BR-${String(o.collectionBranchId).padStart(2, '0')}` : undefined,
               pickupBranchName: o.collectionBranchName,
               deliveryAddress: o.deliveryAddress,
               paymentMethod: (o.paymentMethod === 'MANUAL_BANK_TRANSFER' || (o.paymentMethod as string) === 'MANUAL_TRANSFER') ? 'MANUAL_BANK_TRANSFER' : 'IN_HAND_CASH',

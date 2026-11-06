@@ -28,15 +28,32 @@
   @if (activeTab === 'orders') {
   <!-- Filter Toolbar -->
   <div style="background:#ffffff; border:1px solid var(--line); border-radius:var(--radius-lg); padding:16px 20px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
-    <div style="display:flex; gap:10px; align-items:center;">
+    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
       <span style="font-size:12px; font-weight:700; color:var(--muted);">{{ 'ORDERS.FILTER_STATUS' | translate:'Filter Order Status:' }}</span>
-      <select class="form-select" style="width:200px;" [ngModel]="statusFilter" (ngModelChange)="onStatusFilterChange($event)">
+      <select class="form-select" style="width:190px;" [ngModel]="statusFilter" (ngModelChange)="onStatusFilterChange($event)">
         <option value="ALL">{{ 'ORDERS.STATUS_ALL' | translate:'All Orders' }} ({{ state.orders().length }})</option>
         <option value="PENDING_PAYMENT">{{ 'ORDERS.STATUS_PENDING' | translate:'Pending Payment' }}</option>
         <option value="PROCESSING">{{ 'ORDERS.STATUS_PROCESSING' | translate:'Processing' }}</option>
         <option value="READY_FOR_DISPATCH">{{ 'ORDERS.STATUS_READY' | translate:'Ready for Dispatch' }}</option>
         <option value="DELIVERED">{{ 'ORDERS.STATUS_DELIVERED' | translate:'Delivered' }}</option>
       </select>
+
+      @if (state.isBranchScopeLocked()) {
+        <div style="display:inline-flex; align-items:center; gap:6px; background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:600;">
+          <aser-icon name="lucide:building-2" [size]="14"></aser-icon>
+          <span>{{ state.currentUser()?.assignedBranchName || 'My Branch' }}</span>
+        </div>
+      } @else {
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span style="font-size:12px; font-weight:700; color:var(--muted);">Branch:</span>
+          <select class="form-select" style="width:180px;" [ngModel]="branchFilter" (ngModelChange)="onBranchFilterChange($event)">
+            <option value="ALL">All Branches</option>
+            @for (b of state.branches(); track b.id) {
+              <option [value]="b.id">{{ b.name }}</option>
+            }
+          </select>
+        </div>
+      }
     </div>
 
     <div style="display:flex; align-items:center; gap:16px;">

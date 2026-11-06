@@ -48,6 +48,7 @@ export class OrdersComponent {
 
   activeTab: 'orders' | 'quotes' = 'orders';
   statusFilter = 'ALL';
+  branchFilter = 'ALL';
   selectedOrder = signal<Order | null>(null);
 
   // Pagination
@@ -63,7 +64,25 @@ export class OrdersComponent {
 
   get filteredOrders(): Order[] {
     const f = this.statusFilter;
-    return this.state.orders().filter(o => f === 'ALL' || o.status === f);
+    const b = this.branchFilter;
+    const locked = this.state.isBranchScopeLocked();
+    const myBranchId = this.state.currentUser()?.assignedBranchId;
+
+    return this.state.orders().filter(o => {
+      if (f !== 'ALL' && o.status !== f) return false;
+
+      // When branch scope is locked, only show orders for assigned branch
+      if (locked && myBranchId) {
+        return o.pickupBranchId === myBranchId;
+      }
+
+      // For global managers, apply selected branch filter
+      if (b !== 'ALL') {
+        return o.pickupBranchId === b;
+      }
+
+      return true;
+    });
   }
 
   get pagedOrders(): Order[] {
@@ -105,6 +124,11 @@ export class OrdersComponent {
 
   onStatusFilterChange(newFilter: string): void {
     this.statusFilter = newFilter;
+    this.ordersPage = 1;
+  }
+
+  onBranchFilterChange(newBranch: string): void {
+    this.branchFilter = newBranch;
     this.ordersPage = 1;
   }
 
