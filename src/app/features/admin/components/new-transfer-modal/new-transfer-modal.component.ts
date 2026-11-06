@@ -21,14 +21,52 @@ export class NewTransferModalComponent implements OnInit {
   productId = 'PRD-02';
   requestedQty = 10;
   notes = 'Replenish showroom display and meet pending customer orders.';
+  transferDirection: 'inbound' | 'outbound' = 'inbound';
 
   ngOnInit(): void {
     if (this.state.isBranchScopeLocked() && this.state.currentUser()?.assignedBranchId) {
-      this.fromBranchId = this.state.currentUser()!.assignedBranchId!;
-      const other = this.state.branches().find(b => b.id !== this.fromBranchId);
-      if (other) {
-        this.toBranchId = other.id;
+      const myBranch = this.state.currentUser()!.assignedBranchId!;
+      const other = this.state.branches().find(b => b.id !== myBranch);
+      const otherId = other ? other.id : 'BR-01';
+
+      // Default to inbound replenishment (requesting from another branch to our branch)
+      if (this.transferDirection === 'inbound') {
+        this.fromBranchId = otherId;
+        this.toBranchId = myBranch;
+      } else {
+        this.fromBranchId = myBranch;
+        this.toBranchId = otherId;
       }
+    }
+  }
+
+  setDirection(direction: 'inbound' | 'outbound'): void {
+    this.transferDirection = direction;
+    if (this.state.isBranchScopeLocked() && this.state.currentUser()?.assignedBranchId) {
+      const myBranch = this.state.currentUser()!.assignedBranchId!;
+      if (direction === 'inbound') {
+        if (this.toBranchId !== myBranch) {
+          const currentFrom = this.fromBranchId === myBranch ? this.toBranchId : this.fromBranchId;
+          this.fromBranchId = currentFrom !== myBranch ? currentFrom : (this.state.branches().find(b => b.id !== myBranch)?.id || 'BR-01');
+          this.toBranchId = myBranch;
+        }
+      } else {
+        if (this.fromBranchId !== myBranch) {
+          const currentTo = this.toBranchId === myBranch ? this.fromBranchId : this.toBranchId;
+          this.toBranchId = currentTo !== myBranch ? currentTo : (this.state.branches().find(b => b.id !== myBranch)?.id || 'BR-01');
+          this.fromBranchId = myBranch;
+        }
+      }
+    }
+  }
+
+  swapBranches(): void {
+    const temp = this.fromBranchId;
+    this.fromBranchId = this.toBranchId;
+    this.toBranchId = temp;
+    if (this.state.isBranchScopeLocked() && this.state.currentUser()?.assignedBranchId) {
+      const myBranch = this.state.currentUser()!.assignedBranchId!;
+      this.transferDirection = (this.toBranchId === myBranch) ? 'inbound' : 'outbound';
     }
   }
 
