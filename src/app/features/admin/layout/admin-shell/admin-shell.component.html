@@ -31,14 +31,14 @@
 
     <nav class="admin-nav">
       <div class="nav-section-title">
-        {{ 'NAV.OPERATIONS' | translate:'Operations Modules' }}
+        {{ 'NAV.OPERATIONS' | translate:'' }}
       </div>
 
-      <!-- Executive Overview (All Staff) -->
+      <!--  Dashboard (All Staff) -->
       <a class="admin-nav-item" routerLink="/app" [routerLinkActiveOptions]="{exact:true}" routerLinkActive="active"
-        (click)="closeSidebar()" [title]="'NAV.OVERVIEW' | translate:'Executive Overview'">
+        (click)="closeSidebar()" [title]="'NAV.OVERVIEW' | translate:' Dashboard'">
         <aser-icon name="lucide:layout-dashboard" [size]="18"></aser-icon>
-        <span>{{ 'NAV.OVERVIEW' | translate:'Executive Overview' }}</span>
+        <span>{{ 'NAV.OVERVIEW' | translate:' Dashboard' }}</span>
       </a>
 
       <!-- Stock Inventory (Warehouse & Storekeepers) -->
@@ -68,7 +68,7 @@
       @if (canManageServices()) {
       <a class="admin-nav-item" routerLink="/app/services" routerLinkActive="active" (click)="closeSidebar()"
         [title]="'NAV.COMMERCIAL_SERVICES' | translate:'Commercial Services'">
-        <aser-icon name="lucide:sparkles" [size]="18"></aser-icon>
+        <aser-icon name="lucide:briefcase" [size]="18"></aser-icon>
         <span>{{ 'NAV.COMMERCIAL_SERVICES' | translate:'Commercial Services' }}</span>
       </a>
       }
@@ -196,8 +196,7 @@
         <div class="branch-select-pill">
           <aser-icon name="lucide:map-pin" [size]="14" color="var(--blue)"></aser-icon>
           <span class="branch-scope-tag">{{ 'COMMON.BRANCH' | translate:'Branch' }}:</span>
-          <select class="branch-scope-select" [ngModel]="branchFilter()"
-            (ngModelChange)="onBranchFilterChange($event)">
+          <select class="branch-scope-select" [ngModel]="branchFilter()" (ngModelChange)="onBranchFilterChange($event)">
             <option value="ALL">{{ 'DASHBOARD.ALL_BRANCHES' | translate:'All Branches (Consolidated System View)' }}
             </option>
             @for (b of branchList(); track b.id) {

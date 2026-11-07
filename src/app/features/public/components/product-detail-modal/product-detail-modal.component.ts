@@ -93,7 +93,7 @@ export class ProductDetailModalComponent {
       case 'PRINTING_SUPPLIES':
         return { name: 'lucide:file-text', color: 'var(--blue)', size: 64 };
       case 'BRANDING_PROMOTION':
-        return { name: 'lucide:sparkles', color: 'var(--amber)', size: 64 };
+        return { name: 'lucide:award', color: 'var(--amber)', size: 64 };
       case 'EQUIPMENT':
         return { name: 'lucide:cog', color: 'var(--ink)', size: 64 };
       default:

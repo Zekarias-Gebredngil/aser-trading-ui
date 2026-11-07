@@ -28,7 +28,9 @@ export interface BranchStockSummary {
 export interface StockSummaryReportDto {
   totalProducts: number;
   totalUnitsOnHand: number;
-  totalWarehouses: number;
+  totalUnitsReserved?: number;
+  totalUnitsAvailable?: number;
+  totalWarehouses?: number;
   branchSummaries: BranchStockSummary[];
 }
 

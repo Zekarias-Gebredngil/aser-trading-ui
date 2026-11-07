@@ -38,8 +38,8 @@
     "EXPORT_CSV": "Export CSV"
   },
   "NAV": {
-    "OPERATIONS": "Operations Modules",
-    "OVERVIEW": "Executive Overview",
+    "OPERATIONS": "",
+    "OVERVIEW": " Dashboard",
     "STOCK_INVENTORY": "Stock Inventory",
     "PRODUCT_CATALOG": "Product Catalog",
     "COMMERCIAL_SERVICES": "Commercial Services",

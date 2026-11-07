@@ -52,7 +52,7 @@ export class PublicHeaderComponent {
       path: '/services',
       labelKey: 'STOREFRONT.NAV_SERVICES',
       defaultLabel: 'Services',
-      icon: 'lucide:sparkles'
+      icon: 'lucide:briefcase'
     },
     {
       path: '/products',

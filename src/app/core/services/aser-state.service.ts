@@ -477,7 +477,7 @@ export class AserStateService {
               : s.serviceCode.includes('GARMENT')
                 ? 'lucide:shirt'
                 : s.serviceCode.includes('BRAND')
-                  ? 'lucide:sparkles'
+                  ? 'lucide:award'
                   : 'lucide:printer';
 
             const finalImage = this.normalizeMediaUrl(s.imageUrl) || '/assets/images/Aser-trading.png';

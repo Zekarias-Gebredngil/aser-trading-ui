@@ -108,8 +108,9 @@ export class ServicesMgmtComponent {
   ];
 
   iconOptions = [
+    { value: 'lucide:briefcase', label: 'Commercial Services' },
+    { value: 'lucide:award', label: 'Branding & Promotion' },
     { value: 'lucide:printer', label: 'Printer / Press' },
-    { value: 'lucide:sparkles', label: 'Branding / Sparkles' },
     { value: 'lucide:shirt', label: 'Apparel / Garment' },
     { value: 'lucide:wrench', label: 'Maintenance / Tools' },
     { value: 'lucide:package', label: 'Package / Supply' },
