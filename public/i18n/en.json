@@ -81,7 +81,7 @@
     "ZH": "中文 (Chinese)"
   },
   "DASHBOARD": {
-    "SUBHEADER": "CENTRALIZED MULTI-BRANCH OPERATIONS",
+    "SUBHEADER": "",
     "GREETING": "Good morning",
     "DESCRIPTION": "Real-time branch inventory, weighted-average valuation, logistics transfers, and online sales.",
     "RECEIVE_STOCK": "Receive Inbound Stock",
@@ -119,7 +119,7 @@
   "ORDERS": {
     "TITLE": "Customer Online Orders",
     "SUBTITLE": "Review order items, verify manual bank transfers, monitor stock reservations, and track dispatch status.",
-    "CATEGORY_HEADER": "E-COMMERCE & FULFILLMENT OPERATIONS",
+    "CATEGORY_HEADER": "",
     "TAB_ORDERS": "Customer Online Orders",
     "TAB_QUOTES": "Technical Inquiries & Quotations",
     "FILTER_STATUS": "Filter Order Status:",
@@ -154,7 +154,7 @@
   "INVENTORY": {
     "TITLE": "Centralized Inventory Ledger",
     "SUBTITLE": "Weighted-average costing valuation, physical balances, and transaction history.",
-    "CATEGORY_HEADER": "MULTI-BRANCH STOCK CONTROL",
+    "CATEGORY_HEADER": "",
     "ADJUST_STOCK": "Adjust Stock",
     "RECORD_RECEIPT": "Record Stock Receipt",
     "COSTING_TITLE": "Weighted-Average Costing Model ",
@@ -179,7 +179,7 @@
   "PRODUCTS": {
     "TITLE": "Product Catalog",
     "SUBTITLE": "Manage standard SKUs, units of measure, pricing models, and Website availability.",
-    "CATEGORY_HEADER": "CATALOG & PUBLICATION MANAGEMENT",
+    "CATEGORY_HEADER": "",
     "ADD_PRODUCT": "Add New Product",
     "SEARCH_PLACEHOLDER": "Search by SKU, product name, or Amharic title...",
     "CATEGORY": "Category:",
@@ -198,7 +198,7 @@
   "TRANSFERS": {
     "TITLE": "Controlled Branch Transfers",
     "SUBTITLE": "Enforces separation of duties: Request → System Admin Approval → Dispatch → Destination Receipt.",
-    "CATEGORY_HEADER": "LOGISTICS & INTER-BRANCH RELOCATION",
+    "CATEGORY_HEADER": "",
     "REQUEST_TRANSFER": "Request New Transfer",
     "FILTER_STATUS": "Filter by Status:",
     "ACTIVE_ROLE": "Active Role:",
@@ -337,11 +337,11 @@
     "CATALOGS_MATERIALS": "Catalogs & Materials",
     "PRINTING_SERVICES": "Printing Services",
     "COMPANY_PORTAL": "Company & Portal",
-    "ALL_RIGHTS": "All rights reserved. Addis Ababa & Hawassa, Ethiopia.",
+    "ALL_RIGHTS": "All rights reserved. Indaslasie Shire, Tigray, Ethiopia",
     "HERO_EYEBROW": "PRINTING PRESS · BRANDING · GARMENT MATERIALS · SUPPLIES",
     "HERO_TITLE": "Ideas made visible.",
     "HERO_TITLE_SUB": "Business made easier.",
-    "HERO_DESC": "Aser Trading is Ethiopia's premier integrated printing, promotional branding, and raw material distribution partner. Supplying high-speed commercial offset printing, premium garment vinyls, DTF films, and equipment across multi-branch hubs in Shire and Surroundings.",
+    "HERO_DESC": "Aser Trading is Ethiopia's premier integrated printing, promotional branding, and raw material distribution partner. Supplying high-speed commercial offset printing, premium garment vinyls, DTF films, and equipment across multi-branch hubs in Indaslasie Shire, Tigray, Ethiopia and Surroundings.",
     "EXPLORE_SHOP": "Explore Materials & Shop",
     "REQUEST_CUSTOM_QUOTE": "Request Custom Quotation",
     "BRANCHES_COUNT": "Branches",

@@ -2,7 +2,7 @@
   <div class="page-header-row">
     <div>
       <div style="font-size:11px; font-weight:800; color:var(--blue); letter-spacing:1px; margin-bottom:4px;">
-        {{ 'PRODUCTS.CATEGORY_HEADER' | translate:'CATALOG & PUBLICATION MANAGEMENT' }}
+        {{ 'PRODUCTS.CATEGORY_HEADER' | translate:'' }}
       </div>
       <h1>{{ 'PRODUCTS.TITLE' | translate:'Product Catalog' }}</h1>
       <p>
@@ -21,7 +21,8 @@
       @if (canManageProducts()) {
       <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;"
         (click)="openAddModal()">
-        <aser-icon name="lucide:plus" [size]="16"></aser-icon> {{ 'PRODUCTS.ADD_PRODUCT' | translate:'Add New Product' }}
+        <aser-icon name="lucide:plus" [size]="16"></aser-icon> {{ 'PRODUCTS.ADD_PRODUCT' | translate:'Add New Product'
+        }}
       </button>
       }
     </div>
@@ -97,7 +98,8 @@
               @if (p.isFixedPrice) {
               <strong style="color:var(--ink);">ETB {{ p.unitPrice | number:'1.2-2' }}</strong>
               } @else {
-              <span style="color:var(--muted); font-size:12px;">{{ 'PRODUCTS.QUOTATION_ONLY' | translate:'By Project Quote' }}</span>
+              <span style="color:var(--muted); font-size:12px;">{{ 'PRODUCTS.QUOTATION_ONLY' | translate:'By Project
+                Quote' }}</span>
               }
             </td>
             <td>{{ p.reorderThreshold }} {{ p.unit }}</td>
@@ -109,7 +111,8 @@
             @if (canManageProducts()) {
             <td style="text-align:right;">
               <div style="display:inline-flex; align-items:center; gap:6px;">
-                <button class="btn btn-outline btn-sm" (click)="togglePublish(p.raw)" title="Toggle storefront visibility">
+                <button class="btn btn-outline btn-sm" (click)="togglePublish(p.raw)"
+                  title="Toggle storefront visibility">
                   {{ p.toggleActionLabelKey | translate:p.toggleActionLabelDefault }}
                 </button>
                 <button class="btn btn-outline btn-sm" (click)="openEditModal(p.raw)" title="Edit product details">

@@ -23,13 +23,17 @@
         </h1>
 
         <p class="hero-desc">
-          {{ 'STOREFRONT.HERO_DESC' | translate:"Aser Trading is Ethiopia's premier integrated printing, promotional branding, and raw material distribution partner. Supplying high-speed commercial offset printing, premium garment vinyls, DTF films, and equipment across multi-branch hubs in Shire and Surroundings" }}
+          {{ 'STOREFRONT.HERO_DESC' | translate:"Aser Trading is Ethiopia's premier integrated printing, promotional
+          branding, and raw material distribution partner. Supplying high-speed commercial offset printing, premium
+          garment vinyls, DTF films, and equipment across multi-branch hubs in Indaslasie Shire, Tigray, Ethiopia and
+          Surroundings" }}
         </p>
 
         <div class="hero-actions">
           <a routerLink="/products" class="btn btn-primary btn-lg"
             style="display:inline-flex; align-items:center; gap:8px;">
-            {{ 'STOREFRONT.EXPLORE_SHOP' | translate:'Explore Materials & Shop' }} <aser-icon name="lucide:arrow-right" [size]="16"></aser-icon>
+            {{ 'STOREFRONT.EXPLORE_SHOP' | translate:'Explore Materials & Shop' }} <aser-icon name="lucide:arrow-right"
+              [size]="16"></aser-icon>
           </a>
           <button class="btn btn-outline btn-lg" (click)="openQuoteModal('PRINTING_PRESS')">
             {{ 'STOREFRONT.REQUEST_CUSTOM_QUOTE' | translate:'Request Custom Quotation' }}
@@ -38,18 +42,21 @@
 
         <div class="hero-trust-bar">
           <div class="trust-item">
-            <span class="trust-val">{{ state.branches().length }} {{ 'STOREFRONT.BRANCHES_COUNT' | translate:'Branches' }}</span>
+            <span class="trust-val">{{ state.branches().length }} {{ 'STOREFRONT.BRANCHES_COUNT' | translate:'Branches'
+              }}</span>
             <span class="trust-label">{{ 'STOREFRONT.NETWORK_HUBS' | translate:'Network Hubs & Warehouses' }}</span>
           </div>
           <div style="width:1px; height:32px; background:var(--line);"></div>
           <div class="trust-item">
             <span class="trust-val">{{ 'STOREFRONT.QUALITY_VAL' | translate:'100% Quality' }}</span>
-            <span class="trust-label">{{ 'STOREFRONT.QUALITY_LABEL' | translate:'ISO-standard ink & paper supplies' }}</span>
+            <span class="trust-label">{{ 'STOREFRONT.QUALITY_LABEL' | translate:'ISO-standard ink & paper supplies'
+              }}</span>
           </div>
           <div style="width:1px; height:32px; background:var(--line);"></div>
           <div class="trust-item">
             <span class="trust-val">{{ 'STOREFRONT.FULFILLMENT_VAL' | translate:'Fast Fulfillment' }}</span>
-            <span class="trust-label">{{ 'STOREFRONT.FULFILLMENT_LABEL' | translate:'Branch pickup & address dispatch' }}</span>
+            <span class="trust-label">{{ 'STOREFRONT.FULFILLMENT_LABEL' | translate:'Branch pickup & address dispatch'
+              }}</span>
           </div>
         </div>
       </div>
@@ -77,11 +84,13 @@
         <div class="hero-fast-facts">
           <div class="fact-box">
             <strong>{{ 'HOME.MULTI_BRANCH_INV' | translate:'Multi-Branch Inventory' }}</strong>
-            <small>{{ 'HOME.MULTI_BRANCH_INV_DESC' | translate:'Real-time stock reservation for online customer orders' }}</small>
+            <small>{{ 'HOME.MULTI_BRANCH_INV_DESC' | translate:'Real-time stock reservation for online customer orders'
+              }}</small>
           </div>
           <div class="fact-box">
             <strong>{{ 'HOME.FLEXIBLE_SETTLEMENT' | translate:'Flexible Settlement' }}</strong>
-            <small>{{ 'HOME.FLEXIBLE_SETTLEMENT_DESC' | translate:'Manual bank transfer (CBE/BOA/Telebirr) & cash payment' }}</small>
+            <small>{{ 'HOME.FLEXIBLE_SETTLEMENT_DESC' | translate:'Manual bank transfer (CBE/BOA/Telebirr) & cash
+              payment' }}</small>
           </div>
         </div>
       </div>
@@ -97,7 +106,8 @@
         </div>
         <div class="pillar-text">
           <strong>01 / {{ 'HOME.PILLAR_1_TITLE' | translate:'Commercial Printing' }}</strong>
-          <p>{{ 'HOME.PILLAR_1_DESC' | translate:'Books, magazines, packaging, marketing flyers & business cards.' }}</p>
+          <p>{{ 'HOME.PILLAR_1_DESC' | translate:'Books, magazines, packaging, marketing flyers & business cards.' }}
+          </p>
         </div>
       </div>
 
@@ -139,10 +149,12 @@
       <div class="section-head">
         <div>
           <span class="section-tag">{{ 'HOME.DIRECT_FROM_STOCK' | translate:'Direct From Stock' }}</span>
-          <h2 class="section-title">{{ 'STOREFRONT.FEATURED_MATERIALS' | translate:'Commercial Raw Materials & Equipment' }}</h2>
+          <h2 class="section-title">{{ 'STOREFRONT.FEATURED_MATERIALS' | translate:'Commercial Raw Materials &
+            Equipment' }}</h2>
         </div>
         <p class="section-subtitle">
-          {{ 'STOREFRONT.FEATURED_DESC' | translate:'Certified materials directly imported and stocked across our Ethiopian branch network.' }}
+          {{ 'STOREFRONT.FEATURED_DESC' | translate:'Certified materials directly imported and stocked across our
+          Ethiopian branch network.' }}
         </p>
       </div>
 
@@ -191,11 +203,9 @@
               <span class="badge badge-transit">{{ item.badge }}</span>
               }
             </div>
-            <div class="product-slider-wrapper" style="width: 100%; border-radius: var(--radius-sm); overflow: hidden; margin-top: 8px;">
-              <aser-image-slider 
-                [images]="item.images" 
-                [fallbackCategory]="item.category" 
-                [alt]="item.name"
+            <div class="product-slider-wrapper"
+              style="width: 100%; border-radius: var(--radius-sm); overflow: hidden; margin-top: 8px;">
+              <aser-image-slider [images]="item.images" [fallbackCategory]="item.category" [alt]="item.name"
                 height="170px">
               </aser-image-slider>
             </div>
@@ -237,20 +247,24 @@
                 {{ 'COMMON.VIEW' | translate:'Details' }}
               </button>
               @if (item.isFixedPrice) {
-                @if (item.rawProduct.availability === 'OUT_OF_STOCK') {
-                  <button class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:5px; opacity:0.6; cursor:not-allowed;" disabled title="Currently Out of Stock">
-                    {{ 'PRODUCT_DETAIL.OUT_OF_STOCK' | translate:'Out of Stock' }}
-                  </button>
-                } @else {
-                  <button class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;"
-                    (click)="addToCart(item.rawProduct)">
-                    {{ 'STOREFRONT.ADD_TO_CART' | translate:'Add' }} <aser-icon name="lucide:shopping-cart" [size]="13"></aser-icon>
-                  </button>
-                }
+              @if (item.rawProduct.availability === 'OUT_OF_STOCK') {
+              <button class="btn btn-outline btn-sm"
+                style="display:inline-flex; align-items:center; gap:5px; opacity:0.6; cursor:not-allowed;" disabled
+                title="Currently Out of Stock">
+                {{ 'PRODUCT_DETAIL.OUT_OF_STOCK' | translate:'Out of Stock' }}
+              </button>
+              } @else {
+              <button class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;"
+                (click)="addToCart(item.rawProduct)">
+                {{ 'STOREFRONT.ADD_TO_CART' | translate:'Add' }} <aser-icon name="lucide:shopping-cart"
+                  [size]="13"></aser-icon>
+              </button>
+              }
               } @else {
               <button class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:5px;"
                 (click)="openQuoteModal('EQUIPMENT_DISTRIBUTION')">
-                {{ 'STOREFRONT.REQUEST_QUOTE_BTN' | translate:'Quote' }} <aser-icon name="lucide:clipboard-list" [size]="13"></aser-icon>
+                {{ 'STOREFRONT.REQUEST_QUOTE_BTN' | translate:'Quote' }} <aser-icon name="lucide:clipboard-list"
+                  [size]="13"></aser-icon>
               </button>
               }
             </div>
@@ -274,10 +288,12 @@
       <div class="section-head">
         <div>
           <span class="section-tag">{{ 'HOME.CRAFTSMANSHIP' | translate:'Craftsmanship & Production' }}</span>
-          <h2 class="section-title">{{ 'STOREFRONT.OUR_SERVICES' | translate:'Commercial Services & Capabilities' }}</h2>
+          <h2 class="section-title">{{ 'STOREFRONT.OUR_SERVICES' | translate:'Commercial Services & Capabilities' }}
+          </h2>
         </div>
         <p class="section-subtitle">
-          {{ 'STOREFRONT.SERVICES_DESC' | translate:'End-to-end industrial solutions for publishers, enterprises, garment factories, and advertising agencies.' }}
+          {{ 'STOREFRONT.SERVICES_DESC' | translate:'End-to-end industrial solutions for publishers, enterprises,
+          garment factories, and advertising agencies.' }}
         </p>
       </div>
 
@@ -288,7 +304,8 @@
           </div>
           <h3 class="service-card-title">{{ 'HOME.SVC_1_TITLE' | translate:'Commercial Book & Magazine Printing' }}</h3>
           <p class="service-card-desc">
-            {{ 'HOME.SVC_1_DESC' | translate:'High-volume offset press runs for school textbooks, corporate annual reports, luxury catalogs, and magazines with custom PUR binding.' }}
+            {{ 'HOME.SVC_1_DESC' | translate:'High-volume offset press runs for school textbooks, corporate annual
+            reports, luxury catalogs, and magazines with custom PUR binding.' }}
           </p>
           <ul class="service-features-list">
             <li>{{ 'HOME.SVC_1_F1' | translate:'Heidelberg 4-color offset press runs' }}</li>
@@ -298,7 +315,8 @@
           <button class="btn btn-secondary"
             style="margin-top:auto; display:inline-flex; align-items:center; justify-content:center; gap:8px;"
             (click)="openQuoteModal('PRINTING_PRESS')">
-            {{ 'HOME.SVC_1_BTN' | translate:'Request Printing Quote' }} <aser-icon name="lucide:arrow-right" [size]="14"></aser-icon>
+            {{ 'HOME.SVC_1_BTN' | translate:'Request Printing Quote' }} <aser-icon name="lucide:arrow-right"
+              [size]="14"></aser-icon>
           </button>
         </div>
 
@@ -308,7 +326,8 @@
           </div>
           <h3 class="service-card-title">{{ 'HOME.SVC_2_TITLE' | translate:'Fleet & Vehicle Branding Wraps' }}</h3>
           <p class="service-card-desc">
-            {{ 'HOME.SVC_2_DESC' | translate:'Turn your commercial delivery vans, trucks, and company cars into mobile billboards with weather-resistant outdoor vinyl wraps.' }}
+            {{ 'HOME.SVC_2_DESC' | translate:'Turn your commercial delivery vans, trucks, and company cars into mobile
+            billboards with weather-resistant outdoor vinyl wraps.' }}
           </p>
           <ul class="service-features-list">
             <li>{{ 'HOME.SVC_2_F1' | translate:'Cast polymeric wrap vinyl with UV laminate' }}</li>
@@ -318,7 +337,8 @@
           <button class="btn btn-secondary"
             style="margin-top:auto; display:inline-flex; align-items:center; justify-content:center; gap:8px;"
             (click)="openQuoteModal('BRANDING_PROMOTION')">
-            {{ 'HOME.SVC_2_BTN' | translate:'Request Vehicle Quote' }} <aser-icon name="lucide:arrow-right" [size]="14"></aser-icon>
+            {{ 'HOME.SVC_2_BTN' | translate:'Request Vehicle Quote' }} <aser-icon name="lucide:arrow-right"
+              [size]="14"></aser-icon>
           </button>
         </div>
 
@@ -328,7 +348,8 @@
           </div>
           <h3 class="service-card-title">{{ 'HOME.SVC_3_TITLE' | translate:'Custom Packaging & Box Printing' }}</h3>
           <p class="service-card-desc">
-            {{ 'HOME.SVC_3_DESC' | translate:'Rigid luxury boxes, corrugated shippers, pharmaceutical cartons, and food packaging designed with tamper-evident precision.' }}
+            {{ 'HOME.SVC_3_DESC' | translate:'Rigid luxury boxes, corrugated shippers, pharmaceutical cartons, and food
+            packaging designed with tamper-evident precision.' }}
           </p>
           <ul class="service-features-list">
             <li>{{ 'HOME.SVC_3_F1' | translate:'Duplex board, kraft, and ivory cardstocks' }}</li>
@@ -338,7 +359,8 @@
           <button class="btn btn-secondary"
             style="margin-top:auto; display:inline-flex; align-items:center; justify-content:center; gap:8px;"
             (click)="openQuoteModal('PRINTING_PRESS')">
-            {{ 'HOME.SVC_3_BTN' | translate:'Request Packaging Quote' }} <aser-icon name="lucide:arrow-right" [size]="14"></aser-icon>
+            {{ 'HOME.SVC_3_BTN' | translate:'Request Packaging Quote' }} <aser-icon name="lucide:arrow-right"
+              [size]="14"></aser-icon>
           </button>
         </div>
       </div>
@@ -351,7 +373,8 @@
       <div class="section-head">
         <div>
           <span class="section-tag">{{ 'HOME.PHYSICAL_NETWORK' | translate:'Our Physical Network' }}</span>
-          <h2 class="section-title">{{ 'STOREFRONT.BRANCH_LOCATIONS' | translate:'Aser Trading Branches & Warehouses' }}</h2>
+          <h2 class="section-title">{{ 'STOREFRONT.BRANCH_LOCATIONS' | translate:'Aser Trading Branches & Warehouses' }}
+          </h2>
         </div>
         <p class="section-subtitle">
           Visit any of our {{ state.branches().length }} registered branch locations for material inspections, order
@@ -402,20 +425,20 @@
 
   <!-- Modals & Drawers -->
   @if (isCartOpen()) {
-    <aser-cart-drawer (close)="closeCart()" (checkout)="proceedToCheckout()"></aser-cart-drawer>
+  <aser-cart-drawer (close)="closeCart()" (checkout)="proceedToCheckout()"></aser-cart-drawer>
   }
 
   @if (isCheckoutOpen()) {
-    <aser-checkout-modal (close)="closeCheckout()"></aser-checkout-modal>
+  <aser-checkout-modal (close)="closeCheckout()"></aser-checkout-modal>
   }
 
   @if (isQuoteOpen()) {
-    <aser-quote-modal [initialCategory]="activeQuoteCategory" (close)="closeQuoteModal()"></aser-quote-modal>
+  <aser-quote-modal [initialCategory]="activeQuoteCategory" (close)="closeQuoteModal()"></aser-quote-modal>
   }
 
   @if (selectedModalProduct()) {
-    <aser-product-detail-modal [product]="selectedModalProduct()" (close)="closeProductDetails()"
-      (requestQuote)="onProductQuoteRequest($event)">
-    </aser-product-detail-modal>
+  <aser-product-detail-modal [product]="selectedModalProduct()" (close)="closeProductDetails()"
+    (requestQuote)="onProductQuoteRequest($event)">
+  </aser-product-detail-modal>
   }
 </div>

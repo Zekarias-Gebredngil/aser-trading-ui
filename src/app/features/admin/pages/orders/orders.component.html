@@ -2,11 +2,12 @@
   <div class="page-header-row">
     <div>
       <div style="font-size:11px; font-weight:800; color:var(--blue); letter-spacing:1px; margin-bottom:4px;">
-        {{ 'ORDERS.CATEGORY_HEADER' | translate:'E-COMMERCE & FULFILLMENT OPERATIONS' }}
+        {{ 'ORDERS.CATEGORY_HEADER' | translate:'' }}
       </div>
       <h1>{{ 'ORDERS.TITLE' | translate:'Customer Online Orders' }}</h1>
       <p>
-        {{ 'ORDERS.SUBTITLE' | translate:'Review order items, verify manual bank transfers, monitor stock reservations, and track dispatch status.' }}
+        {{ 'ORDERS.SUBTITLE' | translate:'Review order items, verify manual bank transfers, monitor stock reservations,
+        and track dispatch status.' }}
       </p>
     </div>
   </div>
@@ -27,10 +28,13 @@
 
   @if (activeTab === 'orders') {
   <!-- Filter Toolbar -->
-  <div style="background:#ffffff; border:1px solid var(--line); border-radius:var(--radius-lg); padding:16px 20px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
+  <div
+    style="background:#ffffff; border:1px solid var(--line); border-radius:var(--radius-lg); padding:16px 20px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
     <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
-      <span style="font-size:12px; font-weight:700; color:var(--muted);">{{ 'ORDERS.FILTER_STATUS' | translate:'Filter Order Status:' }}</span>
-      <select class="form-select" style="width:190px;" [ngModel]="statusFilter" (ngModelChange)="onStatusFilterChange($event)">
+      <span style="font-size:12px; font-weight:700; color:var(--muted);">{{ 'ORDERS.FILTER_STATUS' | translate:'Filter
+        Order Status:' }}</span>
+      <select class="form-select" style="width:190px;" [ngModel]="statusFilter"
+        (ngModelChange)="onStatusFilterChange($event)">
         <option value="ALL">{{ 'ORDERS.STATUS_ALL' | translate:'All Orders' }} ({{ state.orders().length }})</option>
         <option value="PENDING_PAYMENT">{{ 'ORDERS.STATUS_PENDING' | translate:'Pending Payment' }}</option>
         <option value="PROCESSING">{{ 'ORDERS.STATUS_PROCESSING' | translate:'Processing' }}</option>
@@ -39,20 +43,22 @@
       </select>
 
       @if (state.isBranchScopeLocked()) {
-        <div style="display:inline-flex; align-items:center; gap:6px; background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:600;">
-          <aser-icon name="lucide:building-2" [size]="14"></aser-icon>
-          <span>{{ state.currentUser()?.assignedBranchName || 'My Branch' }}</span>
-        </div>
+      <div
+        style="display:inline-flex; align-items:center; gap:6px; background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:600;">
+        <aser-icon name="lucide:building-2" [size]="14"></aser-icon>
+        <span>{{ state.currentUser()?.assignedBranchName || 'My Branch' }}</span>
+      </div>
       } @else {
-        <div style="display:flex; gap:6px; align-items:center;">
-          <span style="font-size:12px; font-weight:700; color:var(--muted);">Branch:</span>
-          <select class="form-select" style="width:180px;" [ngModel]="branchFilter" (ngModelChange)="onBranchFilterChange($event)">
-            <option value="ALL">All Branches</option>
-            @for (b of state.branches(); track b.id) {
-              <option [value]="b.id">{{ b.name }}</option>
-            }
-          </select>
-        </div>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <span style="font-size:12px; font-weight:700; color:var(--muted);">Branch:</span>
+        <select class="form-select" style="width:180px;" [ngModel]="branchFilter"
+          (ngModelChange)="onBranchFilterChange($event)">
+          <option value="ALL">All Branches</option>
+          @for (b of state.branches(); track b.id) {
+          <option [value]="b.id">{{ b.name }}</option>
+          }
+        </select>
+      </div>
       }
     </div>
 
@@ -60,7 +66,8 @@
       <div style="font-size:12px; color:var(--muted);">
         {{ 'ORDERS.TOTAL_ACTIVE' | translate:'Total Active Orders' }}: <strong>{{ filteredOrders.length }}</strong>
       </div>
-      <button class="btn btn-sm btn-outline" (click)="exportOrdersToExcel()" style="display:inline-flex; align-items:center; gap:6px;">
+      <button class="btn btn-sm btn-outline" (click)="exportOrdersToExcel()"
+        style="display:inline-flex; align-items:center; gap:6px;">
         <aser-icon name="lucide:file-spreadsheet" [size]="14"></aser-icon>
         <span>{{ 'COMMON.EXPORT_EXCEL' | translate:'Export to Excel' }}</span>
       </button>
@@ -86,108 +93,129 @@
         </thead>
         <tbody>
           @for (order of pagedOrderRows; track order.id) {
-            <tr>
-              <td>
-                <strong style="color:var(--blue); font-family:monospace; font-size:13px;">{{ order.orderNumber }}</strong>
-              </td>
-              <td style="font-size:11px; color:var(--muted);">{{ order.createdAtFormatted }}</td>
-              <td>
-                <strong style="color:var(--ink); display:block;">{{ order.customerName }}</strong>
-                <small style="color:var(--muted);">{{ order.customerPhone }}</small>
-              </td>
-              <td>
-                @if (order.isPickup) {
-                  <span style="font-weight:600; color:var(--ink); font-size:12px; display:inline-flex; align-items:center; gap:4px;">
-                    <aser-icon name="lucide:building-2" [size]="14" color="var(--blue)"></aser-icon> {{ 'ORDERS.PICKUP' | translate:order.fulfillmentLabel }}
-                  </span>
-                  <small style="display:block; color:var(--muted);">{{ order.fulfillmentDetail }}</small>
+          <tr>
+            <td>
+              <strong style="color:var(--blue); font-family:monospace; font-size:13px;">{{ order.orderNumber }}</strong>
+            </td>
+            <td style="font-size:11px; color:var(--muted);">{{ order.createdAtFormatted }}</td>
+            <td>
+              <strong style="color:var(--ink); display:block;">{{ order.customerName }}</strong>
+              <small style="color:var(--muted);">{{ order.customerPhone }}</small>
+            </td>
+            <td>
+              @if (order.isPickup) {
+              <span
+                style="font-weight:600; color:var(--ink); font-size:12px; display:inline-flex; align-items:center; gap:4px;">
+                <aser-icon name="lucide:building-2" [size]="14" color="var(--blue)"></aser-icon> {{ 'ORDERS.PICKUP' |
+                translate:order.fulfillmentLabel }}
+              </span>
+              <small style="display:block; color:var(--muted);">{{ order.fulfillmentDetail }}</small>
+              } @else {
+              <span
+                style="font-weight:600; color:var(--ink); font-size:12px; display:inline-flex; align-items:center; gap:4px;">
+                <aser-icon name="lucide:truck" [size]="14" color="var(--magenta)"></aser-icon> {{ 'ORDERS.DELIVERY' |
+                translate:order.fulfillmentLabel }}
+              </span>
+              <small style="display:block; color:var(--muted);">{{ order.fulfillmentDetail }}</small>
+              }
+            </td>
+            <td>
+              <span class="badge badge-quote-only">{{ order.itemsCount }} {{ 'COMMON.ITEMS' | translate:'items'
+                }}</span>
+            </td>
+            <td>
+              <strong style="font-size:14px; color:var(--ink);">ETB {{ order.totalAmount | number:'1.2-2' }}</strong>
+            </td>
+            <td>
+              <div
+                style="margin-bottom:4px; font-size:11px; font-weight:600; display:flex; align-items:center; gap:4px;">
+                @if (order.isBankTransfer) {
+                <aser-icon name="lucide:landmark" [size]="13" color="var(--blue)"></aser-icon> {{ 'ORDERS.BANK_TRANSFER'
+                | translate:order.paymentMethodLabel }}
                 } @else {
-                  <span style="font-weight:600; color:var(--ink); font-size:12px; display:inline-flex; align-items:center; gap:4px;">
-                    <aser-icon name="lucide:truck" [size]="14" color="var(--magenta)"></aser-icon> {{ 'ORDERS.DELIVERY' | translate:order.fulfillmentLabel }}
-                  </span>
-                  <small style="display:block; color:var(--muted);">{{ order.fulfillmentDetail }}</small>
+                <aser-icon name="lucide:banknote" [size]="13" color="var(--green)"></aser-icon> {{ 'ORDERS.CASH' |
+                translate:order.paymentMethodLabel }}
                 }
-              </td>
-              <td>
-                <span class="badge badge-quote-only">{{ order.itemsCount }} {{ 'COMMON.ITEMS' | translate:'items' }}</span>
-              </td>
-              <td>
-                <strong style="font-size:14px; color:var(--ink);">ETB {{ order.totalAmount | number:'1.2-2' }}</strong>
-              </td>
-              <td>
-                <div style="margin-bottom:4px; font-size:11px; font-weight:600; display:flex; align-items:center; gap:4px;">
-                  @if (order.isBankTransfer) {
-                    <aser-icon name="lucide:landmark" [size]="13" color="var(--blue)"></aser-icon> {{ 'ORDERS.BANK_TRANSFER' | translate:order.paymentMethodLabel }}
-                  } @else {
-                    <aser-icon name="lucide:banknote" [size]="13" color="var(--green)"></aser-icon> {{ 'ORDERS.CASH' | translate:order.paymentMethodLabel }}
-                  }
-                </div>
-                <span class="badge" [class]="order.paymentStatusBadgeClass">
-                  {{ order.paymentStatusTextKey | translate:order.paymentStatusDefaultText }}
-                </span>
-                @if (order.paymentReference) {
-                  <div style="font-family:monospace; font-size:10px; color:var(--muted); margin-top:2px;">Ref: {{ order.paymentReference }}</div>
-                }
-              </td>
-              <td>
-                <span class="badge" [class]="order.statusBadgeClass">
-                  {{ order.status }}
-                </span>
-              </td>
-              <td>
-                <div style="display:flex; gap:6px;">
-                  <button type="button" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:4px;" (click)="openOrderDetails($event, order.rawOrder)">
-                    {{ 'PROFILE.DETAILS' | translate:'Details' }} <aser-icon name="lucide:clipboard-list" [size]="13"></aser-icon>
-                  </button>
+              </div>
+              <span class="badge" [class]="order.paymentStatusBadgeClass">
+                {{ order.paymentStatusTextKey | translate:order.paymentStatusDefaultText }}
+              </span>
+              @if (order.paymentReference) {
+              <div style="font-family:monospace; font-size:10px; color:var(--muted); margin-top:2px;">Ref: {{
+                order.paymentReference }}</div>
+              }
+            </td>
+            <td>
+              <span class="badge" [class]="order.statusBadgeClass">
+                {{ order.status }}
+              </span>
+            </td>
+            <td>
+              <div style="display:flex; gap:6px;">
+                <button type="button" class="btn btn-outline btn-sm"
+                  style="display:inline-flex; align-items:center; gap:4px;"
+                  (click)="openOrderDetails($event, order.rawOrder)">
+                  {{ 'PROFILE.DETAILS' | translate:'Details' }} <aser-icon name="lucide:clipboard-list"
+                    [size]="13"></aser-icon>
+                </button>
 
-                  @if (order.paymentStatus === 'PENDING') {
-                    <button type="button" class="btn btn-secondary btn-sm" style="display:inline-flex; align-items:center; gap:4px;" (click)="updateStatus($event, order.rawOrder, 'PROCESSING', 'PAID')" title="Verify bank transfer or cash deposit">
-                      {{ 'ORDERS.CONFIRM_ORDER' | translate:'Verify Paid' }} <aser-icon name="lucide:check" [size]="13"></aser-icon>
-                    </button>
-                  } @else if (order.status === 'PROCESSING') {
-                    <button type="button" class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:4px;" (click)="updateStatus($event, order.rawOrder, 'READY_FOR_DISPATCH')">
-                      {{ 'ORDERS.READY_FOR_PICKUP' | translate:'Ready' }} <aser-icon name="lucide:arrow-right" [size]="13"></aser-icon>
-                    </button>
-                  } @else if (order.status === 'READY_FOR_DISPATCH') {
-                    <button type="button" class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:4px;" (click)="updateStatus($event, order.rawOrder, 'DELIVERED')">
-                      {{ 'ORDERS.COMPLETE_ORDER' | translate:'Delivered' }} <aser-icon name="lucide:check-circle" [size]="13"></aser-icon>
-                    </button>
-                  }
-                  @if (order.status !== 'CANCELLED' && order.status !== 'DELIVERED') {
-                    <button type="button" class="btn btn-outline btn-sm" style="color:var(--red); border-color:#fca5a5;" (click)="cancelOrder($event, order.rawOrder)" title="Cancel Order">
-                      <aser-icon name="lucide:x" [size]="13"></aser-icon>
-                    </button>
-                  }
-                </div>
-              </td>
-            </tr>
+                @if (order.paymentStatus === 'PENDING') {
+                <button type="button" class="btn btn-secondary btn-sm"
+                  style="display:inline-flex; align-items:center; gap:4px;"
+                  (click)="updateStatus($event, order.rawOrder, 'PROCESSING', 'PAID')"
+                  title="Verify bank transfer or cash deposit">
+                  {{ 'ORDERS.CONFIRM_ORDER' | translate:'Verify Paid' }} <aser-icon name="lucide:check"
+                    [size]="13"></aser-icon>
+                </button>
+                } @else if (order.status === 'PROCESSING') {
+                <button type="button" class="btn btn-primary btn-sm"
+                  style="display:inline-flex; align-items:center; gap:4px;"
+                  (click)="updateStatus($event, order.rawOrder, 'READY_FOR_DISPATCH')">
+                  {{ 'ORDERS.READY_FOR_PICKUP' | translate:'Ready' }} <aser-icon name="lucide:arrow-right"
+                    [size]="13"></aser-icon>
+                </button>
+                } @else if (order.status === 'READY_FOR_DISPATCH') {
+                <button type="button" class="btn btn-primary btn-sm"
+                  style="display:inline-flex; align-items:center; gap:4px;"
+                  (click)="updateStatus($event, order.rawOrder, 'DELIVERED')">
+                  {{ 'ORDERS.COMPLETE_ORDER' | translate:'Delivered' }} <aser-icon name="lucide:check-circle"
+                    [size]="13"></aser-icon>
+                </button>
+                }
+                @if (order.status !== 'CANCELLED' && order.status !== 'DELIVERED') {
+                <button type="button" class="btn btn-outline btn-sm" style="color:var(--red); border-color:#fca5a5;"
+                  (click)="cancelOrder($event, order.rawOrder)" title="Cancel Order">
+                  <aser-icon name="lucide:x" [size]="13"></aser-icon>
+                </button>
+                }
+              </div>
+            </td>
+          </tr>
           }
         </tbody>
       </table>
     </div>
 
     @if (filteredOrders.length === 0) {
-      <div style="text-align:center; padding:40px; color:var(--muted);">
-        No orders found under this status.
-      </div>
+    <div style="text-align:center; padding:40px; color:var(--muted);">
+      No orders found under this status.
+    </div>
     } @else {
-      <aser-paginator
-        [totalItems]="filteredOrders.length"
-        [pageSize]="ordersPageSize"
-        [currentPage]="ordersPage"
-        (pageChange)="onOrdersPageChange($event)"
-        (pageSizeChange)="onOrdersPageSizeChange($event)">
-      </aser-paginator>
+    <aser-paginator [totalItems]="filteredOrders.length" [pageSize]="ordersPageSize" [currentPage]="ordersPage"
+      (pageChange)="onOrdersPageChange($event)" (pageSizeChange)="onOrdersPageSizeChange($event)">
+    </aser-paginator>
     }
   </div>
   }
 
   @if (activeTab === 'quotes') {
-  <div style="background:#ffffff; border:1px solid var(--line); border-radius:var(--radius-lg); padding:14px 20px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
+  <div
+    style="background:#ffffff; border:1px solid var(--line); border-radius:var(--radius-lg); padding:14px 20px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
     <div style="font-size:12px; color:var(--muted);">
       Total Inquiries & Quotations: <strong>{{ state.quotations().length }}</strong>
     </div>
-    <button class="btn btn-sm btn-outline" (click)="exportQuotesToExcel()" style="display:inline-flex; align-items:center; gap:6px;">
+    <button class="btn btn-sm btn-outline" (click)="exportQuotesToExcel()"
+      style="display:inline-flex; align-items:center; gap:6px;">
       <aser-icon name="lucide:file-spreadsheet" [size]="14"></aser-icon>
       <span>{{ 'COMMON.EXPORT_EXCEL' | translate:'Export to Excel' }}</span>
     </button>
@@ -210,201 +238,211 @@
         </thead>
         <tbody>
           @for (quote of pagedQuotations; track quote.id) {
-            <tr>
-              <td>
-                <strong style="color:var(--blue); font-family:monospace; font-size:13px;">{{ quote.quoteNumber }}</strong>
-              </td>
-              <td style="font-size:11px; color:var(--muted);">{{ quote.createdAt | slice:0:10 }}</td>
-              <td>
-                <strong style="color:var(--ink); display:block;">{{ quote.customerName }}</strong>
-                <small style="color:var(--muted);">{{ quote.customerPhone }} · {{ quote.customerEmail }}</small>
-              </td>
-              <td>
-                <span style="font-size:12px; color:var(--slate);">{{ quote.companyName || 'Individual' }}</span>
-              </td>
-              <td>
-                <strong style="display:block; font-size:13px; color:var(--ink);">{{ quote.projectTitle }}</strong>
-                <small style="color:var(--muted);">{{ quote.serviceCategoryLabel }}</small>
-              </td>
-              <td>{{ quote.quantity }} {{ quote.unit }}</td>
-              <td>
-                @if (quote.quotedPrice) {
-                  <strong style="color:var(--blue); font-size:14px;">ETB {{ quote.quotedPrice | number:'1.2-2' }}</strong>
-                } @else {
-                  <span style="color:var(--muted); font-size:12px;">Pending</span>
-                }
-              </td>
-              <td>
-                <span class="badge" 
-                  [class.badge-pending]="quote.status === 'PENDING'"
-                  [class.badge-transit]="quote.status === 'UNDER_REVIEW'"
-                  [class.badge-paid]="quote.status === 'QUOTED' || quote.status === 'ACCEPTED'">
-                  {{ quote.status }}
-                </span>
-              </td>
-              <td>
-                <button class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;" (click)="openQuotingModal(quote)">
-                  <aser-icon name="lucide:file-edit" [size]="13"></aser-icon> {{ quote.quotedPrice ? 'Revise Quote' : 'Issue Quote' }}
-                </button>
-              </td>
-            </tr>
+          <tr>
+            <td>
+              <strong style="color:var(--blue); font-family:monospace; font-size:13px;">{{ quote.quoteNumber }}</strong>
+            </td>
+            <td style="font-size:11px; color:var(--muted);">{{ quote.createdAt | slice:0:10 }}</td>
+            <td>
+              <strong style="color:var(--ink); display:block;">{{ quote.customerName }}</strong>
+              <small style="color:var(--muted);">{{ quote.customerPhone }} · {{ quote.customerEmail }}</small>
+            </td>
+            <td>
+              <span style="font-size:12px; color:var(--slate);">{{ quote.companyName || 'Individual' }}</span>
+            </td>
+            <td>
+              <strong style="display:block; font-size:13px; color:var(--ink);">{{ quote.projectTitle }}</strong>
+              <small style="color:var(--muted);">{{ quote.serviceCategoryLabel }}</small>
+            </td>
+            <td>{{ quote.quantity }} {{ quote.unit }}</td>
+            <td>
+              @if (quote.quotedPrice) {
+              <strong style="color:var(--blue); font-size:14px;">ETB {{ quote.quotedPrice | number:'1.2-2' }}</strong>
+              } @else {
+              <span style="color:var(--muted); font-size:12px;">Pending</span>
+              }
+            </td>
+            <td>
+              <span class="badge" [class.badge-pending]="quote.status === 'PENDING'"
+                [class.badge-transit]="quote.status === 'UNDER_REVIEW'"
+                [class.badge-paid]="quote.status === 'QUOTED' || quote.status === 'ACCEPTED'">
+                {{ quote.status }}
+              </span>
+            </td>
+            <td>
+              <button class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;"
+                (click)="openQuotingModal(quote)">
+                <aser-icon name="lucide:file-edit" [size]="13"></aser-icon> {{ quote.quotedPrice ? 'Revise Quote' :
+                'Issue Quote' }}
+              </button>
+            </td>
+          </tr>
           }
         </tbody>
       </table>
     </div>
 
     @if (state.quotations().length === 0) {
-      <div style="text-align:center; padding:40px; color:var(--muted);">
-        No quotation requests recorded yet.
-      </div>
+    <div style="text-align:center; padding:40px; color:var(--muted);">
+      No quotation requests recorded yet.
+    </div>
     } @else {
-      <aser-paginator
-        [totalItems]="state.quotations().length"
-        [pageSize]="quotesPageSize"
-        [currentPage]="quotesPage"
-        (pageChange)="onQuotesPageChange($event)"
-        (pageSizeChange)="onQuotesPageSizeChange($event)">
-      </aser-paginator>
+    <aser-paginator [totalItems]="state.quotations().length" [pageSize]="quotesPageSize" [currentPage]="quotesPage"
+      (pageChange)="onQuotesPageChange($event)" (pageSizeChange)="onQuotesPageSizeChange($event)">
+    </aser-paginator>
     }
   </div>
   }
 
   <!-- Order Detail Modal -->
   @if (selectedOrder()) {
-    <div class="modal-backdrop" (click)="closeOrderModal()">
-      <div class="modal-dialog" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <div>
-            <h3 style="font-size:17px; font-weight:800; color:var(--ink);">Order {{ selectedOrder()?.orderNumber }}</h3>
-            <span class="badge badge-in-stock">Stock Reserved ✓</span>
+  <div class="modal-backdrop" (click)="closeOrderModal()">
+    <div class="modal-dialog" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h3 style="font-size:17px; font-weight:800; color:var(--ink);">Order {{ selectedOrder()?.orderNumber }}</h3>
+          <span class="badge badge-in-stock">Stock Reserved ✓</span>
+        </div>
+        <button class="modal-close-btn" (click)="closeOrderModal()" aria-label="Close dialog">
+          <aser-icon name="lucide:x" [size]="18"></aser-icon>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div
+          style="background:var(--bg-soft); border-radius:var(--radius-md); padding:16px; margin-bottom:20px; border:1px solid var(--line);">
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;">
+            <span style="color:var(--muted);">Customer Name:</span>
+            <strong>{{ selectedOrder()?.customerName }}</strong>
           </div>
-          <button class="modal-close-btn" (click)="closeOrderModal()" aria-label="Close dialog">
-            <aser-icon name="lucide:x" [size]="18"></aser-icon>
-          </button>
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;">
+            <span style="color:var(--muted);">Phone Contact:</span>
+            <a [href]="'tel:' + selectedOrder()?.customerPhone" style="color:var(--blue); font-weight:700;">
+              {{ selectedOrder()?.customerPhone }}
+            </a>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;">
+            <span style="color:var(--muted);">Email:</span>
+            <span>{{ selectedOrder()?.customerEmail }}</span>
+          </div>
+          @if (selectedOrder()?.companyName) {
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;">
+            <span style="color:var(--muted);">Company:</span>
+            <span>{{ selectedOrder()?.companyName }}</span>
+          </div>
+          }
+          <div style="display:flex; justify-content:space-between; font-size:13px;">
+            <span style="color:var(--muted);">Fulfillment Type:</span>
+            <span>{{ getFulfillmentDisplay(selectedOrder()) }}</span>
+          </div>
         </div>
 
-        <div class="modal-body">
-          <div style="background:var(--bg-soft); border-radius:var(--radius-md); padding:16px; margin-bottom:20px; border:1px solid var(--line);">
-            <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;">
-              <span style="color:var(--muted);">Customer Name:</span>
-              <strong>{{ selectedOrder()?.customerName }}</strong>
-            </div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;">
-              <span style="color:var(--muted);">Phone Contact:</span>
-              <a [href]="'tel:' + selectedOrder()?.customerPhone" style="color:var(--blue); font-weight:700;">
-                {{ selectedOrder()?.customerPhone }}
-              </a>
-            </div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;">
-              <span style="color:var(--muted);">Email:</span>
-              <span>{{ selectedOrder()?.customerEmail }}</span>
-            </div>
-            @if (selectedOrder()?.companyName) {
-              <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:13px;">
-                <span style="color:var(--muted);">Company:</span>
-                <span>{{ selectedOrder()?.companyName }}</span>
-              </div>
-            }
-            <div style="display:flex; justify-content:space-between; font-size:13px;">
-              <span style="color:var(--muted);">Fulfillment Type:</span>
-              <span>{{ getFulfillmentDisplay(selectedOrder()) }}</span>
-            </div>
-          </div>
+        <h4 style="font-size:13px; font-weight:800; color:var(--ink); margin-bottom:12px;">Itemized Snapshot</h4>
+        <div style="border:1px solid var(--line); border-radius:var(--radius-md); overflow:hidden; margin-bottom:20px;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of selectedOrder()?.items; track item.productId) {
+              <tr>
+                <td>
+                  <strong style="display:block;">{{ item.productName }}</strong>
+                  <small style="color:var(--muted);">{{ item.productSku }}</small>
+                </td>
+                <td>{{ item.quantity }} {{ item.unit }}</td>
+                <td>ETB {{ item.unitPrice | number:'1.2-2' }}</td>
+                <td><strong>ETB {{ item.lineTotal | number:'1.2-2' }}</strong></td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
 
-          <h4 style="font-size:13px; font-weight:800; color:var(--ink); margin-bottom:12px;">Itemized Snapshot</h4>
-          <div style="border:1px solid var(--line); border-radius:var(--radius-md); overflow:hidden; margin-bottom:20px;">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Product</th>
-                  <th>Quantity</th>
-                  <th>Unit Price</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (item of selectedOrder()?.items; track item.productId) {
-                  <tr>
-                    <td>
-                      <strong style="display:block;">{{ item.productName }}</strong>
-                      <small style="color:var(--muted);">{{ item.productSku }}</small>
-                    </td>
-                    <td>{{ item.quantity }} {{ item.unit }}</td>
-                    <td>ETB {{ item.unitPrice | number:'1.2-2' }}</td>
-                    <td><strong>ETB {{ item.lineTotal | number:'1.2-2' }}</strong></td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
+        <div
+          style="display:flex; justify-content:space-between; font-size:15px; font-weight:800; color:var(--ink); padding:10px 0; border-top:1px dashed var(--line);">
+          <span>Total Payable Amount</span>
+          <span style="color:var(--blue);">ETB {{ selectedOrder()?.totalAmount | number:'1.2-2' }}</span>
+        </div>
 
-          <div style="display:flex; justify-content:space-between; font-size:15px; font-weight:800; color:var(--ink); padding:10px 0; border-top:1px dashed var(--line);">
-            <span>Total Payable Amount</span>
-            <span style="color:var(--blue);">ETB {{ selectedOrder()?.totalAmount | number:'1.2-2' }}</span>
-          </div>
+        @if (selectedOrder()?.notes) {
+        <div
+          style="margin-top:14px; font-size:12px; color:var(--slate); background:#ffffff; border:1px solid var(--line); padding:10px; border-radius:6px;">
+          <strong>Customer / Fulfillment Notes:</strong> {{ selectedOrder()?.notes }}
+        </div>
+        }
+      </div>
 
-          @if (selectedOrder()?.notes) {
-            <div style="margin-top:14px; font-size:12px; color:var(--slate); background:#ffffff; border:1px solid var(--line); padding:10px; border-radius:6px;">
-              <strong>Customer / Fulfillment Notes:</strong> {{ selectedOrder()?.notes }}
-            </div>
+      <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          @if (selectedOrder()?.status !== 'CANCELLED' && selectedOrder()?.status !== 'DELIVERED') {
+          <button class="btn btn-outline"
+            style="color:var(--red); border-color:#fca5a5; display:inline-flex; align-items:center; gap:6px;"
+            (click)="cancelOrder($event, selectedOrder()!)">
+            <aser-icon name="lucide:x-circle" [size]="14"></aser-icon>
+            <span>Cancel Order & Release Stock</span>
+          </button>
           }
         </div>
-
-        <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
-          <div>
-            @if (selectedOrder()?.status !== 'CANCELLED' && selectedOrder()?.status !== 'DELIVERED') {
-              <button class="btn btn-outline" style="color:var(--red); border-color:#fca5a5; display:inline-flex; align-items:center; gap:6px;" (click)="cancelOrder($event, selectedOrder()!)">
-                <aser-icon name="lucide:x-circle" [size]="14"></aser-icon>
-                <span>Cancel Order & Release Stock</span>
-              </button>
-            }
-          </div>
-          <button class="btn btn-outline" (click)="closeOrderModal()">{{ 'COMMON.CLOSE' | translate:'Close' }}</button>
-        </div>
+        <button class="btn btn-outline" (click)="closeOrderModal()">{{ 'COMMON.CLOSE' | translate:'Close' }}</button>
       </div>
     </div>
+  </div>
   }
   <!-- Quotation Issue Modal -->
   @if (quotingInquiry()) {
-    <div class="modal-backdrop" (click)="closeQuotingModal()">
-      <div class="modal-dialog" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <div>
-            <h3 style="font-size:17px; font-weight:800; color:var(--ink);">Issue Quotation for {{ quotingInquiry()?.quoteNumber }}</h3>
-            <span class="category-tag">{{ quotingInquiry()?.serviceCategoryLabel }}</span>
-          </div>
-          <button class="modal-close-btn" (click)="closeQuotingModal()" aria-label="Close dialog">
-            <aser-icon name="lucide:x" [size]="18"></aser-icon>
-          </button>
+  <div class="modal-backdrop" (click)="closeQuotingModal()">
+    <div class="modal-dialog" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h3 style="font-size:17px; font-weight:800; color:var(--ink);">Issue Quotation for {{
+            quotingInquiry()?.quoteNumber }}</h3>
+          <span class="category-tag">{{ quotingInquiry()?.serviceCategoryLabel }}</span>
+        </div>
+        <button class="modal-close-btn" (click)="closeQuotingModal()" aria-label="Close dialog">
+          <aser-icon name="lucide:x" [size]="18"></aser-icon>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div
+          style="background:var(--bg-soft); border-radius:var(--radius-md); padding:16px; margin-bottom:18px; border:1px solid var(--line);">
+          <div style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:4px;">{{
+            quotingInquiry()?.projectTitle }}</div>
+          <div style="font-size:12px; color:var(--slate); margin-bottom:8px;">{{ quotingInquiry()?.customerName }} ({{
+            quotingInquiry()?.companyName || 'Direct Customer' }})</div>
+          <p style="font-size:12px; color:var(--muted); line-height:1.5; margin:0;">
+            <strong>Specs / Notes:</strong> {{ quotingInquiry()?.specifications || quotingInquiry()?.notes }}
+          </p>
         </div>
 
-        <div class="modal-body">
-          <div style="background:var(--bg-soft); border-radius:var(--radius-md); padding:16px; margin-bottom:18px; border:1px solid var(--line);">
-            <div style="font-size:13px; font-weight:700; color:var(--ink); margin-bottom:4px;">{{ quotingInquiry()?.projectTitle }}</div>
-            <div style="font-size:12px; color:var(--slate); margin-bottom:8px;">{{ quotingInquiry()?.customerName }} ({{ quotingInquiry()?.companyName || 'Direct Customer' }})</div>
-            <p style="font-size:12px; color:var(--muted); line-height:1.5; margin:0;">
-              <strong>Specs / Notes:</strong> {{ quotingInquiry()?.specifications || quotingInquiry()?.notes }}
-            </p>
-          </div>
-
-          <div class="form-group" style="margin-bottom:14px;">
-            <label class="form-label" style="font-size:12px; font-weight:700;">Quotation Price (ETB) *</label>
-            <input type="number" class="form-control" [(ngModel)]="quotePriceInput" placeholder="Total ETB including production and VAT" min="1" step="0.5" />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" style="font-size:12px; font-weight:700;">Estimator Technical Notes / Delivery Timeline</label>
-            <textarea class="form-control" rows="3" [(ngModel)]="quoteNotesInput" placeholder="e.g. Valid for 15 days, 3-day turnaround, includes 15% VAT"></textarea>
-          </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label class="form-label" style="font-size:12px; font-weight:700;">Quotation Price (ETB) *</label>
+          <input type="number" class="form-control" [(ngModel)]="quotePriceInput"
+            placeholder="Total ETB including production and VAT" min="1" step="0.5" />
         </div>
 
-        <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
-          <button class="btn btn-outline" (click)="closeQuotingModal()">{{ 'COMMON.CANCEL' | translate:'Cancel' }}</button>
-          <button class="btn btn-primary" [disabled]="quotePriceInput <= 0" (click)="submitQuotation()">
-            {{ 'COMMON.SUBMIT' | translate:'Submit Official Quotation' }}
-          </button>
+        <div class="form-group">
+          <label class="form-label" style="font-size:12px; font-weight:700;">Estimator Technical Notes / Delivery
+            Timeline</label>
+          <textarea class="form-control" rows="3" [(ngModel)]="quoteNotesInput"
+            placeholder="e.g. Valid for 15 days, 3-day turnaround, includes 15% VAT"></textarea>
         </div>
       </div>
+
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
+        <button class="btn btn-outline" (click)="closeQuotingModal()">{{ 'COMMON.CANCEL' | translate:'Cancel'
+          }}</button>
+        <button class="btn btn-primary" [disabled]="quotePriceInput <= 0" (click)="submitQuotation()">
+          {{ 'COMMON.SUBMIT' | translate:'Submit Official Quotation' }}
+        </button>
+      </div>
     </div>
+  </div>
   }
 </aser-admin-shell>
