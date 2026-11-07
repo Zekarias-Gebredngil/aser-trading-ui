@@ -1,4 +1,4 @@
-ASER TRADING
+ TRADING
 Software Requirements Specification (SRS)
 Public Website, E-Commerce Platform & Multi-Branch Inventory Management System
 Document version: 1.0 — Finalized Requirements Baseline
