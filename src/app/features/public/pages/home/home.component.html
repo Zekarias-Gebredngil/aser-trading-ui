@@ -59,9 +59,18 @@
         <div class="visual-logo-wrapper">
           <img src="Aser-trading.png" alt="Aser Trading Logo" class="hero-logo-display">
           <div class="visual-badges">
-            <span class="visual-feature-pill">✦ {{ 'HOME.COMMERCIAL_PRINTING' | translate:'Commercial Printing' }}</span>
-            <span class="visual-feature-pill">✦ {{ 'HOME.FLEET_BRANDING' | translate:'Fleet Branding' }}</span>
-            <span class="visual-feature-pill">✦ {{ 'HOME.GARMENT_VINYL' | translate:'Garment Vinyl & DTF' }}</span>
+            <span class="visual-feature-pill">
+              <aser-icon name="lucide:printer" [size]="13" color="var(--blue)"></aser-icon>
+              <span>{{ 'HOME.COMMERCIAL_PRINTING' | translate:'Commercial Printing' }}</span>
+            </span>
+            <span class="visual-feature-pill">
+              <aser-icon name="lucide:truck" [size]="13" color="var(--magenta)"></aser-icon>
+              <span>{{ 'HOME.FLEET_BRANDING' | translate:'Fleet Branding' }}</span>
+            </span>
+            <span class="visual-feature-pill">
+              <aser-icon name="lucide:shirt" [size]="13" color="var(--amber)"></aser-icon>
+              <span>{{ 'HOME.GARMENT_VINYL' | translate:'Garment Vinyl & DTF' }}</span>
+            </span>
           </div>
         </div>
 
