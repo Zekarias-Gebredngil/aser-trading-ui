@@ -14,12 +14,10 @@
     <!-- Desktop Navigation Links -->
     <nav class="header-nav">
       @for (item of navItems; track item.path) {
-        <a [routerLink]="item.path" 
-           [routerLinkActiveOptions]="item.exact ? { exact: true } : { exact: false }" 
-           routerLinkActive="active" 
-           class="nav-link">
-          {{ item.labelKey | translate:item.defaultLabel }}
-        </a>
+      <a [routerLink]="item.path" [routerLinkActiveOptions]="item.exact ? { exact: true } : { exact: false }"
+        routerLinkActive="active" class="nav-link">
+        {{ item.labelKey | translate:item.defaultLabel }}
+      </a>
       }
     </nav>
 
@@ -34,8 +32,7 @@
         @if (isLangDropdownOpen()) {
         <div class="lang-menu">
           @for (l of languageOptions(); track l.code) {
-          <button type="button" class="lang-option" [class.active]="l.isCurrent"
-            (click)="selectLanguage(l.code)">
+          <button type="button" class="lang-option" [class.active]="l.isCurrent" (click)="selectLanguage(l.code)">
             <span>{{ l.flag }}</span>
             <span>{{ l.nativeName }}</span>
           </button>
@@ -65,7 +62,7 @@
         <span>{{ 'STOREFRONT.PORTAL' | translate:'Portal' }}</span>
       </a>
       } @else {
-      <a class="staff-link desktop-only" routerLink="/app/login" title="Staff Authentication Portal">
+      <a class="staff-link desktop-only" routerLink="/app/login" title="Aser Trading  Portal">
         <aser-icon name="lucide:lock" [size]="13"></aser-icon>
         <span>{{ 'STOREFRONT.SIGN_IN' | translate:'Sign in' }}</span>
       </a>
@@ -84,14 +81,11 @@
   <div class="mobile-nav-drawer">
     <div class="mobile-nav-links">
       @for (item of navItems; track item.path) {
-        <a [routerLink]="item.path" 
-           [routerLinkActiveOptions]="item.exact ? { exact: true } : { exact: false }" 
-           routerLinkActive="active" 
-           class="mobile-nav-item" 
-           (click)="closeMobileNav()">
-          <aser-icon [name]="item.icon" [size]="18"></aser-icon>
-          <span>{{ item.labelKey | translate:item.defaultLabel }}</span>
-        </a>
+      <a [routerLink]="item.path" [routerLinkActiveOptions]="item.exact ? { exact: true } : { exact: false }"
+        routerLinkActive="active" class="mobile-nav-item" (click)="closeMobileNav()">
+        <aser-icon [name]="item.icon" [size]="18"></aser-icon>
+        <span>{{ item.labelKey | translate:item.defaultLabel }}</span>
+      </a>
       }
     </div>
 
