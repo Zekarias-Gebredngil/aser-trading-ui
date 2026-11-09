@@ -22,37 +22,10 @@
     </nav>
 
     <div class="header-actions">
-      <!-- Language Switcher Pill (Desktop & Mobile) -->
-      <div class="lang-dropdown-wrapper">
-        <button type="button" class="lang-toggle-btn" (click)="toggleLangDropdown()" title="Switch Language">
-          <aser-icon name="lucide:globe" [size]="15" color="var(--blue)"></aser-icon>
-          <span style="text-transform:uppercase;">{{ currentLang() }}</span>
-        </button>
-
-        @if (isLangDropdownOpen()) {
-        <div class="lang-menu">
-          @for (l of languageOptions(); track l.code) {
-          <button type="button" class="lang-option" [class.active]="l.isCurrent" (click)="selectLanguage(l.code)">
-            <span>{{ l.flag }}</span>
-            <span>{{ l.nativeName }}</span>
-          </button>
-          }
-        </div>
-        }
-      </div>
-
       <!-- Request Quote Button (Desktop) -->
       <button class="btn btn-secondary btn-sm desktop-only" (click)="onRequestQuote('PRINTING_PRESS')">
         <aser-icon name="lucide:clipboard-list" [size]="15"></aser-icon>
         <span>{{ 'STOREFRONT.REQUEST_QUOTE' | translate:'Request Quote' }}</span>
-      </button>
-
-      <!-- Cart Button with Live Counter Badge -->
-      <button class="cart-button" (click)="onMobileOpenCart()" aria-label="Open Shopping Cart">
-        <aser-icon name="lucide:shopping-cart" [size]="18"></aser-icon>
-        @if (hasCartItems()) {
-        <span class="cart-badge">{{ cartCount() }}</span>
-        }
       </button>
 
       <!-- Staff Management Portal Link (Desktop) -->
@@ -67,6 +40,34 @@
         <span>{{ 'STOREFRONT.SIGN_IN' | translate:'Sign in' }}</span>
       </a>
       }
+
+      <!-- Cart Button with Live Counter Badge -->
+      <button class="cart-button" (click)="onMobileOpenCart()" aria-label="Open Shopping Cart">
+        <aser-icon name="lucide:shopping-cart" [size]="18"></aser-icon>
+        @if (hasCartItems()) {
+        <span class="cart-badge">{{ cartCount() }}</span>
+        }
+      </button>
+
+      <!-- Language Switcher Pill (Desktop & Mobile) -->
+      <div class="lang-dropdown-wrapper">
+        <button type="button" class="lang-toggle-btn" (click)="toggleLangDropdown()" title="Switch Language">
+          <aser-icon name="lucide:globe" [size]="15" color="var(--blue)"></aser-icon>
+          <span style="text-transform:uppercase;">{{ currentLang() }}</span>
+        </button>
+
+        @if (isLangDropdownOpen()) {
+        <div class="lang-backdrop" (click)="closeLangDropdown()"></div>
+        <div class="lang-menu">
+          @for (l of languageOptions(); track l.code) {
+          <button type="button" class="lang-option" [class.active]="l.isCurrent" (click)="selectLanguage(l.code)">
+            <span>{{ l.flag }}</span>
+            <span>{{ l.nativeName }}</span>
+          </button>
+          }
+        </div>
+        }
+      </div>
 
       <!-- Mobile Hamburger Toggle Button -->
       <button class="mobile-nav-toggle" (click)="toggleMobileNav()" [attr.aria-expanded]="mobileNavOpen()"

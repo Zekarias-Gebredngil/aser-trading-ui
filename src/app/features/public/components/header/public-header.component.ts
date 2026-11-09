@@ -90,6 +90,9 @@ export class PublicHeaderComponent {
 
   toggleMobileNav(): void {
     this.mobileNavOpen.update(v => !v);
+    if (this.mobileNavOpen()) {
+      this.isLangDropdownOpen.set(false);
+    }
   }
 
   closeMobileNav(): void {
@@ -98,6 +101,13 @@ export class PublicHeaderComponent {
 
   toggleLangDropdown(): void {
     this.isLangDropdownOpen.update(v => !v);
+    if (this.isLangDropdownOpen()) {
+      this.mobileNavOpen.set(false);
+    }
+  }
+
+  closeLangDropdown(): void {
+    this.isLangDropdownOpen.set(false);
   }
 
   selectLanguage(lang: SupportedLanguage): void {
