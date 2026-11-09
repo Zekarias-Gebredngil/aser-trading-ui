@@ -9,21 +9,18 @@
         {{ greetingKey | translate:greetingDefault }}, {{ userGreetingName() }}
       </h1>
       <p>
-        {{ 'DASHBOARD.DESCRIPTION' | translate:'Real-time branch inventory, weighted-average valuation, logistics
-        transfers, and online sales.' }}
+        {{ 'DASHBOARD.DESCRIPTION' | translate:'Real-time branch inventory, weighted-average valuation, logistics transfers, and online sales.' }}
       </p>
     </div>
 
     <div class="page-header-actions">
       <button class="btn btn-secondary" style="display:inline-flex; align-items:center; gap:8px;"
         (click)="openReceiveModal()">
-        <aser-icon name="lucide:arrow-down" [size]="16"></aser-icon> {{ 'DASHBOARD.RECEIVE_STOCK' | translate:'Receive
-        Inbound Stock' }}
+        <aser-icon name="lucide:arrow-down" [size]="16"></aser-icon> {{ 'DASHBOARD.RECEIVE_STOCK' | translate:'Receive Inbound Stock' }}
       </button>
       <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;"
         (click)="openTransferModal()">
-        <aser-icon name="lucide:arrow-left-right-arrows" [size]="16"></aser-icon> {{ 'DASHBOARD.NEW_TRANSFER' |
-        translate:'New Branch Transfer' }}
+        <aser-icon name="lucide:arrow-left-right-arrows" [size]="16"></aser-icon> {{ 'DASHBOARD.NEW_TRANSFER' | translate:'New Branch Transfer' }}
       </button>
     </div>
   </div>
@@ -44,8 +41,7 @@
       </span>
     </div>
     <span class="badge badge-in-stock">
-      {{ connectedBranchesCount() }} {{ isAllBranchesScope() ? ('DASHBOARD.BRANCHES_CONNECTED' | translate:'Branches
-      Connected') : ('DASHBOARD.BRANCH_ASSIGNED' | translate:'Dedicated Branch Assigned') }}
+      {{ connectedBranchesCount() }} {{ isAllBranchesScope() ? ('DASHBOARD.BRANCHES_CONNECTED' | translate:'Branches Connected') : ('DASHBOARD.BRANCH_ASSIGNED' | translate:'Dedicated Branch Assigned') }}
     </span>
   </div>
 
@@ -87,8 +83,7 @@
       </div>
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <span class="kpi-sub">{{ 'DASHBOARD.LOW_STOCK_SUB' | translate:'Below reorder threshold' }}</span>
-        <a routerLink="/app/inventory" style="color:var(--blue); font-size:11px; font-weight:700;">{{
-          'DASHBOARD.REVIEW_LINK' | translate:'Review →' }}</a>
+        <a routerLink="/app/inventory" style="color:var(--blue); font-size:11px; font-weight:700;">{{ 'DASHBOARD.REVIEW_LINK' | translate:'Review →' }}</a>
       </div>
     </div>
 
@@ -103,15 +98,305 @@
         {{ pendingTransfersCount() }}
       </div>
       <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span class="kpi-sub">{{ 'DASHBOARD.PENDING_TRANSFERS_SUB' | translate:'Awaiting approval / in transit'
-          }}</span>
-        <a routerLink="/app/transfers" style="color:var(--blue); font-size:11px; font-weight:700;">{{
-          'DASHBOARD.VIEW_LINK' | translate:'View →' }}</a>
+        <span class="kpi-sub">{{ 'DASHBOARD.PENDING_TRANSFERS_SUB' | translate:'Awaiting approval / in transit' }}</span>
+        <a routerLink="/app/transfers" style="color:var(--blue); font-size:11px; font-weight:700;">{{ 'DASHBOARD.VIEW_LINK' | translate:'View →' }}</a>
       </div>
     </div>
   </div>
 
-  <!-- Main Dashboard Grid -->
+  <!-- ============================================================== -->
+  <!-- EXECUTIVE VISUAL ANALYTICS: BAR CHARTS, LINE CHARTS & PIE CHARTS -->
+  <!-- ============================================================== -->
+  <div class="analytics-section">
+    <!-- Row 1: Line Chart (Timeline Trend) & Bar Chart (Branch Comparison) -->
+    <div class="charts-row">
+      <!-- 1. LINE CHART: REVENUE & ORDER TRENDS -->
+      <div class="panel-card chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-tag">TIMELINE PERFORMANCE</div>
+            <h2 class="chart-title">Revenue & Order Trends</h2>
+            <div class="chart-metric-callout">
+              <strong>{{ lineChartData().totalFormatted }}</strong>
+              <span>Past 7 Days Operating Aggregate</span>
+            </div>
+          </div>
+          <div class="chart-toggle-group">
+            <button type="button" class="chart-toggle-btn"
+              [class.active]="lineChartMetric() === 'revenue'"
+              (click)="setLineMetric('revenue')">
+              Revenue (ETB)
+            </button>
+            <button type="button" class="chart-toggle-btn"
+              [class.active]="lineChartMetric() === 'volume'"
+              (click)="setLineMetric('volume')">
+              Order Volume
+            </button>
+          </div>
+        </div>
+
+        <div class="svg-chart-container">
+          <svg class="responsive-svg-chart" viewBox="0 0 600 220" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <linearGradient id="revenueLineGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#1e30c4" stop-opacity="0.30"></stop>
+                <stop offset="60%" stop-color="#1e30c4" stop-opacity="0.08"></stop>
+                <stop offset="100%" stop-color="#1e30c4" stop-opacity="0.00"></stop>
+              </linearGradient>
+            </defs>
+
+            <!-- Background Grid Lines -->
+            <line x1="50" y1="30" x2="550" y2="30" stroke="#f1f5f9" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="50" y1="66" x2="550" y2="66" stroke="#f1f5f9" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="50" y1="102" x2="550" y2="102" stroke="#f1f5f9" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="50" y1="138" x2="550" y2="138" stroke="#f1f5f9" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="50" y1="175" x2="550" y2="175" stroke="#e2e8f0" stroke-width="1.5" />
+
+            <!-- Y Axis Scale Text -->
+            @for (yLab of lineChartData().yAxisLabels; track yLab.y) {
+            <text x="44" [attr.y]="yLab.y" text-anchor="end" font-size="10" font-weight="600" fill="#94a3b8">
+              {{ yLab.value }}
+            </text>
+            }
+
+            <!-- Gradient Area Fill -->
+            <path [attr.d]="lineChartData().areaPath" fill="url(#revenueLineGrad)" />
+
+            <!-- Smooth Stroke Curve -->
+            <path [attr.d]="lineChartData().linePath" fill="none" stroke="#1e30c4" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+
+            <!-- Data Point Circles and X Labels -->
+            @for (pt of lineChartData().points; track pt.label) {
+            <g class="chart-point-group" (mouseenter)="activeLinePoint.set(pt)" (mouseleave)="activeLinePoint.set(null)">
+              <circle [attr.cx]="pt.x" [attr.cy]="pt.y" r="5" fill="#ffffff" stroke="#1e30c4" stroke-width="2.5" />
+              <text [attr.x]="pt.x" y="196" text-anchor="middle" font-size="11" font-weight="700" fill="#64748b">
+                {{ pt.label }}
+              </text>
+              <circle [attr.cx]="pt.x" [attr.cy]="pt.y" r="16" fill="transparent" style="cursor:pointer;" />
+            </g>
+            }
+          </svg>
+
+          <!-- Interactive Hover Tooltip for Line Chart -->
+          @if (activeLinePoint()) {
+          <div class="chart-tooltip" [style.left.px]="activeLinePoint()!.x" [style.top.px]="activeLinePoint()!.y - 45">
+            <strong>{{ activeLinePoint()!.label }}</strong>
+            <span>{{ activeLinePoint()!.formattedValue }}</span>
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- 2. BAR CHART: BRANCH INVENTORY VALUATION & STOCK DISTRIBUTION -->
+      <div class="panel-card chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-tag">MULTI-BRANCH COMPARISON</div>
+            <h2 class="chart-title">Branch Inventory Valuation</h2>
+            <div class="chart-metric-callout">
+              <strong>{{ barChartData().totalFormatted }}</strong>
+              <span>Total Network Distribution</span>
+            </div>
+          </div>
+          <div class="chart-toggle-group">
+            <button type="button" class="chart-toggle-btn"
+              [class.active]="barChartMetric() === 'valuation'"
+              (click)="setBarMetric('valuation')">
+              Valuation (ETB)
+            </button>
+            <button type="button" class="chart-toggle-btn"
+              [class.active]="barChartMetric() === 'units'"
+              (click)="setBarMetric('units')">
+              Stock Units
+            </button>
+          </div>
+        </div>
+
+        <div class="svg-chart-container">
+          <svg class="responsive-svg-chart" viewBox="0 0 600 220" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <linearGradient id="barBlueGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#1e30c4"></stop>
+                <stop offset="100%" stop-color="#3b82f6"></stop>
+              </linearGradient>
+            </defs>
+
+            <!-- Background Grid Lines -->
+            <line x1="50" y1="30" x2="550" y2="30" stroke="#f1f5f9" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="50" y1="66" x2="550" y2="66" stroke="#f1f5f9" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="50" y1="102" x2="550" y2="102" stroke="#f1f5f9" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="50" y1="138" x2="550" y2="138" stroke="#f1f5f9" stroke-width="1" stroke-dasharray="3,3" />
+            <line x1="50" y1="175" x2="550" y2="175" stroke="#e2e8f0" stroke-width="1.5" />
+
+            <!-- Y Axis Scale Text -->
+            @for (yLab of barChartData().yAxisLabels; track yLab.y) {
+            <text x="44" [attr.y]="yLab.y" text-anchor="end" font-size="10" font-weight="600" fill="#94a3b8">
+              {{ yLab.value }}
+            </text>
+            }
+
+            <!-- Bars -->
+            @for (bar of barChartData().bars; track bar.id) {
+            <g class="chart-bar-group" (mouseenter)="activeBarItem.set(bar)" (mouseleave)="activeBarItem.set(null)">
+              <!-- Top Value Label -->
+              <text [attr.x]="bar.x + bar.width / 2" [attr.y]="bar.y - 6"
+                text-anchor="middle" font-size="9" font-weight="800" [attr.fill]="bar.color">
+                {{ bar.percentage }}%
+              </text>
+
+              <!-- Rounded Bar Rectangle -->
+              <rect [attr.x]="bar.x" [attr.y]="bar.y" [attr.width]="bar.width" [attr.height]="bar.height"
+                rx="5" ry="5" [attr.fill]="bar.color" class="bar-rect" />
+
+              <!-- Bottom Branch Label -->
+              <text [attr.x]="bar.x + bar.width / 2" y="196"
+                text-anchor="middle" font-size="10" font-weight="700" fill="#475569">
+                {{ bar.shortLabel }}
+              </text>
+            </g>
+            }
+          </svg>
+
+          <!-- Interactive Hover Tooltip for Bar Chart -->
+          @if (activeBarItem()) {
+          <div class="chart-tooltip" [style.left.px]="activeBarItem()!.x + activeBarItem()!.width / 2" [style.top.px]="activeBarItem()!.y - 45">
+            <strong>{{ activeBarItem()!.label }}</strong>
+            <span>{{ activeBarItem()!.formattedValue }} ({{ activeBarItem()!.percentage }}%)</span>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: Pie / Donut Chart (Category Share) & Logistics Flow Velocity -->
+    <div class="charts-row">
+      <!-- 3. PIE / DONUT CHART: INVENTORY VALUATION BY CATEGORY & ORDERS BY STATUS -->
+      <div class="panel-card chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-tag">PORTFOLIO ALLOCATION</div>
+            <h2 class="chart-title">Valuation & Order Distribution</h2>
+            <div class="chart-metric-callout">
+              <strong>{{ pieChartData().totalFormatted }}</strong>
+              <span>{{ pieChartData().totalLabel }}</span>
+            </div>
+          </div>
+          <div class="chart-toggle-group">
+            <button type="button" class="chart-toggle-btn"
+              [class.active]="pieChartMode() === 'category'"
+              (click)="setPieMode('category')">
+              By Category
+            </button>
+            <button type="button" class="chart-toggle-btn"
+              [class.active]="pieChartMode() === 'status'"
+              (click)="setPieMode('status')">
+              By Order Status
+            </button>
+          </div>
+        </div>
+
+        <div class="donut-chart-layout">
+          <!-- Donut SVG Visualization -->
+          <div class="donut-svg-wrapper">
+            <svg class="donut-svg" viewBox="0 0 280 280">
+              <!-- Slices -->
+              @for (slice of pieChartData().slices; track slice.id) {
+              <path [attr.d]="slice.pathData" [attr.fill]="slice.color"
+                class="donut-slice"
+                (mouseenter)="activePieSlice.set(slice)"
+                (mouseleave)="activePieSlice.set(null)" />
+              }
+
+              <!-- Center Donut Ring Hole with Summary -->
+              <circle cx="140" cy="140" r="63" fill="#ffffff" />
+              <text x="140" y="132" text-anchor="middle" font-size="10" font-weight="700" fill="#94a3b8" letter-spacing="0.5">
+                TOTAL
+              </text>
+              <text x="140" y="152" text-anchor="middle" font-size="15" font-weight="900" fill="#0f172a">
+                {{ pieChartData().totalFormatted }}
+              </text>
+            </svg>
+
+            @if (activePieSlice()) {
+            <div class="donut-tooltip">
+              <strong>{{ activePieSlice()!.label }}</strong>
+              <span>{{ activePieSlice()!.formattedValue }} ({{ activePieSlice()!.percentage }}%)</span>
+            </div>
+            }
+          </div>
+
+          <!-- Color-Coded Legend Grid -->
+          <div class="donut-legend-list">
+            @for (slice of pieChartData().slices; track slice.id) {
+            <div class="donut-legend-item" [class.hovered]="activePieSlice()?.id === slice.id"
+              (mouseenter)="activePieSlice.set(slice)" (mouseleave)="activePieSlice.set(null)">
+              <div class="legend-indicator" [style.background]="slice.color"></div>
+              <div class="legend-info">
+                <div class="legend-name">{{ slice.label }}</div>
+                <div class="legend-meta">
+                  <span class="legend-val">{{ slice.formattedValue }}</span>
+                  <span class="legend-pct badge" [style.color]="slice.color" [style.background]="slice.color + '18'">
+                    {{ slice.percentage }}%
+                  </span>
+                </div>
+              </div>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. SUPPLY CHAIN LOGISTICS VELOCITY -->
+      <div class="panel-card chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-tag">SUPPLY CHAIN VELOCITY</div>
+            <h2 class="chart-title">Stock Flow & Logistics Balance</h2>
+            <div class="chart-metric-callout">
+              <strong>Operational Velocity</strong>
+              <span>Real-time Inbound, Inter-Branch & Dispatch Ratios</span>
+            </div>
+          </div>
+          <span class="badge badge-quote-only" style="font-size:11px;">Ledger Verified</span>
+        </div>
+
+        <div class="velocity-list">
+          @for (metric of velocityMetrics(); track metric.label) {
+          <div class="velocity-item">
+            <div class="velocity-header">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div class="velocity-icon" [style.background]="metric.color + '18'" [style.color]="metric.color">
+                  <aser-icon [name]="metric.icon" [size]="16"></aser-icon>
+                </div>
+                <strong style="font-size:13px; color:var(--ink);">{{ metric.label }}</strong>
+              </div>
+              <div style="text-align:right;">
+                <span style="font-size:13px; font-weight:800; color:var(--ink);">{{ metric.formattedUnits }}</span>
+                <span style="font-size:11px; font-weight:700; margin-left:6px;" [style.color]="metric.color">
+                  ({{ metric.percentage }}%)
+                </span>
+              </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="velocity-bar-track">
+              <div class="velocity-bar-fill" [style.width.%]="metric.percentage" [style.background]="metric.color"></div>
+            </div>
+          </div>
+          }
+
+          <div class="velocity-insight-box">
+            <aser-icon name="lucide:info" [size]="18" color="var(--blue)"></aser-icon>
+            <p>
+              Stock receipts from suppliers automatically update weighted-average valuation. Inter-branch transfers maintain audit integrity through separation-of-duties approval.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Dashboard Grid (Recent Ledger & Online Orders) -->
   <div class="dashboard-main-grid">
     <!-- Left: Recent Stock Movements & Activity -->
     <div class="panel-card">
@@ -120,14 +405,12 @@
           <h2>{{ 'DASHBOARD.RECENT_LEDGER' | translate:'Recent Stock Ledger & Activity' }}</h2>
           <p>{{ 'DASHBOARD.RECENT_LEDGER_SUB' | translate:'Auditable inventory movements, deliveries & orders' }}</p>
         </div>
-        <a routerLink="/app/inventory" class="btn btn-outline btn-sm">{{ 'DASHBOARD.FULL_LEDGER' | translate:'Full
-          Ledger ↗' }}</a>
+        <a routerLink="/app/inventory" class="btn btn-outline btn-sm">{{ 'DASHBOARD.FULL_LEDGER' | translate:'Full Ledger ↗' }}</a>
       </div>
 
       <div style="padding:10px 20px;">
         @for (mov of recentStockMovements(); track mov.id) {
-        <div
-          style="display:flex; align-items:flex-start; gap:14px; padding:14px 0; border-bottom:1px solid var(--line);">
+        <div style="display:flex; align-items:flex-start; gap:14px; padding:14px 0; border-bottom:1px solid var(--line);">
           <div
             style="width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0;"
             [style.background]="mov.visualBackground" [style.color]="mov.visualColor">
@@ -162,8 +445,7 @@
             <h2>{{ 'DASHBOARD.TODAY_ORDERS' | translate:"Today's Online Orders" }}</h2>
             <p>{{ 'DASHBOARD.TODAY_ORDERS_SUB' | translate:'E-commerce fulfillment queue' }}</p>
           </div>
-          <a routerLink="/app/orders" class="btn btn-outline btn-sm">{{ 'DASHBOARD.ALL_ORDERS' | translate:'All Orders
-            ↗' }}</a>
+          <a routerLink="/app/orders" class="btn btn-outline btn-sm">{{ 'DASHBOARD.ALL_ORDERS' | translate:'All Orders ↗' }}</a>
         </div>
 
         <div style="padding:10px 20px;">
@@ -176,8 +458,7 @@
               </span>
             </div>
             <div style="font-size:12px; font-weight:700; color:var(--ink);">{{ order.customerName }}</div>
-            <div
-              style="display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:4px;">
+            <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:4px;">
               <span>{{ order.itemCount }} {{ 'COMMON.ITEMS' | translate:'items' }}</span>
               <strong>ETB {{ order.totalAmount | number:'1.2-2' }}</strong>
             </div>
@@ -185,36 +466,6 @@
           }
         </div>
       </div>
-
-      <!-- Branch Valuation Breakdown -->
-      @if (hasBranchSummaries()) {
-      <div class="panel-card" style="margin-bottom:20px;">
-        <div class="panel-card-header">
-          <div>
-            <h2>{{ 'DASHBOARD.BRANCH_VALUATION_BREAKDOWN' | translate:'Branch Valuation Breakdown' }}</h2>
-            <p>{{ 'DASHBOARD.BRANCH_VALUATION_SUB' | translate:'Live inventory value distributed across warehouses' }}
-            </p>
-          </div>
-          <span class="badge badge-in-stock">ETB {{ totalValuation() | number:'1.2-2' }}</span>
-        </div>
-        <div style="padding:12px 20px;">
-          @for (br of branchSummaries(); track br.branchId) {
-          <div
-            style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--line);">
-            <div>
-              <strong style="font-size:13px; color:var(--ink);">{{ br.branchName }}</strong>
-              <div style="font-size:11px; color:var(--muted);">{{ br.warehouseCount }} Warehouse(s) · {{
-                br.totalProducts }} SKU(s)</div>
-            </div>
-            <div style="text-align:right;">
-              <strong style="font-size:13px; color:var(--blue);">ETB {{ br.totalValuationEtb | number:'1.2-2'
-                }}</strong>
-            </div>
-          </div>
-          }
-        </div>
-      </div>
-      }
 
       <!-- Quick Action Buttons -->
       <div class="panel-card">
@@ -225,26 +476,22 @@
           <button class="btn btn-secondary"
             style="justify-content:flex-start; width:100%; display:inline-flex; align-items:center; gap:10px;"
             (click)="openReceiveModal()">
-            <aser-icon name="lucide:arrow-down" [size]="16"></aser-icon> {{ 'DASHBOARD.RECEIVE_DELIVERY' |
-            translate:'Receive Inbound Supplier Delivery' }}
+            <aser-icon name="lucide:arrow-down" [size]="16"></aser-icon> {{ 'DASHBOARD.RECEIVE_DELIVERY' | translate:'Receive Inbound Supplier Delivery' }}
           </button>
           <button class="btn btn-secondary"
             style="justify-content:flex-start; width:100%; display:inline-flex; align-items:center; gap:10px;"
             (click)="openTransferModal()">
-            <aser-icon name="lucide:arrow-left-right-arrows" [size]="16"></aser-icon> {{ 'DASHBOARD.REQUEST_TRANSFER' |
-            translate:'Request Inter-Branch Transfer' }}
+            <aser-icon name="lucide:arrow-left-right-arrows" [size]="16"></aser-icon> {{ 'DASHBOARD.REQUEST_TRANSFER' | translate:'Request Inter-Branch Transfer' }}
           </button>
           <a class="btn btn-outline"
             style="justify-content:flex-start; width:100%; text-decoration:none; display:inline-flex; align-items:center; gap:10px;"
             routerLink="/app/inventory">
-            <aser-icon name="lucide:layers" [size]="16"></aser-icon> {{ 'DASHBOARD.REVIEW_LOW_STOCK' | translate:'Review
-            Low-Stock Products' }}
+            <aser-icon name="lucide:layers" [size]="16"></aser-icon> {{ 'DASHBOARD.REVIEW_LOW_STOCK' | translate:'Review Low-Stock Products' }}
           </a>
           <a class="btn btn-outline"
             style="justify-content:flex-start; width:100%; text-decoration:none; display:inline-flex; align-items:center; gap:10px;"
             routerLink="/app/products">
-            <aser-icon name="lucide:package" [size]="16"></aser-icon> {{ 'DASHBOARD.MANAGE_CATALOG' | translate:'Manage
-            Catalog & Pricing' }}
+            <aser-icon name="lucide:package" [size]="16"></aser-icon> {{ 'DASHBOARD.MANAGE_CATALOG' | translate:'Manage Catalog & Pricing' }}
           </a>
         </div>
       </div>
