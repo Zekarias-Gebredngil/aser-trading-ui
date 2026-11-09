@@ -11,7 +11,7 @@
       </p>
     </div>
 
-    <div style="display:flex; gap:10px;">
+    <div class="page-header-actions">
       <button class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;"
         (click)="exportTransfersToExcel()" [title]="'COMMON.EXPORT_EXCEL' | translate:'Export to Excel'">
         <aser-icon name="lucide:file-spreadsheet" [size]="16"></aser-icon> {{ 'COMMON.EXPORT_EXCEL' | translate:'Export
@@ -26,12 +26,11 @@
   </div>
 
   <!-- Status Filter Toolbar -->
-  <div
-    style="background:#ffffff; border:1px solid var(--line); border-radius:var(--radius-lg); padding:16px 20px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
-    <div style="display:flex; gap:10px; align-items:center;">
-      <span style="font-size:12px; font-weight:700; color:var(--muted);">{{ 'TRANSFERS.FILTER_STATUS' |
+  <div class="toolbar-card transfers-toolbar">
+    <div class="filter-group">
+      <span style="font-size:12px; font-weight:700; color:var(--muted); white-space:nowrap;">{{ 'TRANSFERS.FILTER_STATUS' |
         translate:'Filter by Status:' }}</span>
-      <select class="form-select" style="width:200px;" [ngModel]="statusFilter"
+      <select class="form-select filter-select" [ngModel]="statusFilter"
         (ngModelChange)="statusFilter = $event; onFilterChange()">
         <option value="ALL">{{ 'COMMON.ALL' | translate:'All Transfer Statuses' }}</option>
         <option value="PENDING_APPROVAL">Pending Approval</option>
@@ -42,7 +41,7 @@
       </select>
     </div>
 
-    <div style="font-size:12px; color:var(--muted);">
+    <div class="active-role-pill">
       {{ 'TRANSFERS.ACTIVE_ROLE' | translate:'Active Role:' }} <strong>{{ state.currentRole() }}</strong>
     </div>
   </div>

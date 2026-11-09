@@ -9,10 +9,12 @@
     </div>
 
     @if (state.hasPermission('MANAGE_EMPLOYEES')) {
-    <button class="btn btn-primary" (click)="openRegisterModal()">
-      <aser-icon name="lucide:user-plus" [size]="16"></aser-icon>
-      <span>{{ 'EMPLOYEES.REGISTER_EMPLOYEE' | translate:'Register Employee' }}</span>
-    </button>
+    <div class="page-header-actions">
+      <button class="btn btn-primary" (click)="openRegisterModal()" style="display:inline-flex; align-items:center; gap:8px;">
+        <aser-icon name="lucide:user-plus" [size]="16"></aser-icon>
+        <span>{{ 'EMPLOYEES.REGISTER_EMPLOYEE' | translate:'Register Employee' }}</span>
+      </button>
+    </div>
     }
   </div>
 
@@ -51,75 +53,77 @@
 
   <!-- Employees Table -->
   <div class="table-card">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>{{ 'EMPLOYEES.EMPLOYEE_NAME' | translate:'Employee Name & User' }}</th>
-          <th>{{ 'EMPLOYEES.SYSTEM_ROLE' | translate:'System Role' }}</th>
-          <th>{{ 'EMPLOYEES.ASSIGNED_BRANCH' | translate:'Assigned Branch Scope' }}</th>
-          <th>{{ 'EMPLOYEES.CONTACT' | translate:'Contact' }}</th>
-          <th>{{ 'EMPLOYEES.ACCOUNT_STATUS' | translate:'Account Status' }}</th>
-          @if (state.hasPermission('MANAGE_EMPLOYEES')) {
-          <th style="text-align:right;">{{ 'COMMON.ACTIONS' | translate:'Actions' }}</th>
-          }
-        </tr>
-      </thead>
-      <tbody>
-        @for (emp of pagedEmployeeRows; track emp.id) {
-        <tr>
-          <td>
-            <div class="user-cell">
-              <div class="avatar">{{ emp.initial }}</div>
-              <div>
-                <div class="emp-name">{{ emp.fullName }}</div>
-                <div class="emp-username">&#64;{{ emp.username }}</div>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ 'EMPLOYEES.EMPLOYEE_NAME' | translate:'Employee Name & User' }}</th>
+            <th>{{ 'EMPLOYEES.SYSTEM_ROLE' | translate:'System Role' }}</th>
+            <th>{{ 'EMPLOYEES.ASSIGNED_BRANCH' | translate:'Assigned Branch Scope' }}</th>
+            <th>{{ 'EMPLOYEES.CONTACT' | translate:'Contact' }}</th>
+            <th>{{ 'EMPLOYEES.ACCOUNT_STATUS' | translate:'Account Status' }}</th>
+            @if (state.hasPermission('MANAGE_EMPLOYEES')) {
+            <th style="text-align:right;">{{ 'COMMON.ACTIONS' | translate:'Actions' }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (emp of pagedEmployeeRows; track emp.id) {
+          <tr>
+            <td>
+              <div class="user-cell">
+                <div class="avatar">{{ emp.initial }}</div>
+                <div>
+                  <div class="emp-name">{{ emp.fullName }}</div>
+                  <div class="emp-username">&#64;{{ emp.username }}</div>
+                </div>
               </div>
-            </div>
-          </td>
-          <td>
-            <span class="role-badge" [attr.data-role]="emp.role">
-              {{ emp.roleLabel }}
-            </span>
-          </td>
-          <td>
-            <div class="branch-cell">
-              <aser-icon name="lucide:map-pin" [size]="13" color="var(--blue)"></aser-icon>
-              <span>{{ emp.branchDisplay }}</span>
-            </div>
-          </td>
-          <td>
-            <div class="contact-cell">
-              <div>{{ emp.email }}</div>
-              @if (emp.phone) {
-              <div class="text-muted">{{ emp.phone }}</div>
-              }
-            </div>
-          </td>
-          <td>
-            <button class="status-pill" [class.active]="emp.isActive" [class.inactive]="!emp.isActive"
-              (click)="toggleStatus(emp.rawEmployee)" title="Click to toggle status">
-              <span class="dot"></span>
-              <span>{{ emp.statusTextKey | translate:emp.statusDefaultText }}</span>
-            </button>
-          </td>
-          @if (state.hasPermission('MANAGE_EMPLOYEES')) {
-          <td style="text-align:right;">
-            <button class="btn btn-outline btn-sm" (click)="openEditModal(emp.rawEmployee)">
-              <aser-icon name="lucide:pencil" [size]="13"></aser-icon>
-              <span>{{ 'COMMON.EDIT' | translate:'Edit' }}</span>
-            </button>
-          </td>
+            </td>
+            <td>
+              <span class="role-badge" [attr.data-role]="emp.role">
+                {{ emp.roleLabel }}
+              </span>
+            </td>
+            <td>
+              <div class="branch-cell">
+                <aser-icon name="lucide:map-pin" [size]="13" color="var(--blue)"></aser-icon>
+                <span>{{ emp.branchDisplay }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="contact-cell">
+                <div>{{ emp.email }}</div>
+                @if (emp.phone) {
+                <div class="text-muted">{{ emp.phone }}</div>
+                }
+              </div>
+            </td>
+            <td>
+              <button class="status-pill" [class.active]="emp.isActive" [class.inactive]="!emp.isActive"
+                (click)="toggleStatus(emp.rawEmployee)" title="Click to toggle status">
+                <span class="dot"></span>
+                <span>{{ emp.statusTextKey | translate:emp.statusDefaultText }}</span>
+              </button>
+            </td>
+            @if (state.hasPermission('MANAGE_EMPLOYEES')) {
+            <td style="text-align:right;">
+              <button class="btn btn-outline btn-sm" (click)="openEditModal(emp.rawEmployee)">
+                <aser-icon name="lucide:pencil" [size]="13"></aser-icon>
+                <span>{{ 'COMMON.EDIT' | translate:'Edit' }}</span>
+              </button>
+            </td>
+            }
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="6" class="empty-state">
+              No employees match the filter criteria.
+            </td>
+          </tr>
           }
-        </tr>
-        } @empty {
-        <tr>
-          <td colspan="6" class="empty-state">
-            No employees match the filter criteria.
-          </td>
-        </tr>
-        }
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </div>
 
     @if (filteredEmployees().length > 0) {
     <aser-paginator [totalItems]="filteredEmployees().length" [pageSize]="pageSize" [currentPage]="currentPage"

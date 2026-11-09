@@ -7,10 +7,12 @@
       </p>
     </div>
     @if (canManageBranches()) {
-    <button class="btn btn-primary" (click)="openCreateModal()">
-      <aser-icon name="lucide:plus" [size]="16"></aser-icon>
-      <span>{{ 'BRANCHES.REGISTER_BRANCH' | translate:'Register New Branch' }}</span>
-    </button>
+    <div class="page-header-actions">
+      <button class="btn btn-primary" (click)="openCreateModal()" style="display:inline-flex; align-items:center; gap:8px;">
+        <aser-icon name="lucide:plus" [size]="16"></aser-icon>
+        <span>{{ 'BRANCHES.REGISTER_BRANCH' | translate:'Register New Branch' }}</span>
+      </button>
+    </div>
     }
   </div>
 
@@ -230,7 +232,7 @@
 
         <!-- Associated Warehouses Section -->
         <div style="margin-top:22px; border-top:1px solid var(--line); padding-top:18px;">
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+          <div class="warehouse-header-wrap">
             <div>
               <h4 style="font-size:14px; font-weight:800; color:var(--ink); margin:0; display:flex; align-items:center; gap:8px;">
                 <aser-icon name="lucide:warehouse" [size]="16" color="var(--blue)"></aser-icon>
@@ -250,22 +252,22 @@
 
           <div style="display:flex; flex-direction:column; gap:10px;">
             @for (wh of editableWarehouses; track $index) {
-            <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px; background:var(--bg-soft); border:1px solid var(--line); border-radius:var(--radius-md); padding:10px 14px;">
-              <div style="flex:2; min-width:180px;">
+            <div class="warehouse-edit-row">
+              <div class="wh-input-name">
                 <label style="font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; display:block; margin-bottom:3px;">
                   Warehouse Name *
                 </label>
                 <input type="text" [(ngModel)]="wh.name" class="form-input" style="padding:6px 10px; font-size:12px;" placeholder="e.g. Main Showroom Warehouse" />
               </div>
 
-              <div style="flex:1.5; min-width:130px;">
+              <div class="wh-input-code">
                 <label style="font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; display:block; margin-bottom:3px;">
                   Warehouse Code *
                 </label>
                 <input type="text" [(ngModel)]="wh.code" class="form-input" style="padding:6px 10px; font-size:12px; text-transform:uppercase;" placeholder="e.g. BOLE-WH" />
               </div>
 
-              <div style="display:flex; align-items:center; gap:6px; min-width:100px; margin-top:16px;">
+              <div class="wh-input-default">
                 <input type="radio" 
                        [name]="'defaultWhRadio'" 
                        [id]="'defWh_' + $index" 
@@ -277,7 +279,7 @@
                 </label>
               </div>
 
-              <div style="margin-top:16px;">
+              <div class="wh-input-actions">
                 <button type="button" 
                         class="btn btn-outline" 
                         style="padding:6px 8px; color:var(--rose); border-color:var(--line); cursor:pointer;"

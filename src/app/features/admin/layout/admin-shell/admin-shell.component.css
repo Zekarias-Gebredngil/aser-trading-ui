@@ -524,7 +524,7 @@
     top: 0;
     bottom: 0;
     left: 0;
-    width: 280px !important;
+    width: min(280px, 85vw) !important;
     z-index: 70;
     transform: translateX(-100%);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
@@ -632,7 +632,8 @@
   position: absolute;
   right: 0;
   top: calc(100% + 10px);
-  width: 335px;
+  width: min(340px, calc(100vw - 16px));
+  max-width: calc(100vw - 16px);
   background: #ffffff;
   border: 1px solid var(--blue-border, #d7e0fc);
   border-radius: var(--radius-lg, 16px);

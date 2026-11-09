@@ -1,1 +1,104 @@
-/* Orders styles */
+:host {
+  display: block;
+}
+
+.orders-filter-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.orders-filter-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-select {
+  width: 180px;
+}
+
+.branch-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.orders-meta-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.quotes-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .orders-filter-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .orders-filter-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .filter-item {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .filter-select {
+    flex: 1;
+    width: auto !important;
+  }
+
+  .branch-pill {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .orders-meta-controls {
+    width: 100%;
+    justify-content: space-between;
+    padding-top: 8px;
+    border-top: 1px solid var(--line);
+  }
+
+  .quotes-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .quotes-toolbar .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

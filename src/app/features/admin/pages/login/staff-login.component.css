@@ -271,3 +271,19 @@
 .back-link:hover {
   color: var(--blue);
 }
+
+@media (max-width: 480px) {
+  .login-page {
+    padding: 16px 12px;
+  }
+
+  .login-card {
+    padding: 24px 16px;
+    border-radius: var(--radius-md);
+  }
+
+  .login-title {
+    font-size: 20px;
+  }
+}
+

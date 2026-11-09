@@ -45,3 +45,62 @@
   justify-content: flex-end;
   gap: 12px;
 }
+
+.image-upload-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.url-input-group {
+  display: flex;
+  gap: 6px;
+  flex: 1 1 240px;
+}
+
+@media (max-width: 640px) {
+  .modal-backdrop {
+    padding: 10px;
+  }
+
+  .modal-dialog {
+    max-height: 94vh;
+    border-radius: var(--radius-lg);
+  }
+
+  .modal-header {
+    padding: 14px 16px;
+  }
+
+  .modal-body {
+    padding: 16px;
+  }
+
+  .modal-footer {
+    padding: 12px 16px;
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .image-upload-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .image-upload-row .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .url-input-group {
+    width: 100%;
+    flex: none;
+  }
+}

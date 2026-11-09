@@ -1,1 +1,28 @@
-/* Dashboard specific styles */
+/* Dashboard responsive styles */
+.kpi-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+@media (max-width: 768px) {
+  .panel-card {
+    overflow: hidden;
+  }
+
+  .kpi-value {
+    font-size: 20px;
+    word-break: break-word;
+  }
+
+  .panel-card-header h2 {
+    font-size: 16px;
+  }
+
+  .panel-card-header p {
+    font-size: 11px;
+  }
+
+  .btn {
+    white-space: normal;
+    text-align: left;
+  }
+}

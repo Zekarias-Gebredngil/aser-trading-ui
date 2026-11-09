@@ -14,7 +14,7 @@
       </p>
     </div>
 
-    <div style="display:flex; gap:10px;">
+    <div class="page-header-actions">
       <button class="btn btn-secondary" style="display:inline-flex; align-items:center; gap:8px;"
         (click)="openReceiveModal()">
         <aser-icon name="lucide:arrow-down" [size]="16"></aser-icon> {{ 'DASHBOARD.RECEIVE_STOCK' | translate:'Receive
@@ -29,8 +29,7 @@
   </div>
 
   <!-- Scope Indicator Banner -->
-  <div
-    style="background:#ffffff; border:1px solid var(--line); border-radius:var(--radius-md); padding:12px 18px; margin-bottom:24px; display:flex; align-items:center; justify-content:space-between;">
+  <div class="dashboard-scope-banner">
     <div style="display:flex; align-items:center; gap:10px; font-size:13px;">
       <aser-icon name="lucide:building-2" [size]="20" color="var(--blue)"></aser-icon>
       <span>
@@ -113,7 +112,7 @@
   </div>
 
   <!-- Main Dashboard Grid -->
-  <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:24px;">
+  <div class="dashboard-main-grid">
     <!-- Left: Recent Stock Movements & Activity -->
     <div class="panel-card">
       <div class="panel-card-header">

@@ -8,10 +8,12 @@
       </p>
     </div>
     @if (state.hasPermission('MANAGE_SERVICES')) {
-    <button class="btn btn-primary" (click)="openCreateModal()">
-      <aser-icon name="lucide:plus" [size]="16"></aser-icon>
-      <span>{{ 'SERVICES.REGISTER_SERVICE' | translate:'Register New Service' }}</span>
-    </button>
+    <div class="page-header-actions">
+      <button class="btn btn-primary" (click)="openCreateModal()" style="display:inline-flex; align-items:center; gap:8px;">
+        <aser-icon name="lucide:plus" [size]="16"></aser-icon>
+        <span>{{ 'SERVICES.REGISTER_SERVICE' | translate:'Register New Service' }}</span>
+      </button>
+    </div>
     }
   </div>
 

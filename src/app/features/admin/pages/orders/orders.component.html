@@ -13,14 +13,14 @@
   </div>
 
   <!-- Navigation Tabs -->
-  <div style="display:flex; gap:12px; margin-bottom:20px; border-bottom:1px solid var(--line); padding-bottom:12px;">
+  <div class="tab-bar">
     <button class="btn" [class.btn-primary]="activeTab === 'orders'" [class.btn-outline]="activeTab !== 'orders'"
-      (click)="setActiveTab('orders')" style="display:inline-flex; align-items:center; gap:8px;">
+      (click)="setActiveTab('orders')" style="display:inline-flex; align-items:center; gap:8px; flex-shrink:0;">
       <aser-icon name="lucide:shopping-bag" [size]="16"></aser-icon>
       {{ 'ORDERS.TAB_ORDERS' | translate:'Customer Online Orders' }} ({{ state.orders().length }})
     </button>
     <button class="btn" [class.btn-primary]="activeTab === 'quotes'" [class.btn-outline]="activeTab !== 'quotes'"
-      (click)="setActiveTab('quotes')" style="display:inline-flex; align-items:center; gap:8px;">
+      (click)="setActiveTab('quotes')" style="display:inline-flex; align-items:center; gap:8px; flex-shrink:0;">
       <aser-icon name="lucide:clipboard-list" [size]="16"></aser-icon>
       {{ 'ORDERS.TAB_QUOTES' | translate:'Technical Inquiries & Quotations' }} ({{ state.quotations().length }})
     </button>
@@ -28,30 +28,30 @@
 
   @if (activeTab === 'orders') {
   <!-- Filter Toolbar -->
-  <div
-    style="background:#ffffff; border:1px solid var(--line); border-radius:var(--radius-lg); padding:16px 20px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
-    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
-      <span style="font-size:12px; font-weight:700; color:var(--muted);">{{ 'ORDERS.FILTER_STATUS' | translate:'Filter
-        Order Status:' }}</span>
-      <select class="form-select" style="width:190px;" [ngModel]="statusFilter"
-        (ngModelChange)="onStatusFilterChange($event)">
-        <option value="ALL">{{ 'ORDERS.STATUS_ALL' | translate:'All Orders' }} ({{ state.orders().length }})</option>
-        <option value="PENDING_PAYMENT">{{ 'ORDERS.STATUS_PENDING' | translate:'Pending Payment' }}</option>
-        <option value="PROCESSING">{{ 'ORDERS.STATUS_PROCESSING' | translate:'Processing' }}</option>
-        <option value="READY_FOR_DISPATCH">{{ 'ORDERS.STATUS_READY' | translate:'Ready for Dispatch' }}</option>
-        <option value="DELIVERED">{{ 'ORDERS.STATUS_DELIVERED' | translate:'Delivered' }}</option>
-      </select>
+  <div class="toolbar-card orders-filter-toolbar">
+    <div class="orders-filter-controls">
+      <div class="filter-item">
+        <span style="font-size:12px; font-weight:700; color:var(--muted); white-space:nowrap;">{{ 'ORDERS.FILTER_STATUS' | translate:'Filter
+          Order Status:' }}</span>
+        <select class="form-select filter-select" [ngModel]="statusFilter"
+          (ngModelChange)="onStatusFilterChange($event)">
+          <option value="ALL">{{ 'ORDERS.STATUS_ALL' | translate:'All Orders' }} ({{ state.orders().length }})</option>
+          <option value="PENDING_PAYMENT">{{ 'ORDERS.STATUS_PENDING' | translate:'Pending Payment' }}</option>
+          <option value="PROCESSING">{{ 'ORDERS.STATUS_PROCESSING' | translate:'Processing' }}</option>
+          <option value="READY_FOR_DISPATCH">{{ 'ORDERS.STATUS_READY' | translate:'Ready for Dispatch' }}</option>
+          <option value="DELIVERED">{{ 'ORDERS.STATUS_DELIVERED' | translate:'Delivered' }}</option>
+        </select>
+      </div>
 
       @if (state.isBranchScopeLocked()) {
-      <div
-        style="display:inline-flex; align-items:center; gap:6px; background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:600;">
+      <div class="branch-pill">
         <aser-icon name="lucide:building-2" [size]="14"></aser-icon>
         <span>{{ state.currentUser()?.assignedBranchName || 'My Branch' }}</span>
       </div>
       } @else {
-      <div style="display:flex; gap:6px; align-items:center;">
-        <span style="font-size:12px; font-weight:700; color:var(--muted);">Branch:</span>
-        <select class="form-select" style="width:180px;" [ngModel]="branchFilter"
+      <div class="filter-item">
+        <span style="font-size:12px; font-weight:700; color:var(--muted); white-space:nowrap;">Branch:</span>
+        <select class="form-select filter-select" [ngModel]="branchFilter"
           (ngModelChange)="onBranchFilterChange($event)">
           <option value="ALL">All Branches</option>
           @for (b of state.branches(); track b.id) {
@@ -62,8 +62,8 @@
       }
     </div>
 
-    <div style="display:flex; align-items:center; gap:16px;">
-      <div style="font-size:12px; color:var(--muted);">
+    <div class="orders-meta-controls">
+      <div style="font-size:12px; color:var(--muted); white-space:nowrap;">
         {{ 'ORDERS.TOTAL_ACTIVE' | translate:'Total Active Orders' }}: <strong>{{ filteredOrders.length }}</strong>
       </div>
       <button class="btn btn-sm btn-outline" (click)="exportOrdersToExcel()"
@@ -209,8 +209,7 @@
   }
 
   @if (activeTab === 'quotes') {
-  <div
-    style="background:#ffffff; border:1px solid var(--line); border-radius:var(--radius-lg); padding:14px 20px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
+  <div class="toolbar-card quotes-toolbar">
     <div style="font-size:12px; color:var(--muted);">
       Total Inquiries & Quotations: <strong>{{ state.quotations().length }}</strong>
     </div>

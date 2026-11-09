@@ -11,7 +11,7 @@
       </p>
     </div>
 
-    <div style="display:flex; gap:10px;">
+    <div class="page-header-actions">
       <button class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;"
         (click)="exportInventoryToExcel()" [title]="'COMMON.EXPORT_EXCEL' | translate:'Export to Excel'">
         <aser-icon name="lucide:file-spreadsheet" [size]="16"></aser-icon> {{ 'COMMON.EXPORT_EXCEL' | translate:'Export
@@ -49,20 +49,20 @@
   </div>
 
   <!-- Tabs Navigation -->
-  <div style="display:flex; gap:12px; margin-bottom:20px; border-bottom:1px solid var(--line); padding-bottom:10px;">
-    <button class="btn btn-sm" style="display:inline-flex; align-items:center; gap:6px;"
+  <div class="tab-bar">
+    <button class="btn btn-sm" style="display:inline-flex; align-items:center; gap:6px; flex-shrink:0;"
       [class.btn-primary]="activeTab === 'BALANCES'" [class.btn-outline]="activeTab !== 'BALANCES'"
       (click)="setActiveTab('BALANCES')">
       <aser-icon name="lucide:layers" [size]="15"></aser-icon> {{ 'INVENTORY.TAB_BALANCES' | translate:'Stock Balances
       By Location' }} ({{ filteredBalances.length }})
     </button>
-    <button class="btn btn-sm" style="display:inline-flex; align-items:center; gap:6px;"
+    <button class="btn btn-sm" style="display:inline-flex; align-items:center; gap:6px; flex-shrink:0;"
       [class.btn-primary]="activeTab === 'MOVEMENTS'" [class.btn-outline]="activeTab !== 'MOVEMENTS'"
       (click)="setActiveTab('MOVEMENTS')">
       <aser-icon name="lucide:clock" [size]="15"></aser-icon> {{ 'INVENTORY.TAB_MOVEMENTS' | translate:'Movement Ledger
       & Audit Trail' }} ({{ state.filteredMovements().length }})
     </button>
-    <button class="btn btn-sm" style="display:inline-flex; align-items:center; gap:6px;"
+    <button class="btn btn-sm" style="display:inline-flex; align-items:center; gap:6px; flex-shrink:0;"
       [class.btn-primary]="activeTab === 'ALERTS'" [class.btn-outline]="activeTab !== 'ALERTS'"
       (click)="setActiveTab('ALERTS')">
       <aser-icon name="lucide:alert-triangle" [size]="15"></aser-icon> {{ 'INVENTORY.TAB_ALERTS' | translate:'Low Stock
@@ -72,9 +72,8 @@
 
   @if (activeTab === 'BALANCES') {
   <!-- Search & Filter Controls -->
-  <div
-    style="background:#ffffff; border:1px solid var(--line); border-radius:var(--radius-lg); padding:16px 20px; margin-bottom:20px; display:flex; gap:16px; align-items:center;">
-    <div class="search-input-wrapper" style="flex:1;">
+  <div class="toolbar-card filter-toolbar">
+    <div class="search-input-wrapper search-wrap">
       <span class="search-icon">
         <aser-icon name="lucide:search" [size]="16" color="var(--muted)"></aser-icon>
       </span>
@@ -82,10 +81,10 @@
         [placeholder]="'INVENTORY.SEARCH_PLACEHOLDER' | translate:'Search by SKU, product name, or branch location...'">
     </div>
 
-    <div style="display:flex; align-items:center; gap:8px;">
-      <label style="font-size:12px; font-weight:700; color:var(--muted);">{{ 'INVENTORY.FILTER_STATUS' |
+    <div class="filter-group">
+      <label style="font-size:12px; font-weight:700; color:var(--muted); white-space:nowrap;">{{ 'INVENTORY.FILTER_STATUS' |
         translate:'Filter Status:' }}</label>
-      <select class="form-select" style="width:160px;" [ngModel]="statusFilter"
+      <select class="form-select filter-select" [ngModel]="statusFilter"
         (ngModelChange)="statusFilter = $event; onFilterChange()">
         <option value="ALL">{{ 'COMMON.ALL' | translate:'All Statuses' }}</option>
         <option value="In stock">{{ 'INVENTORY.IN_STOCK' | translate:'In Stock' }}</option>

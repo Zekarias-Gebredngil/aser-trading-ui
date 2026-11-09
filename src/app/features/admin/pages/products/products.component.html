@@ -11,7 +11,7 @@
       </p>
     </div>
 
-    <div style="display:flex; gap:10px;">
+    <div class="page-header-actions">
       <button class="btn btn-outline" style="display:inline-flex; align-items:center; gap:8px;"
         (click)="exportCatalogToExcel()" [title]="'COMMON.EXPORT_EXCEL' | translate:'Export to Excel'">
         <aser-icon name="lucide:file-spreadsheet" [size]="16"></aser-icon>
@@ -29,9 +29,8 @@
   </div>
 
   <!-- Search & Category Filters -->
-  <div
-    style="background:#ffffff; border:1px solid var(--line); border-radius:var(--radius-lg); padding:16px 20px; margin-bottom:20px; display:flex; gap:16px; align-items:center;">
-    <div class="search-input-wrapper" style="flex:1;">
+  <div class="toolbar-card filter-toolbar">
+    <div class="search-input-wrapper search-wrap">
       <span class="search-icon">
         <aser-icon name="lucide:search" [size]="16" color="var(--muted)"></aser-icon>
       </span>
@@ -39,10 +38,10 @@
         [placeholder]="'PRODUCTS.SEARCH_PLACEHOLDER' | translate:'Search by SKU, product name, or Amharic title...'">
     </div>
 
-    <div style="display:flex; align-items:center; gap:8px;">
-      <label style="font-size:12px; font-weight:700; color:var(--muted);">{{ 'PRODUCTS.CATEGORY' | translate:'Category:'
+    <div class="filter-group">
+      <label style="font-size:12px; font-weight:700; color:var(--muted); white-space:nowrap;">{{ 'PRODUCTS.CATEGORY' | translate:'Category:'
         }}</label>
-      <select class="form-select" style="width:180px;" [ngModel]="selectedCategory()"
+      <select class="form-select filter-select" [ngModel]="selectedCategory()"
         (ngModelChange)="onCategoryChange($event)">
         <option value="ALL">{{ 'PRODUCTS.ALL_CATEGORIES' | translate:'All Categories' }}</option>
         <option value="PRINTING_SUPPLIES">Printing Supplies</option>
@@ -172,15 +171,14 @@
 
       <div class="modal-body">
         <!-- Readonly Reference & Category Ribbon -->
-        <div
-          style="background:var(--bg-soft); border-radius:var(--radius-md); padding:12px 16px; margin-bottom:18px; border:1px solid var(--line); display:flex; justify-content:space-between; align-items:center;">
+        <div class="edit-product-ribbon">
           <div style="display:flex; align-items:center; gap:10px;">
             <span style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">SKU
               Code:</span>
             <strong style="font-family:monospace; font-size:13px; color:var(--blue);">{{ selectedProduct()?.sku
               }}</strong>
           </div>
-          <div style="display:flex; align-items:center; gap:10px;">
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
             <span class="category-tag">{{ selectedProduct()?.categoryLabel }}</span>
             <span class="badge" [class.badge-in-stock]="selectedProduct()?.pricingType === 'FIXED'"
               [class.badge-quote-only]="selectedProduct()?.pricingType === 'QUOTATION'">
@@ -248,7 +246,7 @@
             Upload product images or paste web links. These slides will render inside the Website slide carousel.
           </p>
 
-          <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:14px;">
+          <div class="image-upload-row">
             <input type="file" #editFileInput multiple accept="image/*" (change)="onEditFilesSelected($event)"
               style="display:none">
             <button type="button" class="btn btn-secondary btn-sm" (click)="editFileInput.click()"
@@ -258,7 +256,7 @@
 
             <span style="font-size:12px; color:var(--muted);">or paste image URL:</span>
 
-            <div style="display:flex; gap:6px; flex:1; min-width:240px;">
+            <div class="url-input-group">
               <input class="form-input" [(ngModel)]="editImageUrlInput" placeholder="https://example.com/photo.jpg"
                 style="font-size:12px; padding:6px 10px;">
               <button type="button" class="btn btn-outline btn-sm" (click)="addEditImageUrl()"
