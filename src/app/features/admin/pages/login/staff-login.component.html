@@ -48,8 +48,12 @@
         <label>{{ 'AUTH.PASSWORD' | translate:'Password' }}</label>
         <div class="input-with-icon">
           <aser-icon name="lucide:lock" [size]="16" color="var(--muted)"></aser-icon>
-          <input type="password" [(ngModel)]="password" name="password" placeholder="••••••••" required
-            class="form-control" />
+          <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="password" name="password" placeholder="••••••••" required
+            class="form-control password-field-input" />
+          <button type="button" class="password-toggle" (click)="showPassword = !showPassword"
+            [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'" [attr.aria-pressed]="showPassword">
+            <aser-icon [name]="showPassword ? 'lucide:eye-off' : 'lucide:eye'" [size]="16"></aser-icon>
+          </button>
         </div>
       </div>
 

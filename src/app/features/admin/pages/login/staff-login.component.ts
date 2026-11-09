@@ -23,6 +23,7 @@ export class StaffLoginComponent implements OnInit {
 
   username = '';
   password = '';
+  showPassword = false;
   isLoading = signal(false);
   errorMessage = signal<string | null>(null);
   returnUrl = '/app';

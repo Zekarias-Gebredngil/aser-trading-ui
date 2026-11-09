@@ -122,6 +122,40 @@
   padding-left: 38px;
 }
 
+.input-with-icon .password-field-input {
+  padding-right: 42px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.password-toggle aser-icon {
+  position: static;
+  left: auto;
+}
+
+.password-toggle:hover {
+  color: var(--ink);
+}
+
+.password-toggle:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 .form-control {
   width: 100%;
   padding: 11px 14px;
@@ -237,4 +271,3 @@
 .back-link:hover {
   color: var(--blue);
 }
-
