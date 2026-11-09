@@ -77,6 +77,25 @@ export class AddProductModalComponent {
     }
   }
 
+  submitted = false;
+
+  get skuError(): string | null {
+    if (this.submitted && !this.sku.trim()) return 'SKU code is required.';
+    return null;
+  }
+
+  get nameError(): string | null {
+    if (this.submitted && !this.name.trim()) return 'Product name is required.';
+    return null;
+  }
+
+  get priceError(): string | null {
+    if (this.submitted && this.pricingType !== 'QUOTATION' && (!this.unitPrice || this.unitPrice <= 0)) {
+      return 'Unit price must be greater than 0 ETB.';
+    }
+    return null;
+  }
+
   get isFormValid(): boolean {
     return !!(
       this.sku.trim() &&
@@ -90,6 +109,7 @@ export class AddProductModalComponent {
   }
 
   submitProduct() {
+    this.submitted = true;
     if (!this.isFormValid) return;
 
     const categoryLabels: Record<ProductCategory, string> = {

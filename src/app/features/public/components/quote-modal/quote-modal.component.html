@@ -26,15 +26,33 @@
           <div class="form-grid">
             <div class="form-group">
               <label class="form-label">{{ 'QUOTE_MODAL.FULL_NAME' | translate:'Full Name' }} *</label>
-              <input class="form-input" [(ngModel)]="customerName" placeholder="e.g. Dawit Tadesse" required>
+              <input class="form-input" [class.is-invalid]="!!nameError" [(ngModel)]="customerName" (blur)="nameTouched = true" placeholder="e.g. Dawit Tadesse" required>
+              @if (nameError) {
+                <div class="form-error-msg">
+                  <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                  <span>{{ nameError }}</span>
+                </div>
+              }
             </div>
             <div class="form-group">
               <label class="form-label">{{ 'QUOTE_MODAL.PHONE_NUMBER' | translate:'Phone Number' }} *</label>
-              <input class="form-input" [(ngModel)]="customerPhone" placeholder="e.g. +251 91 234 5678" required>
+              <input class="form-input" [class.is-invalid]="!!phoneError" [(ngModel)]="customerPhone" (blur)="phoneTouched = true" placeholder="e.g. +251 91 234 5678" required>
+              @if (phoneError) {
+                <div class="form-error-msg">
+                  <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                  <span>{{ phoneError }}</span>
+                </div>
+              }
             </div>
             <div class="form-group">
               <label class="form-label">{{ 'QUOTE_MODAL.EMAIL_ADDRESS' | translate:'Email Address' }} *</label>
-              <input class="form-input" type="email" [(ngModel)]="customerEmail" placeholder="e.g. info@company.et" required>
+              <input class="form-input" type="email" [class.is-invalid]="!!emailError" [(ngModel)]="customerEmail" (blur)="emailTouched = true" placeholder="e.g. info@company.et" required>
+              @if (emailError) {
+                <div class="form-error-msg">
+                  <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                  <span>{{ emailError }}</span>
+                </div>
+              }
             </div>
             <div class="form-group">
               <label class="form-label">{{ 'QUOTE_MODAL.COMPANY_ORG' | translate:'Company / Organization' }}</label>
@@ -61,25 +79,49 @@
             </div>
             <div class="form-group">
               <label class="form-label">{{ 'QUOTE_MODAL.PROJECT_TITLE' | translate:'Project Title' }} *</label>
-              <input class="form-input" [(ngModel)]="projectTitle" placeholder="e.g. Annual Company Report Printing" required>
+              <input class="form-input" [class.is-invalid]="!!projectTitleError" [(ngModel)]="projectTitle" (blur)="titleTouched = true" placeholder="e.g. Annual Company Report Printing" required>
+              @if (projectTitleError) {
+                <div class="form-error-msg">
+                  <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                  <span>{{ projectTitleError }}</span>
+                </div>
+              }
             </div>
           </div>
 
           <div class="form-grid">
             <div class="form-group">
               <label class="form-label">{{ 'QUOTE_MODAL.ESTIMATED_QUANTITY' | translate:'Estimated Quantity' }} *</label>
-              <input class="form-input" type="number" [(ngModel)]="quantity" min="1" placeholder="e.g. 500" required>
+              <input class="form-input" type="number" [class.is-invalid]="!!quantityError" [(ngModel)]="quantity" (blur)="qtyTouched = true" min="1" placeholder="e.g. 500" required>
+              @if (quantityError) {
+                <div class="form-error-msg">
+                  <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                  <span>{{ quantityError }}</span>
+                </div>
+              }
             </div>
             <div class="form-group">
               <label class="form-label">{{ 'QUOTE_MODAL.UNIT_OF_MEASURE' | translate:'Unit of Measure' }} *</label>
-              <input class="form-input" [(ngModel)]="unit" placeholder="e.g. copies, pieces, meters, rolls" required>
+              <input class="form-input" [class.is-invalid]="!!unitError" [(ngModel)]="unit" (blur)="unitTouched = true" placeholder="e.g. copies, pieces, meters, rolls" required>
+              @if (unitError) {
+                <div class="form-error-msg">
+                  <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                  <span>{{ unitError }}</span>
+                </div>
+              }
             </div>
           </div>
 
           <div class="form-group">
             <label class="form-label">{{ 'QUOTE_MODAL.DETAILED_SPECS' | translate:'Detailed Specifications & Requirements' }} *</label>
-            <textarea class="form-textarea" rows="3" [(ngModel)]="specifications" 
+            <textarea class="form-textarea" [class.is-invalid]="!!specificationsError" rows="3" [(ngModel)]="specifications" (blur)="specsTouched = true"
               placeholder="Specify paper weight (e.g. 150gsm art paper), color count (4C / full color), dimensions, binding style, lamination, or target vehicle model." required></textarea>
+            @if (specificationsError) {
+              <div class="form-error-msg">
+                <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                <span>{{ specificationsError }}</span>
+              </div>
+            }
           </div>
 
           <div class="form-grid">

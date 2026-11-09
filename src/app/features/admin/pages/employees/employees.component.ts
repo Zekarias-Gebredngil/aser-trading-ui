@@ -7,6 +7,7 @@ import { PaginatorComponent } from '../../../../core/components/paginator/pagina
 import { AserStateService } from '../../../../core/services/aser-state.service';
 import { EmployeeUser, StaffRole, ROLE_LABELS, ROLE_PERMISSIONS, Permission } from '../../../../core/models/user.model';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
+import { isValidEmail, isValidPhone } from '../../../../core/utils/validators';
 
 export interface EmployeeRowViewModel {
   readonly id: string;
@@ -57,6 +58,57 @@ export class EmployeesComponent {
     assignedBranchId: 'BR-02',
     password: ''
   };
+
+  regSubmitted = false;
+  editSubmitted = false;
+
+  get regNameError(): string | null {
+    if (this.regSubmitted && !this.regForm.fullName.trim()) return 'Full employee name is required.';
+    return null;
+  }
+
+  get regUsernameError(): string | null {
+    if (this.regSubmitted && !this.regForm.username.trim()) return 'Login username is required.';
+    return null;
+  }
+
+  get regEmailError(): string | null {
+    const val = this.regForm.email.trim();
+    if (this.regSubmitted && !val) return 'Work email is required.';
+    if (val && !isValidEmail(val)) return 'Please enter a valid work email address.';
+    return null;
+  }
+
+  get regPhoneError(): string | null {
+    const val = this.regForm.phone.trim();
+    if (val && !isValidPhone(val)) return 'Please enter a valid phone number (e.g. +251 91 234 5678).';
+    return null;
+  }
+
+  get regPasswordError(): string | null {
+    if (this.regSubmitted && (!this.regForm.password || this.regForm.password.length < 6)) {
+      return 'Password must be at least 6 characters.';
+    }
+    return null;
+  }
+
+  get editNameError(): string | null {
+    if (this.editSubmitted && !this.editForm.fullName.trim()) return 'Full employee name is required.';
+    return null;
+  }
+
+  get editEmailError(): string | null {
+    const val = this.editForm.email.trim();
+    if (this.editSubmitted && !val) return 'Work email is required.';
+    if (val && !isValidEmail(val)) return 'Please enter a valid email address.';
+    return null;
+  }
+
+  get editPhoneError(): string | null {
+    const val = this.editForm.phone.trim();
+    if (val && !isValidPhone(val)) return 'Please enter a valid phone number (e.g. +251 91 234 5678).';
+    return null;
+  }
 
   // Edit Form
   editForm = {
@@ -179,6 +231,7 @@ export class EmployeesComponent {
   }
 
   openRegisterModal() {
+    this.regSubmitted = false;
     this.regForm = {
       fullName: '',
       username: '',
@@ -192,6 +245,7 @@ export class EmployeesComponent {
   }
 
   openEditModal(emp: EmployeeUser) {
+    this.editSubmitted = false;
     this.selectedEmployee.set(emp);
     this.editForm = {
       fullName: emp.fullName,
@@ -205,7 +259,16 @@ export class EmployeesComponent {
   }
 
   saveEmployee() {
-    if (!this.regForm.fullName || !this.regForm.username || !this.regForm.email || !this.regForm.password) {
+    this.regSubmitted = true;
+    if (
+      !this.regForm.fullName.trim() ||
+      !this.regForm.username.trim() ||
+      !this.regForm.email.trim() ||
+      !isValidEmail(this.regForm.email) ||
+      (this.regForm.phone && !isValidPhone(this.regForm.phone)) ||
+      !this.regForm.password ||
+      this.regForm.password.length < 6
+    ) {
       return;
     }
 
@@ -223,8 +286,17 @@ export class EmployeesComponent {
   }
 
   saveEdit() {
+    this.editSubmitted = true;
     const emp = this.selectedEmployee();
-    if (!emp) return;
+    if (
+      !emp ||
+      !this.editForm.fullName.trim() ||
+      !this.editForm.email.trim() ||
+      !isValidEmail(this.editForm.email) ||
+      (this.editForm.phone && !isValidPhone(this.editForm.phone))
+    ) {
+      return;
+    }
 
     const branch = this.state.branches().find(b => b.id === this.editForm.assignedBranchId);
     this.state.updateEmployee(emp.id, {

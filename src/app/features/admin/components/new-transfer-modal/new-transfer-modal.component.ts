@@ -22,6 +22,29 @@ export class NewTransferModalComponent implements OnInit {
   requestedQty = 10;
   notes = 'Replenish showroom display and meet pending customer orders.';
   transferDirection: 'inbound' | 'outbound' = 'inbound';
+  submitted = false;
+  qtyTouched = false;
+
+  get sameBranchError(): string | null {
+    if (this.fromBranchId && this.toBranchId && this.fromBranchId === this.toBranchId) {
+      return 'Source and destination branches cannot be the same.';
+    }
+    return null;
+  }
+
+  get qtyError(): string | null {
+    if ((this.submitted || this.qtyTouched) && (!this.requestedQty || this.requestedQty <= 0)) {
+      return 'Transfer quantity must be greater than 0.';
+    }
+    return null;
+  }
+
+  get productError(): string | null {
+    if (this.submitted && !this.productId) {
+      return 'Please select a product/equipment to transfer.';
+    }
+    return null;
+  }
 
   ngOnInit(): void {
     if (this.state.isBranchScopeLocked() && this.state.currentUser()?.assignedBranchId) {
@@ -87,6 +110,7 @@ export class NewTransferModalComponent implements OnInit {
   }
 
   submitTransfer() {
+    this.submitted = true;
     if (!this.isValid) return;
 
     this.state.createTransfer({

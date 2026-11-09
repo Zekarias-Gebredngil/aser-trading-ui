@@ -7,6 +7,7 @@ import { PaginatorComponent } from '../../../../core/components/paginator/pagina
 import { AserStateService } from '../../../../core/services/aser-state.service';
 import { Branch } from '../../../../core/models/inventory.model';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
+import { isValidEmail, isValidPhone } from '../../../../core/utils/validators';
 
 export interface EditableWarehouseItem {
   id?: string;
@@ -115,6 +116,30 @@ export class BranchesMgmtComponent {
     isHeadOffice: false
   };
 
+  branchSubmitted = false;
+
+  get branchNameError(): string | null {
+    if (this.branchSubmitted && !this.branchForm.name.trim()) return 'Branch name is required.';
+    return null;
+  }
+
+  get branchCodeError(): string | null {
+    if (this.branchSubmitted && !this.branchForm.code.trim()) return 'Branch code is required (e.g. BR-03).';
+    return null;
+  }
+
+  get branchEmailError(): string | null {
+    const val = this.branchForm.email?.trim();
+    if (val && !isValidEmail(val)) return 'Please enter a valid contact email.';
+    return null;
+  }
+
+  get branchPhoneError(): string | null {
+    const val = this.branchForm.phone?.trim();
+    if (val && !isValidPhone(val)) return 'Please enter a valid contact phone (e.g. +251 22 112 3456).';
+    return null;
+  }
+
   // Form Model for Warehouse
   warehouseForm = {
     branchId: '',
@@ -123,6 +148,7 @@ export class BranchesMgmtComponent {
   };
 
   openCreateModal() {
+    this.branchSubmitted = false;
     this.branchForm = {
       name: '',
       code: '',
@@ -138,6 +164,7 @@ export class BranchesMgmtComponent {
   editableWarehouses: EditableWarehouseItem[] = [];
 
   openEditModal(branch: Branch) {
+    this.branchSubmitted = false;
     this.selectedBranch.set(branch);
     this.branchForm = {
       name: branch.name,
@@ -209,7 +236,15 @@ export class BranchesMgmtComponent {
   }
 
   saveNewBranch() {
-    if (!this.branchForm.name || !this.branchForm.code) return;
+    this.branchSubmitted = true;
+    if (
+      !this.branchForm.name.trim() ||
+      !this.branchForm.code.trim() ||
+      (this.branchForm.email && !isValidEmail(this.branchForm.email)) ||
+      (this.branchForm.phone && !isValidPhone(this.branchForm.phone))
+    ) {
+      return;
+    }
     this.state.createBranch({
       name: this.branchForm.name,
       code: this.branchForm.code,
@@ -223,8 +258,17 @@ export class BranchesMgmtComponent {
   }
 
   saveBranchEdit() {
+    this.branchSubmitted = true;
     const branch = this.selectedBranch();
-    if (!branch || !this.branchForm.name || !this.branchForm.code) return;
+    if (
+      !branch ||
+      !this.branchForm.name.trim() ||
+      !this.branchForm.code.trim() ||
+      (this.branchForm.email && !isValidEmail(this.branchForm.email)) ||
+      (this.branchForm.phone && !isValidPhone(this.branchForm.phone))
+    ) {
+      return;
+    }
 
     // Validate warehouse inputs
     for (const wh of this.editableWarehouses) {

@@ -49,7 +49,7 @@
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">{{ 'MODALS.SOURCE_BRANCH' | translate:'Source Branch (From)' }} *</label>
-          <select class="form-select" [(ngModel)]="fromBranchId">
+          <select class="form-select" [class.is-invalid]="!!sameBranchError" [(ngModel)]="fromBranchId">
             @for (b of state.branches(); track b.id) {
               <option [value]="b.id">{{ b.name }}</option>
             }
@@ -58,7 +58,7 @@
 
         <div class="form-group">
           <label class="form-label">{{ 'MODALS.DEST_BRANCH_LABEL' | translate:'Destination Branch (To)' }} *</label>
-          <select class="form-select" [(ngModel)]="toBranchId">
+          <select class="form-select" [class.is-invalid]="!!sameBranchError" [(ngModel)]="toBranchId">
             @for (b of state.branches(); track b.id) {
               <option [value]="b.id" [disabled]="b.id === fromBranchId">
                 {{ b.name }} {{ b.id === fromBranchId ? '(Cannot be same location)' : '' }}
@@ -67,20 +67,38 @@
           </select>
         </div>
       </div>
+      @if (sameBranchError) {
+        <div class="form-error-msg" style="margin-top:-8px; margin-bottom:12px;">
+          <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+          <span>{{ sameBranchError }}</span>
+        </div>
+      }
 
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">{{ 'MODALS.PRODUCT_TO_RELOCATE' | translate:'Product to Relocate' }} *</label>
-          <select class="form-select" [(ngModel)]="productId">
+          <select class="form-select" [class.is-invalid]="!!productError" [(ngModel)]="productId">
             @for (p of state.products(); track p.id) {
               <option [value]="p.id">{{ p.name }} ({{ p.sku }})</option>
             }
           </select>
+          @if (productError) {
+            <div class="form-error-msg">
+              <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+              <span>{{ productError }}</span>
+            </div>
+          }
         </div>
 
         <div class="form-group">
           <label class="form-label">{{ 'MODALS.REQUESTED_QTY' | translate:'Requested Quantity' }} *</label>
-          <input class="form-input" type="number" [(ngModel)]="requestedQty" min="1">
+          <input class="form-input" type="number" [class.is-invalid]="!!qtyError" [(ngModel)]="requestedQty" (blur)="qtyTouched = true" min="1">
+          @if (qtyError) {
+            <div class="form-error-msg">
+              <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+              <span>{{ qtyError }}</span>
+            </div>
+          }
         </div>
       </div>
 

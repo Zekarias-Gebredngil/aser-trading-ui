@@ -26,15 +26,33 @@
           <div class="form-grid">
             <div class="form-group">
               <label class="form-label">{{ 'STOREFRONT.CUSTOMER_NAME' | translate:'Full Name' }} *</label>
-              <input class="form-input" [(ngModel)]="customerName" placeholder="e.g. Almaz Bekele" required>
+              <input class="form-input" [class.is-invalid]="!!nameError" [(ngModel)]="customerName" (blur)="nameTouched = true" placeholder="e.g. Almaz Bekele" required>
+              @if (nameError) {
+                <div class="form-error-msg">
+                  <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                  <span>{{ nameError }}</span>
+                </div>
+              }
             </div>
             <div class="form-group">
               <label class="form-label">{{ 'STOREFRONT.PHONE_NUMBER' | translate:'Phone Number' }} *</label>
-              <input class="form-input" [(ngModel)]="customerPhone" placeholder="e.g. +251 91 123 4567" required>
+              <input class="form-input" [class.is-invalid]="!!phoneError" [(ngModel)]="customerPhone" (blur)="phoneTouched = true" placeholder="e.g. +251 91 123 4567" required>
+              @if (phoneError) {
+                <div class="form-error-msg">
+                  <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                  <span>{{ phoneError }}</span>
+                </div>
+              }
             </div>
             <div class="form-group">
               <label class="form-label">{{ 'COMMON.EMAIL' | translate:'Email Address' }} *</label>
-              <input class="form-input" type="email" [(ngModel)]="customerEmail" placeholder="e.g. almaz@company.com" required>
+              <input class="form-input" type="email" [class.is-invalid]="!!emailError" [(ngModel)]="customerEmail" (blur)="emailTouched = true" placeholder="e.g. almaz@company.com" required>
+              @if (emailError) {
+                <div class="form-error-msg">
+                  <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                  <span>{{ emailError }}</span>
+                </div>
+              }
             </div>
             <div class="form-group">
               <label class="form-label">Company / Organization (Optional)</label>
@@ -78,7 +96,13 @@
           } @else {
             <div class="form-group">
               <label class="form-label">{{ 'STOREFRONT.DELIVERY_ADDRESS' | translate:'Delivery Address & Landmarks' }} *</label>
-              <input class="form-input" [(ngModel)]="deliveryAddress" placeholder="Subcity, Woreda, Building or Street Name">
+              <input class="form-input" [class.is-invalid]="!!deliveryAddressError" [(ngModel)]="deliveryAddress" (blur)="deliveryTouched = true" placeholder="Subcity, Woreda, Building or Street Name">
+              @if (deliveryAddressError) {
+                <div class="form-error-msg">
+                  <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                  <span>{{ deliveryAddressError }}</span>
+                </div>
+              }
               <div style="display:flex; align-items:center; gap:6px; margin-top:6px; font-size:11px; color:var(--muted);">
                 <aser-icon name="lucide:phone" [size]="12"></aser-icon>
                 <span>Dispatch logistics will confirm coordinates via phone call prior to vehicle departure.</span>

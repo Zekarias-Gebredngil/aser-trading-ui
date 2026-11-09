@@ -5,6 +5,7 @@ import { IconComponent } from '../../../../core/components/icon/icon.component';
 import { AserStateService } from '../../../../core/services/aser-state.service';
 import { FulfillmentType, Order, PaymentMethod } from '../../../../core/models/order.model';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
+import { isValidEmail, isValidPhone } from '../../../../core/utils/validators';
 
 @Component({
   selector: 'aser-checkout-modal',
@@ -29,18 +30,61 @@ export class CheckoutModalComponent {
   confirmedOrder = signal<Order | null>(null);
   isSubmitting = signal<boolean>(false);
   orderError = signal<string | null>(null);
+  submitted = signal<boolean>(false);
+
+  // Field touched flags for instant feedback on blur
+  nameTouched = false;
+  phoneTouched = false;
+  emailTouched = false;
+  deliveryTouched = false;
+
+  get nameError(): string | null {
+    if ((this.submitted() || this.nameTouched) && !this.customerName.trim()) {
+      return 'Full name is required.';
+    }
+    return null;
+  }
+
+  get phoneError(): string | null {
+    const val = this.customerPhone.trim();
+    if ((this.submitted() || this.phoneTouched) && !val) {
+      return 'Phone number is required.';
+    }
+    if (val && !isValidPhone(val)) {
+      return 'Please enter a valid phone number (e.g. +251 91 123 4567 or 0911234567).';
+    }
+    return null;
+  }
+
+  get emailError(): string | null {
+    const val = this.customerEmail.trim();
+    if ((this.submitted() || this.emailTouched) && !val) {
+      return 'Email address is required.';
+    }
+    if (val && !isValidEmail(val)) {
+      return 'Please enter a valid email address (e.g. name@company.com).';
+    }
+    return null;
+  }
+
+  get deliveryAddressError(): string | null {
+    if (this.fulfillment === 'DELIVERY' && (this.submitted() || this.deliveryTouched) && !this.deliveryAddress.trim()) {
+      return 'Delivery address & landmarks are required for company delivery.';
+    }
+    return null;
+  }
 
   get isFormValid(): boolean {
-    if (!this.customerName.trim() || !this.customerPhone.trim() || !this.customerEmail.trim()) {
-      return false;
-    }
-    if (this.fulfillment === 'DELIVERY' && !this.deliveryAddress.trim()) {
-      return false;
-    }
+    if (!this.customerName.trim()) return false;
+    if (!this.customerPhone.trim() || !isValidPhone(this.customerPhone)) return false;
+    if (!this.customerEmail.trim() || !isValidEmail(this.customerEmail)) return false;
+    if (this.fulfillment === 'DELIVERY' && !this.deliveryAddress.trim()) return false;
+    if (this.fulfillment === 'BRANCH_PICKUP' && !this.pickupBranchId) return false;
     return true;
   }
 
   submitOrder() {
+    this.submitted.set(true);
     if (!this.isFormValid || this.isSubmitting()) return;
 
     this.isSubmitting.set(true);

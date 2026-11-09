@@ -422,8 +422,14 @@
 
         <div class="form-group" style="margin-bottom:14px;">
           <label class="form-label" style="font-size:12px; font-weight:700;">Quotation Price (ETB) *</label>
-          <input type="number" class="form-control" [(ngModel)]="quotePriceInput"
+          <input type="number" class="form-input" [class.is-invalid]="quoteSubmitted && quotePriceInput <= 0" [(ngModel)]="quotePriceInput"
             placeholder="Total ETB including production and VAT" min="1" step="0.5" />
+          @if (quoteSubmitted && quotePriceInput <= 0) {
+            <div class="form-error-msg">
+              <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+              <span>Quoted price must be greater than 0 ETB.</span>
+            </div>
+          }
         </div>
 
         <div class="form-group">

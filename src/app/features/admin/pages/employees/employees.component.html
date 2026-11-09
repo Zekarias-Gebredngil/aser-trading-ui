@@ -210,23 +210,47 @@
         <div class="form-grid">
           <div class="form-group full-width">
             <label class="form-label">Full Employee Name *</label>
-            <input type="text" [(ngModel)]="regForm.fullName" placeholder="e.g. Almaz Tadesse" class="form-input" />
+            <input type="text" [class.is-invalid]="!!regNameError" [(ngModel)]="regForm.fullName" placeholder="e.g. Almaz Tadesse" class="form-input" />
+            @if (regNameError) {
+              <div class="form-error-msg">
+                <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                <span>{{ regNameError }}</span>
+              </div>
+            }
           </div>
 
           <div class="form-group">
             <label class="form-label">{{ 'PROFILE.USERNAME' | translate:'Login Username' }} *</label>
-            <input type="text" [(ngModel)]="regForm.username" placeholder="e.g. almaz" class="form-input" />
+            <input type="text" [class.is-invalid]="!!regUsernameError" [(ngModel)]="regForm.username" placeholder="e.g. almaz" class="form-input" />
+            @if (regUsernameError) {
+              <div class="form-error-msg">
+                <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                <span>{{ regUsernameError }}</span>
+              </div>
+            }
           </div>
 
           <div class="form-group">
             <label class="form-label">{{ 'PROFILE.EMAIL' | translate:'Work Email' }} *</label>
-            <input type="email" [(ngModel)]="regForm.email" placeholder="e.g. almaz@asertrading.et"
+            <input type="email" [class.is-invalid]="!!regEmailError" [(ngModel)]="regForm.email" placeholder="e.g. almaz@asertrading.et"
               class="form-input" />
+            @if (regEmailError) {
+              <div class="form-error-msg">
+                <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                <span>{{ regEmailError }}</span>
+              </div>
+            }
           </div>
 
           <div class="form-group">
             <label class="form-label">{{ 'COMMON.PHONE' | translate:'Contact Phone' }}</label>
-            <input type="text" [(ngModel)]="regForm.phone" placeholder="e.g. +251 91 234 5678" class="form-input" />
+            <input type="text" [class.is-invalid]="!!regPhoneError" [(ngModel)]="regForm.phone" placeholder="e.g. +251 91 234 5678" class="form-input" />
+            @if (regPhoneError) {
+              <div class="form-error-msg">
+                <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                <span>{{ regPhoneError }}</span>
+              </div>
+            }
           </div>
 
           <div class="form-group">
@@ -251,7 +275,13 @@
 
           <div class="form-group full-width" style="margin-top:14px;">
             <label class="form-label">Account Password * (min 6 characters)</label>
-            <input type="password" [(ngModel)]="regForm.password" placeholder="••••••••" class="form-input" />
+            <input type="password" [class.is-invalid]="!!regPasswordError" [(ngModel)]="regForm.password" placeholder="••••••••" class="form-input" />
+            @if (regPasswordError) {
+              <div class="form-error-msg">
+                <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                <span>{{ regPasswordError }}</span>
+              </div>
+            }
           </div>
         </div>
       </div>
@@ -295,17 +325,35 @@
         <div class="form-grid">
           <div class="form-group full-width">
             <label class="form-label">Full Employee Name *</label>
-            <input type="text" [(ngModel)]="editForm.fullName" class="form-input" />
+            <input type="text" [class.is-invalid]="!!editNameError" [(ngModel)]="editForm.fullName" class="form-input" />
+            @if (editNameError) {
+              <div class="form-error-msg">
+                <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                <span>{{ editNameError }}</span>
+              </div>
+            }
           </div>
 
           <div class="form-group">
             <label class="form-label">{{ 'PROFILE.EMAIL' | translate:'Work Email' }} *</label>
-            <input type="email" [(ngModel)]="editForm.email" class="form-input" />
+            <input type="email" [class.is-invalid]="!!editEmailError" [(ngModel)]="editForm.email" class="form-input" />
+            @if (editEmailError) {
+              <div class="form-error-msg">
+                <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                <span>{{ editEmailError }}</span>
+              </div>
+            }
           </div>
 
           <div class="form-group">
             <label class="form-label">{{ 'COMMON.PHONE' | translate:'Contact Phone' }}</label>
-            <input type="text" [(ngModel)]="editForm.phone" class="form-input" />
+            <input type="text" [class.is-invalid]="!!editPhoneError" [(ngModel)]="editForm.phone" class="form-input" />
+            @if (editPhoneError) {
+              <div class="form-error-msg">
+                <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                <span>{{ editPhoneError }}</span>
+              </div>
+            }
           </div>
 
           <div class="form-group">

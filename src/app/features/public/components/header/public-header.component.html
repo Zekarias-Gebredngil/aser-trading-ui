@@ -11,7 +11,7 @@
       </div>
     </a>
 
-    <!-- Desktop Navigation Links -->
+    <!-- Desktop Navigation Links (with Language Selector inside the Menu) -->
     <nav class="header-nav">
       @for (item of navItems; track item.path) {
       <a [routerLink]="item.path" [routerLinkActiveOptions]="item.exact ? { exact: true } : { exact: false }"
@@ -19,6 +19,27 @@
         {{ item.labelKey | translate:item.defaultLabel }}
       </a>
       }
+
+      <!-- Language Selector inside Desktop Navigation Menu -->
+      <div class="lang-dropdown-wrapper desktop-nav-lang">
+        <button type="button" class="lang-toggle-btn" (click)="toggleLangDropdown()" title="Switch Language">
+          <aser-icon name="lucide:globe" [size]="15" color="var(--blue)"></aser-icon>
+          <span style="text-transform:uppercase;">{{ currentLang() }}</span>
+          <aser-icon name="lucide:chevron-down" [size]="12" color="var(--muted)"></aser-icon>
+        </button>
+
+        @if (isLangDropdownOpen()) {
+        <div class="lang-backdrop" (click)="closeLangDropdown()"></div>
+        <div class="lang-menu">
+          @for (l of languageOptions(); track l.code) {
+          <button type="button" class="lang-option" [class.active]="l.isCurrent" (click)="selectLanguage(l.code)">
+            <span>{{ l.flag }}</span>
+            <span>{{ l.nativeName }}</span>
+          </button>
+          }
+        </div>
+        }
+      </div>
     </nav>
 
     <div class="header-actions">
@@ -49,26 +70,6 @@
         }
       </button>
 
-      <!-- Language Switcher Pill (Desktop & Mobile) -->
-      <div class="lang-dropdown-wrapper">
-        <button type="button" class="lang-toggle-btn" (click)="toggleLangDropdown()" title="Switch Language">
-          <aser-icon name="lucide:globe" [size]="15" color="var(--blue)"></aser-icon>
-          <span style="text-transform:uppercase;">{{ currentLang() }}</span>
-        </button>
-
-        @if (isLangDropdownOpen()) {
-        <div class="lang-backdrop" (click)="closeLangDropdown()"></div>
-        <div class="lang-menu">
-          @for (l of languageOptions(); track l.code) {
-          <button type="button" class="lang-option" [class.active]="l.isCurrent" (click)="selectLanguage(l.code)">
-            <span>{{ l.flag }}</span>
-            <span>{{ l.nativeName }}</span>
-          </button>
-          }
-        </div>
-        }
-      </div>
-
       <!-- Mobile Hamburger Toggle Button -->
       <button class="mobile-nav-toggle" (click)="toggleMobileNav()" [attr.aria-expanded]="mobileNavOpen()"
         aria-label="Toggle Navigation Menu">
@@ -88,6 +89,25 @@
         <span>{{ item.labelKey | translate:item.defaultLabel }}</span>
       </a>
       }
+    </div>
+
+    <!-- Language Selector inside Mobile Menu -->
+    <div class="mobile-nav-lang-card">
+      <div class="mobile-nav-lang-title">
+        <aser-icon name="lucide:globe" [size]="15" color="var(--blue)"></aser-icon>
+        <span>{{ 'PROFILE.LANGUAGE' | translate:'Language' }}</span>
+      </div>
+      <div class="mobile-nav-lang-chips">
+        @for (l of languageOptions(); track l.code) {
+        <button type="button" class="mobile-lang-chip" [class.active]="l.isCurrent" (click)="selectLanguage(l.code)">
+          <span class="chip-flag">{{ l.flag }}</span>
+          <span class="chip-text">{{ l.nativeName }}</span>
+          @if (l.isCurrent) {
+          <aser-icon name="lucide:check" [size]="13" color="var(--blue)"></aser-icon>
+          }
+        </button>
+        }
+      </div>
     </div>
 
     <div class="mobile-nav-footer">

@@ -61,6 +61,7 @@ export class OrdersComponent {
   quotingInquiry = signal<QuotationRequest | null>(null);
   quotePriceInput = 0;
   quoteNotesInput = '';
+  quoteSubmitted = false;
 
   get filteredOrders(): Order[] {
     const f = this.statusFilter;
@@ -222,9 +223,11 @@ export class OrdersComponent {
     this.quotingInquiry.set(quote);
     this.quotePriceInput = quote?.quotedPrice || 0;
     this.quoteNotesInput = '';
+    this.quoteSubmitted = false;
   }
 
   submitQuotation() {
+    this.quoteSubmitted = true;
     const q = this.quotingInquiry();
     if (!q || this.quotePriceInput <= 0) return;
     this.state.quoteInquiry(q.id, this.quotePriceInput, this.quoteNotesInput);

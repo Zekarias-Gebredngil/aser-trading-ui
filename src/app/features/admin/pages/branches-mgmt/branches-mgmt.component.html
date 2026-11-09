@@ -122,12 +122,24 @@
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">Branch Name *</label>
-            <input type="text" [(ngModel)]="branchForm.name" placeholder="e.g. Adama Regional Distribution Depot" class="form-input" />
+            <input type="text" [class.is-invalid]="!!branchNameError" [(ngModel)]="branchForm.name" placeholder="e.g. Adama Regional Distribution Depot" class="form-input" />
+            @if (branchNameError) {
+              <div class="form-error-msg">
+                <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                <span>{{ branchNameError }}</span>
+              </div>
+            }
           </div>
 
           <div class="form-group">
             <label class="form-label">Branch Code *</label>
-            <input type="text" [(ngModel)]="branchForm.code" placeholder="e.g. ADA-DEP" class="form-input" />
+            <input type="text" [class.is-invalid]="!!branchCodeError" [(ngModel)]="branchForm.code" placeholder="e.g. ADA-DEP" class="form-input" />
+            @if (branchCodeError) {
+              <div class="form-error-msg">
+                <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                <span>{{ branchCodeError }}</span>
+              </div>
+            }
           </div>
         </div>
 
@@ -146,12 +158,24 @@
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">{{ 'COMMON.PHONE' | translate:'Contact Phone' }}</label>
-            <input type="text" [(ngModel)]="branchForm.phone" placeholder="e.g. +251 22 112 3456" class="form-input" />
+            <input type="text" [class.is-invalid]="!!branchPhoneError" [(ngModel)]="branchForm.phone" placeholder="e.g. +251 22 112 3456" class="form-input" />
+            @if (branchPhoneError) {
+              <div class="form-error-msg">
+                <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                <span>{{ branchPhoneError }}</span>
+              </div>
+            }
           </div>
 
           <div class="form-group">
             <label class="form-label">{{ 'COMMON.EMAIL' | translate:'Contact Email' }}</label>
-            <input type="email" [(ngModel)]="branchForm.email" placeholder="e.g. adama@asertrading.et" class="form-input" />
+            <input type="email" [class.is-invalid]="!!branchEmailError" [(ngModel)]="branchForm.email" placeholder="e.g. adama@asertrading.et" class="form-input" />
+            @if (branchEmailError) {
+              <div class="form-error-msg">
+                <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                <span>{{ branchEmailError }}</span>
+              </div>
+            }
           </div>
         </div>
 
@@ -196,12 +220,24 @@
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">Branch Name *</label>
-            <input type="text" [(ngModel)]="branchForm.name" class="form-input" placeholder="e.g. Bole Showroom" />
+            <input type="text" [class.is-invalid]="!!branchNameError" [(ngModel)]="branchForm.name" class="form-input" placeholder="e.g. Bole Showroom" />
+            @if (branchNameError) {
+              <div class="form-error-msg">
+                <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                <span>{{ branchNameError }}</span>
+              </div>
+            }
           </div>
 
           <div class="form-group">
             <label class="form-label">Branch Code *</label>
-            <input type="text" [(ngModel)]="branchForm.code" class="form-input" style="text-transform:uppercase;" placeholder="e.g. BOLE-01" />
+            <input type="text" [class.is-invalid]="!!branchCodeError" [(ngModel)]="branchForm.code" class="form-input" style="text-transform:uppercase;" placeholder="e.g. BOLE-01" />
+            @if (branchCodeError) {
+              <div class="form-error-msg">
+                <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                <span>{{ branchCodeError }}</span>
+              </div>
+            }
             <span style="font-size:10px; color:var(--muted); display:block; margin-top:2px;">Unique identifier code across systems and transfers</span>
           </div>
         </div>
@@ -221,12 +257,24 @@
         <div class="form-grid">
           <div class="form-group">
             <label class="form-label">{{ 'COMMON.PHONE' | translate:'Contact Phone' }}</label>
-            <input type="text" [(ngModel)]="branchForm.phone" class="form-input" />
+            <input type="text" [class.is-invalid]="!!branchPhoneError" [(ngModel)]="branchForm.phone" class="form-input" />
+            @if (branchPhoneError) {
+              <div class="form-error-msg">
+                <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                <span>{{ branchPhoneError }}</span>
+              </div>
+            }
           </div>
 
           <div class="form-group">
             <label class="form-label">{{ 'COMMON.EMAIL' | translate:'Contact Email' }}</label>
-            <input type="email" [(ngModel)]="branchForm.email" class="form-input" />
+            <input type="email" [class.is-invalid]="!!branchEmailError" [(ngModel)]="branchForm.email" class="form-input" />
+            @if (branchEmailError) {
+              <div class="form-error-msg">
+                <aser-icon name="lucide:alert-circle" [size]="13"></aser-icon>
+                <span>{{ branchEmailError }}</span>
+              </div>
+            }
           </div>
         </div>
 
