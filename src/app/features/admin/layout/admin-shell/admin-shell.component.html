@@ -197,7 +197,7 @@
           <aser-icon name="lucide:map-pin" [size]="14" color="var(--blue)"></aser-icon>
           <span class="branch-scope-tag">{{ 'COMMON.BRANCH' | translate:'Branch' }}:</span>
           <select class="branch-scope-select" [ngModel]="branchFilter()" (ngModelChange)="onBranchFilterChange($event)">
-            <option value="ALL">{{ 'DASHBOARD.ALL_BRANCHES' | translate:'All Branches (Consolidated System View)' }}
+            <option value="ALL">{{ 'DASHBOARD.ALL_BRANCHES' | translate:'All Branches ' }}
             </option>
             @for (b of branchList(); track b.id) {
             <option [value]="b.id">{{ b.name }}</option>

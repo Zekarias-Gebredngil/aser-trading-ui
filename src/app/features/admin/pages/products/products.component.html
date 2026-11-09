@@ -39,7 +39,8 @@
     </div>
 
     <div class="filter-group">
-      <label style="font-size:12px; font-weight:700; color:var(--muted); white-space:nowrap;">{{ 'PRODUCTS.CATEGORY' | translate:'Category:'
+      <label style="font-size:12px; font-weight:700; color:var(--muted); white-space:nowrap;">{{ 'PRODUCTS.CATEGORY' |
+        translate:'Category:'
         }}</label>
       <select class="form-select filter-select" [ngModel]="selectedCategory()"
         (ngModelChange)="onCategoryChange($event)">
@@ -59,7 +60,7 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>{{ 'PRODUCTS.PRODUCT_NAME' | translate:'Product Name & Amharic' }}</th>
+            <th>{{ 'PRODUCTS.PRODUCT_NAME' | translate:'Product Name' }}</th>
             <th>{{ 'INVENTORY.SKU' | translate:'SKU' }}</th>
             <th>{{ 'PRODUCTS.CATEGORY' | translate:'Category' }}</th>
             <th>{{ 'PRODUCTS.BASE_UNIT' | translate:'Base Unit' }}</th>
