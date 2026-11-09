@@ -26,6 +26,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: nowrap;
   gap: 16px;
 }
 
@@ -118,6 +119,8 @@
 .header-actions {
   display: flex;
   align-items: center;
+  flex-direction: row;
+  flex-wrap: nowrap;
   gap: 12px;
   flex-shrink: 0;
   margin-left: auto;
@@ -266,7 +269,7 @@
 /* Responsive Breakpoints */
 @media (max-width: 992px) {
   .header-nav {
-    display: none;
+    display: none !important;
   }
 
   .desktop-only {
@@ -274,7 +277,10 @@
   }
 
   .mobile-nav-toggle {
-    display: inline-flex;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
   }
 }
 
@@ -282,11 +288,13 @@
   .header-inner {
     padding: 0 14px;
     height: 64px;
+    gap: 8px;
+    flex-wrap: nowrap;
   }
 
   .brand-logo-img {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     object-fit: contain;
     background: transparent;
     border: none;
@@ -295,7 +303,7 @@
   }
 
   .brand-name {
-    font-size: 15px;
+    font-size: 14px;
   }
 
   .brand-sub {
@@ -303,21 +311,18 @@
   }
 
   .header-actions {
-    gap: 8px;
+    gap: 8px !important;
     margin-left: auto;
+    flex-shrink: 0 !important;
+    flex-wrap: nowrap !important;
   }
 
   .cart-button,
   .mobile-nav-toggle {
-    width: 38px;
-    height: 38px;
-  }
-
-  .lang-toggle-btn {
-    height: 38px;
-    padding: 0 8px;
-    font-size: 12px;
-    gap: 4px;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    flex-shrink: 0 !important;
   }
 }
 

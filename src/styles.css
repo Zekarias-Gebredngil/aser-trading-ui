@@ -2170,7 +2170,6 @@ aser-public-header {
   }
 
   .page-header-actions,
-  .header-actions,
   .page-header-row > div:last-child {
     width: 100%;
     display: flex;
@@ -2179,7 +2178,6 @@ aser-public-header {
   }
 
   .page-header-actions .btn,
-  .header-actions .btn,
   .page-header-row > div:last-child .btn {
     flex: 1 1 calc(50% - 8px);
     min-width: 120px;
@@ -2297,7 +2295,6 @@ aser-public-header {
   }
 
   .page-header-actions .btn,
-  .header-actions .btn,
   .page-header-row > div:last-child .btn {
     flex: 1 1 100%;
     width: 100%;
