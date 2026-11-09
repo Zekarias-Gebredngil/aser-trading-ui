@@ -67,10 +67,20 @@ export interface BarChartItem {
   readonly value: number;
   readonly formattedValue: string;
   readonly percentage: number;
+  readonly relativePercentage: number;
   readonly x: number;
   readonly y: number;
   readonly width: number;
   readonly height: number;
+  readonly color: string;
+  readonly warehouseCount: number;
+  readonly skuCount: number;
+}
+
+export interface KpiCardBarChart {
+  readonly bars: readonly number[];
+  readonly progressPercentage: number;
+  readonly progressLabel: string;
   readonly color: string;
 }
 
@@ -161,6 +171,46 @@ export class DashboardComponent implements OnInit {
   readonly lowStockCount = computed<number>(() => this.state.lowStockCount());
   readonly pendingTransfersCount = computed<number>(() => this.state.pendingTransfersCount());
   readonly lowStockColor = computed<string>(() => this.lowStockCount() > 0 ? 'var(--red)' : 'var(--ink)');
+
+  // Micro Bar Charts & Progress Indicators for the first 4 KPI Cards
+  readonly valuationKpiChart = computed<KpiCardBarChart>(() => {
+    return {
+      bars: [42, 58, 52, 74, 68, 86, 94],
+      progressPercentage: 88,
+      progressLabel: '88% of target valuation',
+      color: 'var(--blue)'
+    };
+  });
+
+  readonly locationsKpiChart = computed<KpiCardBarChart>(() => {
+    const count = this.activeLocationsCount();
+    return {
+      bars: [55, 68, 62, 78, 72, 85, 92],
+      progressPercentage: Math.min(100, Math.max(30, count * 6)),
+      progressLabel: `${count} active items across branches`,
+      color: 'var(--green)'
+    };
+  });
+
+  readonly lowStockKpiChart = computed<KpiCardBarChart>(() => {
+    const alerts = this.lowStockCount();
+    return {
+      bars: alerts > 0 ? [15, 20, 28, 22, 40, 55, 75] : [14, 10, 8, 12, 9, 6, 4],
+      progressPercentage: alerts > 0 ? Math.min(100, Math.max(20, alerts * 18)) : 5,
+      progressLabel: alerts > 0 ? `${alerts} items below safety stock` : 'Healthy stock levels',
+      color: alerts > 0 ? 'var(--amber)' : 'var(--green)'
+    };
+  });
+
+  readonly transfersKpiChart = computed<KpiCardBarChart>(() => {
+    const pending = this.pendingTransfersCount();
+    return {
+      bars: pending > 0 ? [30, 42, 38, 60, 52, 74, 88] : [32, 28, 35, 25, 20, 18, 15],
+      progressPercentage: pending > 0 ? Math.min(100, Math.max(25, pending * 25)) : 12,
+      progressLabel: pending > 0 ? `${pending} active transfer orders` : 'Logistics balanced',
+      color: 'var(--magenta)'
+    };
+  });
 
   readonly recentStockMovements = computed<readonly StockMovementRowViewModel[]>(() => {
     return this.state.filteredMovements().slice(0, 5).map(mov => {
@@ -340,6 +390,8 @@ export class DashboardComponent implements OnInit {
       id: string | number;
       name: string;
       value: number;
+      warehouseCount: number;
+      skuCount: number;
     }
 
     let rawList: RawBranchBar[] = [];
@@ -348,7 +400,9 @@ export class DashboardComponent implements OnInit {
       rawList = summaries.map(s => ({
         id: s.branchId,
         name: s.branchName,
-        value: metric === 'valuation' ? s.totalValuationEtb : (s.totalProducts * 140)
+        value: metric === 'valuation' ? s.totalValuationEtb : (s.totalProducts * 140),
+        warehouseCount: s.warehouseCount || 1,
+        skuCount: s.totalProducts || 1
       }));
     } else if (branches.length > 0) {
       const items = this.state.filteredInventory();
@@ -359,16 +413,18 @@ export class DashboardComponent implements OnInit {
         return {
           id: b.id,
           name: b.name,
-          value: metric === 'valuation' ? (val || 250000) : (units || 450)
+          value: metric === 'valuation' ? (val || 250000) : (units || 450),
+          warehouseCount: b.warehouses?.length || 1,
+          skuCount: branchItems.length || 1
         };
       });
     } else {
       rawList = [
-        { id: '1', name: 'Head Office Plant', value: metric === 'valuation' ? 1450000 : 8500 },
-        { id: '2', name: 'Bole Showroom', value: metric === 'valuation' ? 980000 : 5400 },
-        { id: '3', name: 'Adama Depot', value: metric === 'valuation' ? 620000 : 3800 },
-        { id: '4', name: 'Hawassa Hub', value: metric === 'valuation' ? 410000 : 2100 },
-        { id: '5', name: 'Dire Dawa Center', value: metric === 'valuation' ? 320000 : 1600 }
+        { id: '1', name: 'Head Office Plant', value: metric === 'valuation' ? 1450000 : 8500, warehouseCount: 3, skuCount: 24 },
+        { id: '2', name: 'Bole Showroom', value: metric === 'valuation' ? 980000 : 5400, warehouseCount: 2, skuCount: 18 },
+        { id: '3', name: 'Adama Depot', value: metric === 'valuation' ? 620000 : 3800, warehouseCount: 2, skuCount: 14 },
+        { id: '4', name: 'Hawassa Hub', value: metric === 'valuation' ? 410000 : 2100, warehouseCount: 1, skuCount: 10 },
+        { id: '5', name: 'Dire Dawa Center', value: metric === 'valuation' ? 320000 : 1600, warehouseCount: 1, skuCount: 8 }
       ];
     }
 
@@ -392,6 +448,7 @@ export class DashboardComponent implements OnInit {
       const height = Math.max((item.value / maxValue) * chartHeight, 6);
       const y = chartBottom - height;
       const percentage = Math.round((item.value / totalVal) * 100);
+      const relativePercentage = Math.max(8, Math.round((item.value / maxValue) * 100));
       const formattedValue = metric === 'valuation'
         ? `ETB ${item.value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
         : `${item.value.toLocaleString()} units`;
@@ -411,11 +468,14 @@ export class DashboardComponent implements OnInit {
         value: item.value,
         formattedValue,
         percentage,
+        relativePercentage,
         x,
         y,
         width: barWidth,
         height,
-        color: branchColors[idx % branchColors.length]
+        color: branchColors[idx % branchColors.length],
+        warehouseCount: item.warehouseCount,
+        skuCount: item.skuCount
       };
     });
 

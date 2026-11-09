@@ -47,6 +47,7 @@
 
   <!-- Key Performance Metrics (KPIs) -->
   <div class="kpi-grid">
+    <!-- Card 1: Valuation -->
     <div class="kpi-card">
       <div class="kpi-top">
         <span class="kpi-label">{{ 'DASHBOARD.TOTAL_VALUATION' | translate:'Total Inventory Valuation' }}</span>
@@ -56,8 +57,24 @@
         ETB {{ totalValuation() | number:'1.2-2' }}
       </div>
       <span class="kpi-sub">{{ 'DASHBOARD.VALUATION_SUB' | translate:'Weighted-Average Cost Valuation ' }}</span>
+
+      <!-- Mini Bar Chart inside Card 1 -->
+      <div class="kpi-mini-chart-wrap">
+        <div class="kpi-spark-bars">
+          @for (h of valuationKpiChart().bars; track $index) {
+          <div class="kpi-spark-bar" [style.height.%]="h" [style.background]="valuationKpiChart().color"></div>
+          }
+        </div>
+        <div class="kpi-progress-wrap">
+          <div class="kpi-progress-track">
+            <div class="kpi-progress-fill" [style.width.%]="valuationKpiChart().progressPercentage" [style.background]="valuationKpiChart().color"></div>
+          </div>
+          <span class="kpi-progress-text">{{ valuationKpiChart().progressLabel }}</span>
+        </div>
+      </div>
     </div>
 
+    <!-- Card 2: Active Locations -->
     <div class="kpi-card">
       <div class="kpi-top">
         <span class="kpi-label">{{ 'DASHBOARD.ACTIVE_LOCATIONS' | translate:'Active Stock Locations' }}</span>
@@ -69,8 +86,24 @@
         {{ activeLocationsCount() }} {{ 'COMMON.ITEMS' | translate:'Items' }}
       </div>
       <span class="kpi-sub">{{ 'DASHBOARD.LOCATIONS_SUB' | translate:'Across branch warehouses' }}</span>
+
+      <!-- Mini Bar Chart inside Card 2 -->
+      <div class="kpi-mini-chart-wrap">
+        <div class="kpi-spark-bars">
+          @for (h of locationsKpiChart().bars; track $index) {
+          <div class="kpi-spark-bar" [style.height.%]="h" [style.background]="locationsKpiChart().color"></div>
+          }
+        </div>
+        <div class="kpi-progress-wrap">
+          <div class="kpi-progress-track">
+            <div class="kpi-progress-fill" [style.width.%]="locationsKpiChart().progressPercentage" [style.background]="locationsKpiChart().color"></div>
+          </div>
+          <span class="kpi-progress-text">{{ locationsKpiChart().progressLabel }}</span>
+        </div>
+      </div>
     </div>
 
+    <!-- Card 3: Low Stock Alerts -->
     <div class="kpi-card">
       <div class="kpi-top">
         <span class="kpi-label">{{ 'DASHBOARD.LOW_STOCK_ALERTS' | translate:'Low Stock Alerts' }}</span>
@@ -85,8 +118,24 @@
         <span class="kpi-sub">{{ 'DASHBOARD.LOW_STOCK_SUB' | translate:'Below reorder threshold' }}</span>
         <a routerLink="/app/inventory" style="color:var(--blue); font-size:11px; font-weight:700;">{{ 'DASHBOARD.REVIEW_LINK' | translate:'Review →' }}</a>
       </div>
+
+      <!-- Mini Bar Chart inside Card 3 -->
+      <div class="kpi-mini-chart-wrap">
+        <div class="kpi-spark-bars">
+          @for (h of lowStockKpiChart().bars; track $index) {
+          <div class="kpi-spark-bar" [style.height.%]="h" [style.background]="lowStockKpiChart().color"></div>
+          }
+        </div>
+        <div class="kpi-progress-wrap">
+          <div class="kpi-progress-track">
+            <div class="kpi-progress-fill" [style.width.%]="lowStockKpiChart().progressPercentage" [style.background]="lowStockKpiChart().color"></div>
+          </div>
+          <span class="kpi-progress-text">{{ lowStockKpiChart().progressLabel }}</span>
+        </div>
+      </div>
     </div>
 
+    <!-- Card 4: Pending Transfers -->
     <div class="kpi-card">
       <div class="kpi-top">
         <span class="kpi-label">{{ 'DASHBOARD.PENDING_TRANSFERS' | translate:'Pending Transfers' }}</span>
@@ -100,6 +149,21 @@
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <span class="kpi-sub">{{ 'DASHBOARD.PENDING_TRANSFERS_SUB' | translate:'Awaiting approval / in transit' }}</span>
         <a routerLink="/app/transfers" style="color:var(--blue); font-size:11px; font-weight:700;">{{ 'DASHBOARD.VIEW_LINK' | translate:'View →' }}</a>
+      </div>
+
+      <!-- Mini Bar Chart inside Card 4 -->
+      <div class="kpi-mini-chart-wrap">
+        <div class="kpi-spark-bars">
+          @for (h of transfersKpiChart().bars; track $index) {
+          <div class="kpi-spark-bar" [style.height.%]="h" [style.background]="transfersKpiChart().color"></div>
+          }
+        </div>
+        <div class="kpi-progress-wrap">
+          <div class="kpi-progress-track">
+            <div class="kpi-progress-fill" [style.width.%]="transfersKpiChart().progressPercentage" [style.background]="transfersKpiChart().color"></div>
+          </div>
+          <span class="kpi-progress-text">{{ transfersKpiChart().progressLabel }}</span>
+        </div>
       </div>
     </div>
   </div>
@@ -212,56 +276,28 @@
           </div>
         </div>
 
-        <div class="svg-chart-container">
-          <svg class="responsive-svg-chart" viewBox="0 0 600 220" preserveAspectRatio="xMidYMid meet">
-            <defs>
-              <linearGradient id="barBlueGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#1e30c4"></stop>
-                <stop offset="100%" stop-color="#3b82f6"></stop>
-              </linearGradient>
-            </defs>
+        <!-- Horizontal Bar Chart as a Progress Bar -->
+        <div class="branch-progress-chart-container">
+          @for (bar of barChartData().bars; track bar.id) {
+          <div class="branch-progress-row" (mouseenter)="activeBarItem.set(bar)" (mouseleave)="activeBarItem.set(null)">
+            <div class="branch-progress-meta">
+              <div class="branch-name-wrap">
+                <span class="branch-dot" [style.background]="bar.color"></span>
+                <span class="branch-name-label" [title]="bar.label">{{ bar.label }}</span>
+                <span class="branch-facility-tag">{{ bar.warehouseCount }} Facility(s)</span>
+              </div>
+              <div class="branch-value-wrap">
+                <span class="branch-val-text">{{ bar.formattedValue }}</span>
+                <span class="branch-pct-pill" [style.color]="bar.color" [style.background]="bar.color + '18'">
+                  {{ bar.percentage }}%
+                </span>
+              </div>
+            </div>
 
-            <!-- Background Grid Lines -->
-            <line x1="50" y1="30" x2="550" y2="30" stroke="#f1f5f9" stroke-width="1" stroke-dasharray="3,3" />
-            <line x1="50" y1="66" x2="550" y2="66" stroke="#f1f5f9" stroke-width="1" stroke-dasharray="3,3" />
-            <line x1="50" y1="102" x2="550" y2="102" stroke="#f1f5f9" stroke-width="1" stroke-dasharray="3,3" />
-            <line x1="50" y1="138" x2="550" y2="138" stroke="#f1f5f9" stroke-width="1" stroke-dasharray="3,3" />
-            <line x1="50" y1="175" x2="550" y2="175" stroke="#e2e8f0" stroke-width="1.5" />
-
-            <!-- Y Axis Scale Text -->
-            @for (yLab of barChartData().yAxisLabels; track yLab.y) {
-            <text x="44" [attr.y]="yLab.y" text-anchor="end" font-size="10" font-weight="600" fill="#94a3b8">
-              {{ yLab.value }}
-            </text>
-            }
-
-            <!-- Bars -->
-            @for (bar of barChartData().bars; track bar.id) {
-            <g class="chart-bar-group" (mouseenter)="activeBarItem.set(bar)" (mouseleave)="activeBarItem.set(null)">
-              <!-- Top Value Label -->
-              <text [attr.x]="bar.x + bar.width / 2" [attr.y]="bar.y - 6"
-                text-anchor="middle" font-size="9" font-weight="800" [attr.fill]="bar.color">
-                {{ bar.percentage }}%
-              </text>
-
-              <!-- Rounded Bar Rectangle -->
-              <rect [attr.x]="bar.x" [attr.y]="bar.y" [attr.width]="bar.width" [attr.height]="bar.height"
-                rx="5" ry="5" [attr.fill]="bar.color" class="bar-rect" />
-
-              <!-- Bottom Branch Label -->
-              <text [attr.x]="bar.x + bar.width / 2" y="196"
-                text-anchor="middle" font-size="10" font-weight="700" fill="#475569">
-                {{ bar.shortLabel }}
-              </text>
-            </g>
-            }
-          </svg>
-
-          <!-- Interactive Hover Tooltip for Bar Chart -->
-          @if (activeBarItem()) {
-          <div class="chart-tooltip" [style.left.px]="activeBarItem()!.x + activeBarItem()!.width / 2" [style.top.px]="activeBarItem()!.y - 45">
-            <strong>{{ activeBarItem()!.label }}</strong>
-            <span>{{ activeBarItem()!.formattedValue }} ({{ activeBarItem()!.percentage }}%)</span>
+            <!-- Horizontal Progress Bar Track -->
+            <div class="horizontal-bar-track">
+              <div class="horizontal-bar-fill" [style.width.%]="bar.relativePercentage" [style.background]="bar.color"></div>
+            </div>
           </div>
           }
         </div>
