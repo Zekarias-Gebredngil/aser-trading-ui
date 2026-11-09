@@ -39,6 +39,13 @@ export class PublicHeaderComponent {
 
   readonly mobileNavOpen = signal<boolean>(false);
   readonly isLangDropdownOpen = signal<boolean>(false);
+  readonly mobileLangExpanded = signal<boolean>(false);
+
+  readonly currentLangName = computed<string>(() => {
+    const cur = this.currentLang();
+    const match = this.supportedLanguages.find(l => l.code === cur);
+    return match ? `${match.flag} ${match.nativeName}` : cur.toUpperCase();
+  });
 
   readonly navItems: readonly HeaderNavItem[] = [
     {
@@ -92,11 +99,22 @@ export class PublicHeaderComponent {
     this.mobileNavOpen.update(v => !v);
     if (this.mobileNavOpen()) {
       this.isLangDropdownOpen.set(false);
+      this.mobileLangExpanded.set(false);
     }
   }
 
   closeMobileNav(): void {
     this.mobileNavOpen.set(false);
+    this.mobileLangExpanded.set(false);
+  }
+
+  toggleMobileLangCollapse(): void {
+    this.mobileLangExpanded.update(v => !v);
+  }
+
+  selectLanguageFromMobile(lang: SupportedLanguage): void {
+    this.selectLanguage(lang);
+    this.mobileLangExpanded.set(false);
   }
 
   toggleLangDropdown(): void {

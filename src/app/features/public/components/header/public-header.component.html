@@ -78,57 +78,71 @@
     </div>
   </div>
 
-  <!-- Mobile Navigation Drawer Dropdown -->
+  <!-- Mobile Navigation Drawer Dropdown (Half of the Screen) -->
   @if (mobileNavOpen()) {
+  <div class="mobile-nav-backdrop" (click)="closeMobileNav()"></div>
   <div class="mobile-nav-drawer">
     <div class="mobile-nav-links">
       @for (item of navItems; track item.path) {
       <a [routerLink]="item.path" [routerLinkActiveOptions]="item.exact ? { exact: true } : { exact: false }"
         routerLinkActive="active" class="mobile-nav-item" (click)="closeMobileNav()">
-        <aser-icon [name]="item.icon" [size]="18"></aser-icon>
+        <aser-icon [name]="item.icon" [size]="16"></aser-icon>
         <span>{{ item.labelKey | translate:item.defaultLabel }}</span>
       </a>
       }
     </div>
 
-    <!-- Language Selector inside Mobile Menu -->
-    <div class="mobile-nav-lang-card">
-      <div class="mobile-nav-lang-title">
-        <aser-icon name="lucide:globe" [size]="15" color="var(--blue)"></aser-icon>
-        <span>{{ 'PROFILE.LANGUAGE' | translate:'Language' }}</span>
-      </div>
-      <div class="mobile-nav-lang-chips">
+    <!-- Collapsible Language Selector inside Mobile Menu -->
+    <div class="mobile-nav-lang-section">
+      <button type="button" class="mobile-nav-lang-header" (click)="toggleMobileLangCollapse()"
+        [attr.aria-expanded]="mobileLangExpanded()" aria-label="Toggle language selection">
+        <div class="lang-header-left">
+          <aser-icon name="lucide:globe" [size]="14" color="var(--blue)"></aser-icon>
+          <span class="lang-header-label">{{ 'PROFILE.LANGUAGE' | translate:'Language' }}</span>
+        </div>
+        <div class="lang-header-right">
+          <span class="current-lang-pill">{{ currentLangName() }}</span>
+          <aser-icon [name]="mobileLangExpanded() ? 'lucide:chevron-up' : 'lucide:chevron-down'" [size]="13"
+            color="var(--muted)"></aser-icon>
+        </div>
+      </button>
+
+      <!-- Child Language Options (Collapsible) -->
+      @if (mobileLangExpanded()) {
+      <div class="mobile-nav-lang-children">
         @for (l of languageOptions(); track l.code) {
-        <button type="button" class="mobile-lang-chip" [class.active]="l.isCurrent" (click)="selectLanguage(l.code)">
-          <span class="chip-flag">{{ l.flag }}</span>
-          <span class="chip-text">{{ l.nativeName }}</span>
+        <button type="button" class="mobile-lang-child-option" [class.active]="l.isCurrent"
+          (click)="selectLanguageFromMobile(l.code)">
+          <span class="child-flag">{{ l.flag }}</span>
+          <span class="child-name">{{ l.nativeName }}</span>
           @if (l.isCurrent) {
           <aser-icon name="lucide:check" [size]="13" color="var(--blue)"></aser-icon>
           }
         </button>
         }
       </div>
+      }
     </div>
 
     <div class="mobile-nav-footer">
       <button class="btn btn-secondary btn-block" (click)="onMobileRequestQuote('PRINTING_PRESS')">
-        <aser-icon name="lucide:clipboard-list" [size]="16"></aser-icon>
+        <aser-icon name="lucide:clipboard-list" [size]="15"></aser-icon>
         <span>{{ 'STOREFRONT.REQUEST_QUOTE' | translate:'Request Quote' }}</span>
       </button>
 
       @if (isAuthenticated()) {
       <a class="btn btn-primary btn-block" routerLink="/app" (click)="closeMobileNav()">
-        <aser-icon name="lucide:layout-dashboard" [size]="16"></aser-icon>
-        <span>{{ portalButtonText() }}</span>
+        <aser-icon name="lucide:layout-dashboard" [size]="15"></aser-icon>
+        <span>{{ 'STOREFRONT.PORTAL' | translate:'Portal' }}</span>
       </a>
       <button type="button" class="btn btn-outline btn-block" (click)="onMobileLogout()">
-        <aser-icon name="lucide:log-in" [size]="16"></aser-icon>
+        <aser-icon name="lucide:log-in" [size]="15"></aser-icon>
         <span>{{ 'PROFILE.SIGN_OUT' | translate:'Sign Out' }}</span>
       </button>
       } @else {
       <a class="btn btn-outline btn-block" routerLink="/app/login" (click)="closeMobileNav()">
-        <aser-icon name="lucide:lock" [size]="16"></aser-icon>
-        <span>{{ 'STOREFRONT.SIGN_IN' | translate:'Staff Portal Sign In' }}</span>
+        <aser-icon name="lucide:lock" [size]="15"></aser-icon>
+        <span>{{ 'STOREFRONT.SIGN_IN' | translate:'Sign in' }}</span>
       </a>
       }
     </div>
