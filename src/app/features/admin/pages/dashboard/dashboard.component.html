@@ -252,9 +252,9 @@
             }
           </svg>
 
-          <!-- Interactive Hover Tooltip for Line Chart -->
+          <!-- Interactive Hover Tooltip for Line Chart (Responsive Percentage Coordinate Alignment) -->
           @if (activeLinePoint()) {
-          <div class="chart-tooltip" [style.left.px]="activeLinePoint()!.x" [style.top.px]="activeLinePoint()!.y - 45">
+          <div class="chart-tooltip" [style.left.%]="(activeLinePoint()!.x / 600) * 100" [style.top.%]="(activeLinePoint()!.y / 220) * 100">
             <strong>{{ activeLinePoint()!.label }}</strong>
             <span>{{ activeLinePoint()!.formattedValue }}</span>
           </div>
@@ -287,28 +287,35 @@
 
         <!-- Horizontal Bar Chart as a Progress Bar -->
         <div class="branch-progress-chart-container">
-          @for (bar of barChartData().bars; track bar.id) {
-          <div class="branch-progress-row" (mouseenter)="activeBarItem.set(bar)" (mouseleave)="activeBarItem.set(null)">
-            <div class="branch-progress-meta">
-              <div class="branch-name-wrap">
-                <span class="branch-dot" [style.background]="bar.color"></span>
-                <span class="branch-name-label" [title]="bar.label">{{ bar.label }}</span>
-                <span class="branch-facility-tag">{{ bar.warehouseCount }} Facility(s)</span>
-              </div>
-              <div class="branch-value-wrap">
-                <span class="branch-val-text">{{ bar.formattedValue }}</span>
-                <span class="branch-pct-pill" [style.color]="bar.color" [style.background]="bar.color + '18'">
-                  {{ bar.percentage }}%
-                </span>
-              </div>
-            </div>
-
-            <!-- Horizontal Progress Bar Track -->
-            <div class="horizontal-bar-track">
-              <div class="horizontal-bar-fill" [style.width.%]="bar.relativePercentage" [style.background]="bar.color">
-              </div>
-            </div>
+          @if (barChartData().bars.length === 0) {
+          <div class="chart-empty-state">
+            <aser-icon name="lucide:building-2" [size]="32" color="var(--muted)"></aser-icon>
+            <p style="margin:0; font-weight:600;">No branch inventory balances recorded for this scope.</p>
           </div>
+          } @else {
+            @for (bar of barChartData().bars; track bar.id) {
+            <div class="branch-progress-row" (mouseenter)="activeBarItem.set(bar)" (mouseleave)="activeBarItem.set(null)">
+              <div class="branch-progress-meta">
+                <div class="branch-name-wrap">
+                  <span class="branch-dot" [style.background]="bar.color"></span>
+                  <span class="branch-name-label" [title]="bar.label">{{ bar.label }}</span>
+                  <span class="branch-facility-tag">{{ bar.warehouseCount }} Facility(s)</span>
+                </div>
+                <div class="branch-value-wrap">
+                  <span class="branch-val-text">{{ bar.formattedValue }}</span>
+                  <span class="branch-pct-pill" [style.color]="bar.color" [style.background]="bar.color + '18'">
+                    {{ bar.percentage }}%
+                  </span>
+                </div>
+              </div>
+
+              <!-- Horizontal Progress Bar Track -->
+              <div class="horizontal-bar-track">
+                <div class="horizontal-bar-fill" [style.width.%]="bar.relativePercentage" [style.background]="bar.color">
+                </div>
+              </div>
+            </div>
+            }
           }
         </div>
       </div>
@@ -343,10 +350,18 @@
           <!-- Donut SVG Visualization -->
           <div class="donut-svg-wrapper">
             <svg class="donut-svg" viewBox="0 0 280 280">
-              <!-- Slices -->
-              @for (slice of pieChartData().slices; track slice.id) {
-              <path [attr.d]="slice.pathData" [attr.fill]="slice.color" class="donut-slice"
-                (mouseenter)="activePieSlice.set(slice)" (mouseleave)="activePieSlice.set(null)" />
+              @if (pieChartData().totalValue > 0) {
+                <!-- Active Data Slices -->
+                @for (slice of pieChartData().slices; track slice.id) {
+                  @if (slice.value > 0) {
+                  <path [attr.d]="slice.pathData" [attr.fill]="slice.color" class="donut-slice"
+                    (mouseenter)="activePieSlice.set(slice)" (mouseleave)="activePieSlice.set(null)" />
+                  }
+                }
+              } @else {
+                <!-- Neutral Brand Empty Ring -->
+                <circle cx="140" cy="140" r="85" fill="none" stroke="#f1f5f9" stroke-width="36" />
+                <circle cx="140" cy="140" r="85" fill="none" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="4,4" />
               }
 
               <!-- Center Donut Ring Hole with Summary -->
@@ -355,12 +370,12 @@
                 letter-spacing="0.5">
                 TOTAL
               </text>
-              <text x="140" y="152" text-anchor="middle" font-size="15" font-weight="900" fill="#0f172a">
+              <text x="140" y="152" text-anchor="middle" font-size="14" font-weight="900" fill="#0f172a">
                 {{ pieChartData().totalFormatted }}
               </text>
             </svg>
 
-            @if (activePieSlice()) {
+            @if (activePieSlice() && activePieSlice()!.value > 0) {
             <div class="donut-tooltip">
               <strong>{{ activePieSlice()!.label }}</strong>
               <span>{{ activePieSlice()!.formattedValue }} ({{ activePieSlice()!.percentage }}%)</span>

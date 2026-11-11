@@ -40,6 +40,7 @@ export interface BranchSummaryViewModel {
   readonly branchName: string;
   readonly warehouseCount: number;
   readonly totalProducts: number;
+  readonly totalUnitsOnHand: number;
   readonly totalValuationEtb: number;
 }
 
@@ -105,6 +106,7 @@ export interface PieChartViewModel {
   readonly slices: readonly PieChartSlice[];
   readonly totalFormatted: string;
   readonly totalLabel: string;
+  readonly totalValue: number;
 }
 
 export interface VelocityMetric {
@@ -172,42 +174,175 @@ export class DashboardComponent implements OnInit {
   readonly pendingTransfersCount = computed<number>(() => this.state.pendingTransfersCount());
   readonly lowStockColor = computed<string>(() => this.lowStockCount() > 0 ? 'var(--red)' : 'var(--ink)');
 
-  // Micro Bar Charts & Progress Indicators for the first 4 KPI Cards
+  // Master Branch Summaries (computed first for use in KPI micro-charts and branch comparisons)
+  readonly branchSummaries = computed<readonly BranchSummaryViewModel[]>(() => {
+    const filter = this.state.selectedBranchFilter();
+    const summaries = this.state.stockSummaryReport()?.branchSummaries || [];
+    const filtered = filter === 'ALL'
+      ? summaries
+      : summaries.filter(s => {
+          const bIdStr = typeof s.branchId === 'number' ? `BR-0${s.branchId}` : String(s.branchId);
+          return bIdStr === filter || String(s.branchId) === filter;
+        });
+
+    if (filtered.length === 0) {
+      const branches = this.state.branches();
+      const items = this.state.filteredInventory();
+      const targetBranches = filter === 'ALL'
+        ? branches
+        : branches.filter(b => b.id === filter);
+
+      if (targetBranches.length > 0) {
+        return targetBranches.map(b => {
+          const branchItems = items.filter(i => i.branchId === b.id || i.branchName === b.name);
+          const distinctProducts = new Set(branchItems.map(i => i.productId)).size;
+          const valuation = branchItems.reduce((sum, i) => sum + (i.totalValuation || 0), 0);
+          const units = branchItems.reduce((sum, i) => sum + (i.onHandQty || 0), 0);
+          return {
+            branchId: b.id,
+            branchName: b.name,
+            warehouseCount: b.warehouses?.length || 1,
+            totalProducts: distinctProducts,
+            totalUnitsOnHand: units,
+            totalValuationEtb: valuation
+          };
+        });
+      }
+    }
+
+    return filtered.map(s => ({
+      branchId: s.branchId,
+      branchName: s.branchName,
+      warehouseCount: s.warehouseCount,
+      totalProducts: s.totalProducts,
+      totalUnitsOnHand: s.totalUnitsOnHand ?? 0,
+      totalValuationEtb: s.totalValuationEtb
+    }));
+  });
+
+  readonly hasBranchSummaries = computed<boolean>(() => this.branchSummaries().length > 0);
+
+  // Micro Bar Charts & Progress Indicators for the first 4 KPI Cards (Built with Actual Ledger Data)
   readonly valuationKpiChart = computed<KpiCardBarChart>(() => {
+    const summaries = this.branchSummaries();
+    const totalVal = this.totalValuation();
+    const items = this.state.filteredInventory();
+
+    let bars: number[] = [];
+    if (summaries.length > 0) {
+      const maxVal = Math.max(...summaries.map(s => s.totalValuationEtb), 1);
+      bars = summaries.map(s => Math.max(12, Math.min(100, Math.round((s.totalValuationEtb / maxVal) * 100))));
+      while (bars.length < 5) {
+        bars.push(Math.max(10, Math.round(bars[bars.length - 1] * 0.75 || 25)));
+      }
+    } else {
+      bars = [20, 35, 50, 65, 80];
+    }
+
+    const healthyValuation = items
+      .filter(i => (i.onHandQty || 0) > (i.reorderPoint || 0))
+      .reduce((sum, i) => sum + (i.totalValuation || 0), 0);
+    const progressPercentage = totalVal > 0 ? Math.min(100, Math.round((healthyValuation / totalVal) * 100)) : 100;
+    const progressLabel = totalVal > 0
+      ? `${progressPercentage}% healthy inventory valuation`
+      : 'Initial inventory ready';
+
     return {
-      bars: [42, 58, 52, 74, 68, 86, 94],
-      progressPercentage: 88,
-      progressLabel: '88% of target valuation',
+      bars: bars.slice(0, 7),
+      progressPercentage,
+      progressLabel,
       color: 'var(--blue)'
     };
   });
 
   readonly locationsKpiChart = computed<KpiCardBarChart>(() => {
-    const count = this.activeLocationsCount();
+    const summaries = this.branchSummaries();
+    const totalCatalogProducts = Math.max(this.state.products().length, 1);
+    const stockedProductsCount = new Set(
+      this.state.filteredInventory().filter(i => (i.onHandQty || 0) > 0).map(i => i.productId)
+    ).size;
+
+    let bars: number[] = [];
+    if (summaries.length > 0) {
+      const maxProducts = Math.max(...summaries.map(s => s.totalProducts), 1);
+      bars = summaries.map(s => Math.max(14, Math.round((s.totalProducts / maxProducts) * 100)));
+      while (bars.length < 5) {
+        bars.push(Math.max(12, Math.round(bars[bars.length - 1] * 0.8 || 30)));
+      }
+    } else {
+      bars = [25, 45, 60, 75, 90];
+    }
+
+    const progressPercentage = Math.min(100, Math.max(0, Math.round((stockedProductsCount / totalCatalogProducts) * 100)));
+    const progressLabel = `${stockedProductsCount} of ${this.state.products().length || stockedProductsCount} catalog items stocked`;
+
     return {
-      bars: [55, 68, 62, 78, 72, 85, 92],
-      progressPercentage: Math.min(100, Math.max(30, count * 6)),
-      progressLabel: `${count} active items across branches`,
+      bars: bars.slice(0, 7),
+      progressPercentage,
+      progressLabel,
       color: 'var(--green)'
     };
   });
 
   readonly lowStockKpiChart = computed<KpiCardBarChart>(() => {
     const alerts = this.lowStockCount();
+    const items = this.state.filteredInventory();
+    const totalTracked = Math.max(items.length, 1);
+
+    if (alerts === 0) {
+      return {
+        bars: [100, 100, 100, 100, 100],
+        progressPercentage: 100,
+        progressLabel: '100% of items above safety stock',
+        color: 'var(--green)'
+      };
+    }
+
+    const lowStockItems = items.filter(i => (i.onHandQty || 0) <= (i.reorderPoint || 0));
+    let bars = lowStockItems.slice(0, 7).map(i => {
+      const rp = Math.max(i.reorderPoint || 1, 1);
+      return Math.max(10, Math.min(100, Math.round(((i.onHandQty || 0) / rp) * 100)));
+    });
+    while (bars.length < 5) {
+      bars.push(15);
+    }
+
+    const lowStockPct = Math.min(100, Math.round((alerts / totalTracked) * 100));
     return {
-      bars: alerts > 0 ? [15, 20, 28, 22, 40, 55, 75] : [14, 10, 8, 12, 9, 6, 4],
-      progressPercentage: alerts > 0 ? Math.min(100, Math.max(20, alerts * 18)) : 5,
-      progressLabel: alerts > 0 ? `${alerts} items below safety stock` : 'Healthy stock levels',
-      color: alerts > 0 ? 'var(--amber)' : 'var(--green)'
+      bars: bars.slice(0, 7),
+      progressPercentage: Math.max(8, lowStockPct),
+      progressLabel: `${alerts} items below safety stock (${lowStockPct}%)`,
+      color: 'var(--amber)'
     };
   });
 
   readonly transfersKpiChart = computed<KpiCardBarChart>(() => {
+    const transfers = this.state.filteredTransfers();
     const pending = this.pendingTransfersCount();
+    const total = transfers.length;
+
+    const counts = [
+      transfers.filter(t => t.status === 'PENDING_APPROVAL' || t.status === 'DRAFT').length,
+      transfers.filter(t => t.status === 'APPROVED').length,
+      transfers.filter(t => t.status === 'IN_TRANSIT').length,
+      transfers.filter(t => t.status === 'RECEIVED').length,
+      transfers.filter(t => t.status === 'REJECTED' || t.status === 'DISCREPANCY_REVIEW').length
+    ];
+
+    const maxCount = Math.max(...counts, 1);
+    const bars = total > 0
+      ? counts.map(c => Math.max(12, Math.round((c / maxCount) * 100)))
+      : [20, 30, 40, 50, 60];
+
+    const progressPercentage = total > 0 ? Math.min(100, Math.round((pending / total) * 100)) : 0;
+    const progressLabel = pending > 0
+      ? `${pending} pending of ${total} total transfers (${progressPercentage}%)`
+      : (total > 0 ? `All ${total} transfers completed` : 'No transfers pending');
+
     return {
-      bars: pending > 0 ? [30, 42, 38, 60, 52, 74, 88] : [32, 28, 35, 25, 20, 18, 15],
-      progressPercentage: pending > 0 ? Math.min(100, Math.max(25, pending * 25)) : 12,
-      progressLabel: pending > 0 ? `${pending} active transfer orders` : 'Logistics balanced',
+      bars,
+      progressPercentage: pending > 0 ? Math.max(10, progressPercentage) : 100,
+      progressLabel,
       color: 'var(--magenta)'
     };
   });
@@ -254,68 +389,71 @@ export class DashboardComponent implements OnInit {
     }));
   });
 
-  readonly branchSummaries = computed<readonly BranchSummaryViewModel[]>(() => {
-    const filter = this.state.selectedBranchFilter();
-    const summaries = this.state.stockSummaryReport()?.branchSummaries || [];
-    const filtered = filter === 'ALL'
-      ? summaries
-      : summaries.filter(s => {
-          const bIdStr = typeof s.branchId === 'number' ? `BR-0${s.branchId}` : String(s.branchId);
-          return bIdStr === filter || String(s.branchId) === filter;
-        });
-
-    if (filtered.length === 0 && filter !== 'ALL') {
-      const branch = this.state.branches().find(b => b.id === filter);
-      if (branch) {
-        const items = this.state.filteredInventory();
-        const distinctProducts = new Set(items.map(i => i.productId)).size;
-        const valuation = items.reduce((sum, i) => sum + i.totalValuation, 0);
-        return [{
-          branchId: branch.id,
-          branchName: branch.name,
-          warehouseCount: branch.warehouses?.length || 1,
-          totalProducts: distinctProducts,
-          totalValuationEtb: valuation
-        }];
-      }
-    }
-
-    return filtered.map(s => ({
-      branchId: s.branchId,
-      branchName: s.branchName,
-      warehouseCount: s.warehouseCount,
-      totalProducts: s.totalProducts,
-      totalValuationEtb: s.totalValuationEtb
-    }));
-  });
-
-  readonly hasBranchSummaries = computed<boolean>(() => this.branchSummaries().length > 0);
-
   // ==========================================
-  // 1. LINE CHART: REVENUE & ORDER VOLUME TREND
+  // 1. LINE CHART: REVENUE & ORDER VOLUME TREND (Actual Daily Timeline)
   // ==========================================
   readonly lineChartData = computed<LineChartViewModel>(() => {
     const metric = this.lineChartMetric();
-    const orders = this.state.orders();
-    const salesReport = this.state.salesReport();
+    const filter = this.state.selectedBranchFilter();
+    const branch = this.state.branches().find(b => b.id === filter);
 
-    // Group orders or generate timeline buckets across recent periods
-    const periods = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const totalRevenue = salesReport?.totalRevenueEtb || orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0) || 450000;
-    const totalOrderCount = salesReport?.totalOrders || orders.length || 24;
+    const orders = this.state.orders().filter(o => {
+      if (filter === 'ALL') return true;
+      return !o.pickupBranchName || (branch && o.pickupBranchName.toLowerCase().includes(branch.name.toLowerCase()));
+    });
 
-    // Distribute realistic trend values across the 7 timeline slots based on actual data
-    const rawValues: number[] = periods.map((_, idx) => {
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let anchorDate = today;
+    const orderDates = orders
+      .filter(o => o.createdAt)
+      .map(o => new Date(o.createdAt))
+      .filter(d => !isNaN(d.getTime()));
+
+    if (orderDates.length > 0) {
+      const maxOrderTime = Math.max(...orderDates.map(d => d.getTime()));
+      const maxOrderDate = new Date(maxOrderTime);
+      maxOrderDate.setHours(0, 0, 0, 0);
+      if (maxOrderDate > today) {
+        anchorDate = maxOrderDate;
+      }
+    }
+
+    const timelineDays: { date: Date; label: string }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(anchorDate);
+      d.setDate(anchorDate.getDate() - i);
+      timelineDays.push({
+        date: d,
+        label: `${dayNames[d.getDay()]} ${d.getDate()}`
+      });
+    }
+
+    const rawValues: number[] = timelineDays.map(slot => {
+      const slotStart = new Date(slot.date);
+      slotStart.setHours(0, 0, 0, 0);
+      const slotEnd = new Date(slot.date);
+      slotEnd.setHours(23, 59, 59, 999);
+
+      const dayOrders = orders.filter(o => {
+        if (!o.createdAt) return false;
+        const oDate = new Date(o.createdAt);
+        return oDate >= slotStart && oDate <= slotEnd;
+      });
+
       if (metric === 'revenue') {
-        const factor = [0.10, 0.14, 0.18, 0.12, 0.22, 0.15, 0.09][idx];
-        return Math.round(totalRevenue * factor);
+        return dayOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
       } else {
-        const factor = [0.11, 0.15, 0.16, 0.13, 0.20, 0.14, 0.11][idx];
-        return Math.max(1, Math.round(totalOrderCount * factor));
+        return dayOrders.length;
       }
     });
 
-    const maxValue = Math.max(...rawValues, metric === 'revenue' ? 10000 : 10);
+    const totalInPeriod = rawValues.reduce((sum, v) => sum + v, 0);
+    const maxValFound = Math.max(...rawValues, 0);
+    const maxValue = maxValFound > 0 ? maxValFound : (metric === 'revenue' ? 5000 : 10);
+
     const chartLeft = 55;
     const chartRight = 550;
     const chartWidth = chartRight - chartLeft;
@@ -323,17 +461,18 @@ export class DashboardComponent implements OnInit {
     const chartBottom = 175;
     const chartHeight = chartBottom - chartTop;
 
-    const points: LineChartPoint[] = periods.map((label, idx) => {
+    const points: LineChartPoint[] = timelineDays.map((slot, idx) => {
       const val = rawValues[idx];
-      const x = chartLeft + (idx / (periods.length - 1)) * chartWidth;
-      const y = chartBottom - (val / maxValue) * chartHeight;
+      const x = chartLeft + (idx / (timelineDays.length - 1)) * chartWidth;
+      const y = maxValFound > 0
+        ? chartBottom - (val / maxValue) * chartHeight
+        : chartBottom;
       const formattedValue = metric === 'revenue'
         ? `ETB ${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
         : `${val} Orders`;
-      return { label, value: val, formattedValue, x, y };
+      return { label: slot.label, value: val, formattedValue, x, y };
     });
 
-    // Build smooth cubic bezier curve
     let linePath = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
     for (let i = 1; i < points.length; i++) {
       const p0 = points[i - 1];
@@ -365,8 +504,8 @@ export class DashboardComponent implements OnInit {
     ];
 
     const totalFormatted = metric === 'revenue'
-      ? `ETB ${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-      : `${totalOrderCount} Orders`;
+      ? `ETB ${totalInPeriod.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      : `${totalInPeriod} Orders`;
 
     return {
       points,
@@ -379,7 +518,7 @@ export class DashboardComponent implements OnInit {
   });
 
   // ==========================================
-  // 2. BAR CHART: BRANCH INVENTORY VALUATION
+  // 2. BAR CHART: BRANCH INVENTORY VALUATION (Horizontal Progress Bars)
   // ==========================================
   readonly barChartData = computed<BarChartViewModel>(() => {
     const metric = this.barChartMetric();
@@ -400,36 +539,29 @@ export class DashboardComponent implements OnInit {
       rawList = summaries.map(s => ({
         id: s.branchId,
         name: s.branchName,
-        value: metric === 'valuation' ? s.totalValuationEtb : (s.totalProducts * 140),
+        value: metric === 'valuation' ? s.totalValuationEtb : s.totalUnitsOnHand,
         warehouseCount: s.warehouseCount || 1,
-        skuCount: s.totalProducts || 1
+        skuCount: s.totalProducts || 0
       }));
     } else if (branches.length > 0) {
       const items = this.state.filteredInventory();
       rawList = branches.map(b => {
-        const branchItems = items.filter(i => i.branchName === b.name);
-        const val = branchItems.reduce((acc, curr) => acc + curr.totalValuation, 0);
+        const branchItems = items.filter(i => i.branchId === b.id || i.branchName === b.name);
+        const val = branchItems.reduce((acc, curr) => acc + (curr.totalValuation || 0), 0);
         const units = branchItems.reduce((acc, curr) => acc + (curr.onHandQty || 0), 0);
         return {
           id: b.id,
           name: b.name,
-          value: metric === 'valuation' ? (val || 250000) : (units || 450),
+          value: metric === 'valuation' ? val : units,
           warehouseCount: b.warehouses?.length || 1,
-          skuCount: branchItems.length || 1
+          skuCount: branchItems.length
         };
       });
-    } else {
-      rawList = [
-        { id: '1', name: 'Head Office Plant', value: metric === 'valuation' ? 1450000 : 8500, warehouseCount: 3, skuCount: 24 },
-        { id: '2', name: 'Bole Showroom', value: metric === 'valuation' ? 980000 : 5400, warehouseCount: 2, skuCount: 18 },
-        { id: '3', name: 'Adama Depot', value: metric === 'valuation' ? 620000 : 3800, warehouseCount: 2, skuCount: 14 },
-        { id: '4', name: 'Hawassa Hub', value: metric === 'valuation' ? 410000 : 2100, warehouseCount: 1, skuCount: 10 },
-        { id: '5', name: 'Dire Dawa Center', value: metric === 'valuation' ? 320000 : 1600, warehouseCount: 1, skuCount: 8 }
-      ];
     }
 
-    const branchColors = ['#1e30c4', '#059669', '#db2777', '#d97706', '#6366f1', '#0284c7'];
-    const totalVal = rawList.reduce((sum, item) => sum + item.value, 0) || 1;
+    // Aser Design System branding palette
+    const branchColors = ['#1e30c4', '#10b981', '#ec4899', '#f59e0b', '#6366f1', '#0284c7'];
+    const totalVal = rawList.reduce((sum, item) => sum + item.value, 0);
     const maxValue = Math.max(...rawList.map(i => i.value), 1);
 
     const chartLeft = 55;
@@ -439,21 +571,20 @@ export class DashboardComponent implements OnInit {
     const chartBottom = 175;
     const chartHeight = chartBottom - chartTop;
 
-    const count = rawList.length;
+    const count = Math.max(rawList.length, 1);
     const slotWidth = chartWidth / count;
     const barWidth = Math.min(Math.max(slotWidth * 0.55, 20), 48);
 
     const bars: BarChartItem[] = rawList.map((item, idx) => {
       const x = chartLeft + idx * slotWidth + (slotWidth - barWidth) / 2;
-      const height = Math.max((item.value / maxValue) * chartHeight, 6);
+      const height = maxValue > 0 ? Math.max((item.value / maxValue) * chartHeight, 4) : 4;
       const y = chartBottom - height;
-      const percentage = Math.round((item.value / totalVal) * 100);
-      const relativePercentage = Math.max(8, Math.round((item.value / maxValue) * 100));
+      const percentage = totalVal > 0 ? Math.round((item.value / totalVal) * 100) : 0;
+      const relativePercentage = maxValue > 0 ? Math.max(item.value > 0 ? 5 : 0, Math.round((item.value / maxValue) * 100)) : 0;
       const formattedValue = metric === 'valuation'
-        ? `ETB ${item.value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+        ? `ETB ${item.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
         : `${item.value.toLocaleString()} units`;
 
-      // Shorten branch name for mobile labels
       const shortLabel = item.name
         .replace('Distribution Depot', 'Depot')
         .replace('Main Industrial Plant', 'HQ Plant')
@@ -507,10 +638,11 @@ export class DashboardComponent implements OnInit {
   });
 
   // ==========================================
-  // 3. PIE / DONUT CHART: CATEGORY & ORDER DISTRIBUTION
+  // 3. PIE / DONUT CHART: CATEGORY & ORDER DISTRIBUTION (Real Product & Order Data)
   // ==========================================
   readonly pieChartData = computed<PieChartViewModel>(() => {
     const mode = this.pieChartMode();
+    const brandColors = ['#1e30c4', '#10b981', '#ec4899', '#f59e0b', '#6366f1', '#0284c7', '#8b5cf6', '#ea3b24'];
 
     interface RawSlice {
       id: string;
@@ -525,88 +657,79 @@ export class DashboardComponent implements OnInit {
     if (mode === 'category') {
       totalLabel = 'Inventory Valuation';
       const items = this.state.filteredInventory();
-      const catMap: Record<string, { label: string; value: number; color: string }> = {
-        'PRINTING_SUPPLIES': { label: 'Printing Supplies', value: 0, color: '#1e30c4' },
-        'GARMENT_MATERIALS': { label: 'Garment Materials', value: 0, color: '#059669' },
-        'BRANDING_PROMOTION': { label: 'Branding & Promo', value: 0, color: '#db2777' },
-        'EQUIPMENT': { label: 'Equipment Supply', value: 0, color: '#d97706' },
-        'PRINTING_SERVICES': { label: 'Commercial Print', value: 0, color: '#6366f1' }
+      const catMap = new Map<string, { label: string; value: number }>();
+
+      const cleanCategoryName = (raw: string): string => {
+        const u = raw.toUpperCase().replace(/\s+/g, '_');
+        if (u.includes('PRINTING_SUPPLIES') || u === 'PRINTING_PRESS') return 'Printing Supplies';
+        if (u.includes('GARMENT')) return 'Garment Materials';
+        if (u.includes('BRANDING') || u.includes('PROMO')) return 'Branding & Promotion';
+        if (u.includes('EQUIPMENT')) return 'Printing Equipment';
+        if (u.includes('SERVICE')) return 'Commercial Printing';
+        return raw.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
       };
 
       if (items.length > 0) {
         for (const item of items) {
-          const key = (item.category || 'PRINTING_SUPPLIES').toUpperCase().replace(/\s+/g, '_');
-          if (catMap[key]) {
-            catMap[key].value += item.totalValuation;
-          } else {
-            catMap['PRINTING_SUPPLIES'].value += item.totalValuation;
-          }
+          const rawCat = item.category || 'Printing Supplies';
+          const label = cleanCategoryName(rawCat);
+          const current = catMap.get(label) || { label, value: 0 };
+          current.value += (item.totalValuation || 0);
+          catMap.set(label, current);
+        }
+      } else {
+        const products = this.state.products();
+        for (const p of products) {
+          const rawCat = p.category || 'Printing Supplies';
+          const label = cleanCategoryName(rawCat);
+          const current = catMap.get(label) || { label, value: 0 };
+          current.value += (p.unitPrice || p.baseCost || 0);
+          catMap.set(label, current);
         }
       }
 
-      // Check if all zero, provide balanced default catalog valuation distribution
-      const sum = Object.values(catMap).reduce((acc, curr) => acc + curr.value, 0);
-      if (sum === 0) {
-        catMap['PRINTING_SUPPLIES'].value = 1420000;
-        catMap['GARMENT_MATERIALS'].value = 890000;
-        catMap['BRANDING_PROMOTION'].value = 650000;
-        catMap['EQUIPMENT'].value = 480000;
-        catMap['PRINTING_SERVICES'].value = 240000;
-      }
-
-      rawSlices = Object.entries(catMap).map(([id, c]) => ({
+      let colorIdx = 0;
+      rawSlices = Array.from(catMap.entries()).map(([id, c]) => ({
         id,
         label: c.label,
         value: c.value,
-        color: c.color
+        color: brandColors[colorIdx++ % brandColors.length]
       }));
     } else {
       totalLabel = 'Total Orders';
       const orders = this.state.orders();
-      const statusMap: Record<string, { label: string; count: number; color: string }> = {
-        'DELIVERED': { label: 'Delivered (Paid)', count: 0, color: '#059669' },
-        'PROCESSING': { label: 'Processing', count: 0, color: '#d97706' },
-        'READY_FOR_DISPATCH': { label: 'Ready for Dispatch', count: 0, color: '#2563eb' },
-        'PENDING_PAYMENT': { label: 'Pending Payment', count: 0, color: '#db2777' },
-        'CANCELLED': { label: 'Cancelled', count: 0, color: '#94a3b8' }
-      };
+      const statusDefs: { id: string; label: string; color: string }[] = [
+        { id: 'DELIVERED', label: 'Delivered', color: '#10b981' },
+        { id: 'READY_FOR_DISPATCH', label: 'Ready for Dispatch', color: '#1e30c4' },
+        { id: 'PROCESSING', label: 'Processing', color: '#f59e0b' },
+        { id: 'PENDING_PAYMENT', label: 'Pending Payment', color: '#ec4899' },
+        { id: 'CANCELLED', label: 'Cancelled', color: '#ea3b24' }
+      ];
 
-      if (orders.length > 0) {
-        for (const o of orders) {
-          const st = o.status || 'PENDING_PAYMENT';
-          if (statusMap[st]) {
-            statusMap[st].count++;
-          } else {
-            statusMap['PROCESSING'].count++;
-          }
-        }
+      const statusCounts = new Map<string, number>();
+      statusDefs.forEach(s => statusCounts.set(s.id, 0));
+
+      for (const o of orders) {
+        const st = (o.status || 'PENDING_PAYMENT').toUpperCase();
+        statusCounts.set(st, (statusCounts.get(st) || 0) + 1);
       }
 
-      const sum = Object.values(statusMap).reduce((acc, curr) => acc + curr.count, 0);
-      if (sum === 0) {
-        statusMap['DELIVERED'].count = 14;
-        statusMap['PROCESSING'].count = 8;
-        statusMap['READY_FOR_DISPATCH'].count = 5;
-        statusMap['PENDING_PAYMENT'].count = 4;
-        statusMap['CANCELLED'].count = 1;
-      }
-
-      rawSlices = Object.entries(statusMap).map(([id, s]) => ({
-        id,
+      rawSlices = statusDefs.map(s => ({
+        id: s.id,
         label: s.label,
-        value: s.count,
+        value: statusCounts.get(s.id) || 0,
         color: s.color
       }));
     }
 
-    const totalValue = rawSlices.reduce((acc, curr) => acc + curr.value, 0) || 1;
+    const totalValue = rawSlices.reduce((acc, curr) => acc + curr.value, 0);
     const cx = 140;
     const cy = 140;
     const R = 105;
     const r = 65;
 
     let currentAngle = 0;
-    const slices: PieChartSlice[] = rawSlices.map(item => {
+    const slices: PieChartSlice[] = totalValue > 0 ? rawSlices.map(item => {
       const fraction = item.value / totalValue;
       const angleSpan = fraction * 2 * Math.PI;
       const safeSpan = Math.min(angleSpan, 2 * Math.PI - 0.001);
@@ -629,7 +752,7 @@ export class DashboardComponent implements OnInit {
       const percentage = Math.round(fraction * 100);
 
       const formattedValue = mode === 'category'
-        ? `ETB ${item.value.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+        ? `ETB ${item.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
         : `${item.value} Orders`;
 
       return {
@@ -641,56 +764,70 @@ export class DashboardComponent implements OnInit {
         color: item.color,
         pathData
       };
-    });
+    }) : rawSlices.map(item => ({
+      id: item.id,
+      label: item.label,
+      value: 0,
+      formattedValue: mode === 'category' ? 'ETB 0.00' : '0 Orders',
+      percentage: 0,
+      color: item.color,
+      pathData: ''
+    }));
 
     const totalFormatted = mode === 'category'
-      ? `ETB ${(totalValue / 1000000).toFixed(2)}M`
+      ? (totalValue >= 1000000
+          ? `ETB ${(totalValue / 1000000).toFixed(2)}M`
+          : `ETB ${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`)
       : `${totalValue} Orders`;
 
     return {
       slices,
       totalFormatted,
-      totalLabel
+      totalLabel,
+      totalValue
     };
   });
 
   // ==========================================
-  // 4. OPERATIONAL VELOCITY FLOW
+  // 4. OPERATIONAL VELOCITY FLOW (Actual Stock Movement Ledger)
   // ==========================================
   readonly velocityMetrics = computed<readonly VelocityMetric[]>(() => {
     const movements = this.state.stockMovements();
-    const receipts = movements.filter(m => m.type === 'RECEIPT').reduce((acc, m) => acc + Math.abs(m.quantityDelta), 0);
-    const transfers = movements.filter(m => m.type === 'TRANSFER_OUT' || m.type === 'TRANSFER_IN').reduce((acc, m) => acc + Math.abs(m.quantityDelta), 0);
-    const dispatches = movements.filter(m => m.type === 'ISSUE').reduce((acc, m) => acc + Math.abs(m.quantityDelta), 0);
+    const receipts = movements
+      .filter(m => m.type === 'RECEIPT' || (m.type as string) === 'OPENING_BALANCE' || (m.type as string) === 'RETURN_RESTOCK')
+      .reduce((acc, m) => acc + Math.abs(m.quantityDelta || 0), 0);
+    const transfers = movements
+      .filter(m => m.type === 'TRANSFER_OUT' || m.type === 'TRANSFER_IN')
+      .reduce((acc, m) => acc + Math.abs(m.quantityDelta || 0), 0);
+    const dispatches = movements
+      .filter(m => m.type === 'ISSUE')
+      .reduce((acc, m) => acc + Math.abs(m.quantityDelta || 0), 0);
 
-    const safeReceipts = receipts || 2400;
-    const safeTransfers = transfers || 1150;
-    const safeDispatches = dispatches || 1850;
-    const totalFlow = safeReceipts + safeTransfers + safeDispatches || 1;
+    const totalFlow = receipts + transfers + dispatches;
 
     return [
       {
         label: 'Inbound Supplier Deliveries',
-        count: safeReceipts,
-        formattedUnits: `${safeReceipts.toLocaleString()} pcs`,
-        percentage: Math.round((safeReceipts / totalFlow) * 100),
-        color: '#059669',
+        count: receipts,
+        formattedUnits: `${receipts.toLocaleString()} pcs`,
+        percentage: totalFlow > 0 ? Math.round((receipts / totalFlow) * 100) : 0,
+        color: '#10b981', // Aser Green
         icon: 'lucide:arrow-down'
       },
       {
         label: 'Inter-Branch Stock Relocations',
-        count: safeTransfers,
-        formattedUnits: `${safeTransfers.toLocaleString()} pcs`,
-        percentage: Math.round((safeTransfers / totalFlow) * 100),
-        color: '#1e30c4',
+        count: transfers,
+        formattedUnits: `${transfers.toLocaleString()} pcs`,
+        percentage: totalFlow > 0 ? Math.round((transfers / totalFlow) * 100) : 0,
+        color: '#1e30c4', // Aser Blue
         icon: 'lucide:arrow-left-right-arrows'
       },
       {
         label: 'Customer Order Dispatches',
-        count: safeDispatches,
-        formattedUnits: `${safeDispatches.toLocaleString()} pcs`,
-        percentage: Math.round((safeDispatches / totalFlow) * 100),
-        color: '#db2777',
+        count: dispatches,
+        formattedUnits: `${dispatches.toLocaleString()} pcs`,
+        percentage: totalFlow > 0 ? Math.round((dispatches / totalFlow) * 100) : 0,
+        color: '#ec4899', // Aser Magenta
         icon: 'lucide:truck'
       }
     ];
