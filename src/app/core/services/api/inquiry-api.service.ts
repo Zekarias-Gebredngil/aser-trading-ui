@@ -10,7 +10,7 @@ export interface BackendCreateInquiryRequest {
   phone?: string;
   companyName?: string;
   serviceType?: string;
-  inquiryType?: 'GENERAL_INQUIRY' | 'PRICE_QUOTATION' | 'CUSTOM_PRINT_JOB' | 'FLEET_BRANDING' | 'BULK_MATERIAL_SUPPLY';
+  inquiryType?: 'GENERAL_INQUIRY' | 'QUOTATION_REQUEST' | 'PRICE_QUOTATION' | 'CUSTOM_PRINT_JOB' | 'FLEET_BRANDING' | 'BULK_MATERIAL_SUPPLY';
   subject: string;
   message: string;
   specifications?: string;

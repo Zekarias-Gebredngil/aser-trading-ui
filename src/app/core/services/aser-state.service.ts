@@ -1218,7 +1218,7 @@ export class AserStateService {
       phone: quoteData.customerPhone,
       companyName: quoteData.companyName,
       serviceType: quoteData.serviceCategory,
-      inquiryType: 'PRICE_QUOTATION',
+      inquiryType: 'QUOTATION_REQUEST',
       subject: quoteData.projectTitle,
       message: quoteData.notes || quoteData.specifications,
       specifications: quoteData.specifications,
