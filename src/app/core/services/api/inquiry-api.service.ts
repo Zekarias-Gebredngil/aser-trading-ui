@@ -30,9 +30,12 @@ export interface BackendInquiryDto {
   message: string;
   specifications?: string;
   requestedQuantity?: number;
-  status: 'NEW' | 'UNDER_REVIEW' | 'QUOTED' | 'CONVERTED_TO_ORDER' | 'DECLINED';
+  status: 'NEW' | 'UNDER_REVIEW' | 'QUOTED' | 'QUOTE_SENT' | 'CONVERTED_TO_ORDER' | 'DECLINED' | 'CLOSED';
   assignedStaffName?: string;
+  quotedPrice?: number;
   quotedAmount?: number;
+  estimatedCost?: number;
+  netRevenue?: number;
   createdAt: string;
 }
 
@@ -54,8 +57,25 @@ export class InquiryApiService {
     return this.http.get<ApiResponse<BackendInquiryDto>>(`${environment.apiUrl}/inquiries/${id}`);
   }
 
-  quoteInquiry(id: number, request: { quotedAmount: number; notes?: string }): Observable<ApiResponse<BackendInquiryDto>> {
-    return this.http.post<ApiResponse<BackendInquiryDto>>(`${environment.apiUrl}/inquiries/${id}/quote`, request);
+  quoteInquiry(id: number, request: {
+    quotedPrice?: number;
+    quotedAmount?: number;
+    estimatedCost?: number;
+    cost?: number;
+    adminNotes?: string;
+    notes?: string
+  }): Observable<ApiResponse<BackendInquiryDto>> {
+    const price = request.quotedPrice ?? request.quotedAmount ?? 0;
+    const cost = request.estimatedCost ?? request.cost ?? 0;
+    const payload = {
+      quotedPrice: price,
+      quotedAmount: price,
+      estimatedCost: cost,
+      cost: cost,
+      adminNotes: request.adminNotes ?? request.notes ?? '',
+      notes: request.notes ?? request.adminNotes ?? ''
+    };
+    return this.http.post<ApiResponse<BackendInquiryDto>>(`${environment.apiUrl}/inquiries/${id}/quote`, payload);
   }
 }
 

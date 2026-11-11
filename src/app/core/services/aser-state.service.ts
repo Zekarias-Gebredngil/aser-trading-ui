@@ -800,25 +800,32 @@ export class AserStateService {
       this.inquiryApi.getAdminInquiries().subscribe({
         next: (res) => {
           if (res.success && res.data?.content?.length) {
-            const mappedQuotes: QuotationRequest[] = res.data.content.map(q => ({
-              id: `QT-${q.id}`,
-              quoteNumber: q.inquiryNumber,
-              createdAt: q.createdAt,
-              customerName: q.customerName,
-              customerPhone: q.phone || '',
-              customerEmail: q.email,
-              companyName: q.companyName,
-              serviceCategory: (q.serviceType || 'PRINTING_PRESS') as any,
-              serviceCategoryLabel: q.serviceType || 'Custom Project',
-              projectTitle: q.subject,
-              specifications: q.specifications || q.message,
-              quantity: q.requestedQuantity || 1,
-              unit: 'pcs',
-              deliveryPreference: 'DELIVERY',
-              status: q.status === 'NEW' ? 'PENDING' : q.status === 'UNDER_REVIEW' ? 'UNDER_REVIEW' : q.status === 'QUOTED' ? 'QUOTED' : 'ACCEPTED',
-              quotedPrice: q.quotedAmount,
-              notes: q.message
-            }));
+            const mappedQuotes: QuotationRequest[] = res.data.content.map(q => {
+              const price = q.quotedPrice ?? q.quotedAmount;
+              const cost = q.estimatedCost || 0;
+              const isQuoted = q.status === 'QUOTED' || q.status === 'QUOTE_SENT' || (price !== undefined && price !== null && price > 0);
+              return {
+                id: `QT-${q.id}`,
+                quoteNumber: q.inquiryNumber,
+                createdAt: q.createdAt,
+                customerName: q.customerName,
+                customerPhone: q.phone || '',
+                customerEmail: q.email,
+                companyName: q.companyName,
+                serviceCategory: (q.serviceType || 'PRINTING_PRESS') as any,
+                serviceCategoryLabel: q.serviceType || 'Custom Project',
+                projectTitle: q.subject,
+                specifications: q.specifications || q.message,
+                quantity: q.requestedQuantity || 1,
+                unit: 'pcs',
+                deliveryPreference: 'DELIVERY',
+                status: isQuoted ? 'QUOTED' : (q.status === 'NEW' ? 'PENDING' : 'UNDER_REVIEW'),
+                quotedPrice: price,
+                estimatedCost: cost,
+                netRevenue: price ? Math.max(0, price - cost) : 0,
+                notes: q.message
+              };
+            });
             this.quotations.set(mappedQuotes);
           }
         }
@@ -927,12 +934,32 @@ export class AserStateService {
     }
   }
 
-  quoteInquiry(inquiryId: string, amount: number, notes?: string) {
+  quoteInquiry(inquiryId: string, amount: number, cost = 0, notes?: string) {
     const numId = parseInt(inquiryId.replace('QT-', '').replace('INQ-', ''), 10);
     if (!isNaN(numId) && numId > 0) {
-      this.inquiryApi.quoteInquiry(numId, { quotedAmount: amount, notes }).subscribe({
+      this.inquiryApi.quoteInquiry(numId, {
+        quotedPrice: amount,
+        quotedAmount: amount,
+        estimatedCost: cost,
+        cost,
+        adminNotes: notes,
+        notes
+      }).subscribe({
         next: () => {
-          this.toastService.success('Quotation Issued', `Quotation of ETB ${amount.toFixed(2)} sent for ${inquiryId}.`);
+          const net = Math.max(0, amount - cost);
+          this.toastService.success('Quotation Issued', `Quotation of ETB ${amount.toFixed(2)} sent for ${inquiryId} (Net Revenue: ETB ${net.toFixed(2)}).`);
+          this.quotations.update(quotes => quotes.map(q => {
+            if (q.id === inquiryId || q.id === `QT-${numId}`) {
+              return {
+                ...q,
+                quotedPrice: amount,
+                estimatedCost: cost,
+                netRevenue: net,
+                status: 'QUOTED'
+              };
+            }
+            return q;
+          }));
           this.syncProtectedData();
         },
         error: (err) => {

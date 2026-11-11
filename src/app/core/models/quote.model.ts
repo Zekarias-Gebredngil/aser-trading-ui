@@ -32,6 +32,8 @@ export interface QuotationRequest {
   status: QuoteStatus;
   estimatedAmount?: number;
   quotedPrice?: number;
+  estimatedCost?: number;
+  netRevenue?: number;
   notes?: string;
 }
 

@@ -257,6 +257,11 @@
             <td>
               @if (quote.quotedPrice) {
               <strong style="color:var(--blue); font-size:14px;">ETB {{ quote.quotedPrice | number:'1.2-2' }}</strong>
+              @if (quote.estimatedCost && quote.estimatedCost > 0) {
+              <div style="font-size:11px; color:#10b981; font-weight:600; margin-top:2px;">
+                Net: ETB {{ (quote.quotedPrice - quote.estimatedCost) | number:'1.2-2' }}
+              </div>
+              }
               } @else {
               <span style="color:var(--muted); font-size:12px;">Pending</span>
               }
@@ -269,11 +274,16 @@
               </span>
             </td>
             <td>
+              @if (!quote.quotedPrice && quote.status === 'PENDING') {
               <button class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;"
                 (click)="openQuotingModal(quote)">
-                <aser-icon name="lucide:file-edit" [size]="13"></aser-icon> {{ quote.quotedPrice ? 'Revise Quote' :
-                'Issue Quote' }}
+                <aser-icon name="lucide:file-edit" [size]="13"></aser-icon> {{ 'ORDERS.ISSUE_QUOTE' | translate:'Issue Quote' }}
               </button>
+              } @else {
+              <span class="badge badge-paid" style="display:inline-flex; align-items:center; gap:4px; font-size:11px; padding:4px 8px;">
+                <aser-icon name="lucide:check" [size]="12"></aser-icon> Issued ✓
+              </span>
+              }
             </td>
           </tr>
           }
@@ -430,6 +440,15 @@
               <span>Quoted price must be greater than 0 ETB.</span>
             </div>
           }
+        </div>
+
+        <div class="form-group" style="margin-bottom:14px;">
+          <label class="form-label" style="font-size:12px; font-weight:700;">Estimated Production / Material Cost (ETB)</label>
+          <input type="number" class="form-input" [(ngModel)]="quoteCostInput"
+            placeholder="Direct cost of raw materials / equipment" min="0" step="0.5" />
+          <small style="color:var(--muted); font-size:11px; margin-top:4px; display:block;">
+            Calculated Net Revenue: <strong style="color: #10b981;">ETB {{ (quotePriceInput > quoteCostInput ? quotePriceInput - quoteCostInput : 0) | number:'1.2-2' }}</strong>
+          </small>
         </div>
 
         <div class="form-group">

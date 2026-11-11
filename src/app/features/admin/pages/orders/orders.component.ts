@@ -60,6 +60,7 @@ export class OrdersComponent {
   // Quote modal
   quotingInquiry = signal<QuotationRequest | null>(null);
   quotePriceInput = 0;
+  quoteCostInput = 0;
   quoteNotesInput = '';
   quoteSubmitted = false;
 
@@ -222,7 +223,8 @@ export class OrdersComponent {
   openQuotingModal(quote: QuotationRequest) {
     this.quotingInquiry.set(quote);
     this.quotePriceInput = quote?.quotedPrice || 0;
-    this.quoteNotesInput = '';
+    this.quoteCostInput = quote?.estimatedCost || 0;
+    this.quoteNotesInput = quote?.notes || '';
     this.quoteSubmitted = false;
   }
 
@@ -230,7 +232,7 @@ export class OrdersComponent {
     this.quoteSubmitted = true;
     const q = this.quotingInquiry();
     if (!q || this.quotePriceInput <= 0) return;
-    this.state.quoteInquiry(q.id, this.quotePriceInput, this.quoteNotesInput);
+    this.state.quoteInquiry(q.id, this.quotePriceInput, this.quoteCostInput, this.quoteNotesInput);
     this.quotingInquiry.set(null);
   }
 

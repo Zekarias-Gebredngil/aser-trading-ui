@@ -402,6 +402,11 @@ export class DashboardComponent implements OnInit {
       return !o.pickupBranchName || (branch && o.pickupBranchName.toLowerCase().includes(branch.name.toLowerCase()));
     });
 
+    const quotations = this.state.quotations().filter(q => {
+      if (filter === 'ALL') return true;
+      return !q.branchPreference || (branch && q.branchPreference.toLowerCase().includes(branch.name.toLowerCase()));
+    });
+
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -412,12 +417,18 @@ export class DashboardComponent implements OnInit {
       .map(o => new Date(o.createdAt))
       .filter(d => !isNaN(d.getTime()));
 
-    if (orderDates.length > 0) {
-      const maxOrderTime = Math.max(...orderDates.map(d => d.getTime()));
-      const maxOrderDate = new Date(maxOrderTime);
-      maxOrderDate.setHours(0, 0, 0, 0);
-      if (maxOrderDate > today) {
-        anchorDate = maxOrderDate;
+    const quoteDates = quotations
+      .filter(q => q.createdAt)
+      .map(q => new Date(q.createdAt))
+      .filter(d => !isNaN(d.getTime()));
+
+    const allDates = [...orderDates, ...quoteDates];
+    if (allDates.length > 0) {
+      const maxTime = Math.max(...allDates.map(d => d.getTime()));
+      const maxDate = new Date(maxTime);
+      maxDate.setHours(0, 0, 0, 0);
+      if (maxDate > today) {
+        anchorDate = maxDate;
       }
     }
 
@@ -443,10 +454,23 @@ export class DashboardComponent implements OnInit {
         return oDate >= slotStart && oDate <= slotEnd;
       });
 
+      const dayQuotations = quotations.filter(q => {
+        if (!q.createdAt) return false;
+        const qDate = new Date(q.createdAt);
+        return qDate >= slotStart && qDate <= slotEnd;
+      });
+
       if (metric === 'revenue') {
-        return dayOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+        const orderRev = dayOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+        // Add net revenue from issued quotations: quotedPrice - estimatedCost
+        const quoteNetRev = dayQuotations.reduce((sum, q) => {
+          if (!q.quotedPrice) return sum;
+          const net = Math.max(0, (q.quotedPrice || 0) - (q.estimatedCost || 0));
+          return sum + net;
+        }, 0);
+        return orderRev + quoteNetRev;
       } else {
-        return dayOrders.length;
+        return dayOrders.length + dayQuotations.filter(q => !!q.quotedPrice).length;
       }
     });
 
