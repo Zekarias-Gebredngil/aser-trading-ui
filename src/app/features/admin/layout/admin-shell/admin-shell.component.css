@@ -302,22 +302,39 @@
 
 /* Branch Scope Pill */
 .branch-select-pill {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 12px;
+  padding: 5px 14px 5px 10px;
   background: var(--bg-soft);
   border: 1px solid var(--line);
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
   color: var(--ink-secondary);
-  max-width: 220px;
+  max-width: 250px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.branch-select-pill:hover,
+.branch-select-pill:focus-within {
+  border-color: var(--blue);
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(30, 48, 196, 0.08);
 }
 
 .branch-select-pill.locked {
   background: #fffbeb;
   border-color: #fde68a;
+  cursor: default;
+}
+
+.branch-scope-tag {
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--muted);
+  flex-shrink: 0;
 }
 
 .branch-scope-name {
@@ -328,15 +345,61 @@
   display: inline-block;
 }
 
+.branch-select-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 160px;
+}
+
 .branch-scope-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   border: none;
   background: transparent;
+  font-family: inherit;
   font-weight: 700;
   color: var(--ink);
   font-size: 12px;
   outline: none;
   cursor: pointer;
-  max-width: 150px;
+  padding-right: 18px; /* Safe space so text never touches chevron */
+  padding-left: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  width: auto;
+  line-height: 1.4;
+}
+
+/* Remove default IE/Edge arrow */
+.branch-scope-select::-ms-expand {
+  display: none;
+}
+
+.branch-chevron {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  transition: transform 0.2s, color 0.2s;
+  flex-shrink: 0;
+}
+
+.branch-select-pill:hover .branch-chevron,
+.branch-select-pill:focus-within .branch-chevron {
+  color: var(--blue);
 }
 
 /* User Profile Header Pill (Aser Brand) */
@@ -561,14 +624,20 @@
   }
 
   .branch-select-pill {
-    max-width: 160px;
-    padding: 4px 8px;
+    max-width: 190px;
+    padding: 4px 12px 4px 8px;
+    gap: 5px;
+  }
+
+  .branch-select-wrapper {
+    max-width: 120px;
   }
 
   .branch-scope-select,
   .branch-scope-name {
-    max-width: 100px;
+    max-width: 100%;
     font-size: 11px;
+    padding-right: 16px;
   }
 }
 
@@ -597,12 +666,20 @@
   }
 
   .branch-select-pill {
-    max-width: 120px;
+    max-width: 155px;
+    padding: 4px 10px 4px 8px;
+    gap: 4px;
+  }
+
+  .branch-select-wrapper {
+    max-width: 115px;
   }
 
   .branch-scope-select,
   .branch-scope-name {
-    max-width: 85px;
+    max-width: 100%;
+    font-size: 11px;
+    padding-right: 15px;
   }
 
   .topbar-actions {
@@ -611,6 +688,24 @@
 
   .admin-page-body {
     padding: 16px 12px;
+  }
+}
+
+@media (max-width: 420px) {
+  .branch-select-pill {
+    max-width: 130px;
+    padding: 4px 8px 4px 6px;
+  }
+
+  .branch-select-wrapper {
+    max-width: 95px;
+  }
+
+  .branch-scope-select,
+  .branch-scope-name {
+    max-width: 100%;
+    font-size: 11px;
+    padding-right: 14px;
   }
 }
 
