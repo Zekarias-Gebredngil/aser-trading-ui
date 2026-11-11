@@ -8,6 +8,38 @@ import { NewTransferModalComponent } from '../../components/new-transfer-modal/n
 import { AserStateService } from '../../../../core/services/aser-state.service';
 import { TranslatePipe } from '../../../../core/pipes/translate.pipe';
 
+// ============================================================================
+// CONSTANTS (Avoid duplicate string literal smells - S1192) - SonarLint
+// ============================================================================
+const SCOPE_ALL = 'ALL';
+const METRIC_REVENUE = 'revenue';
+const METRIC_VOLUME = 'volume';
+const METRIC_VALUATION = 'valuation';
+const METRIC_UNITS = 'units';
+const MODE_CATEGORY = 'category';
+const MODE_STATUS = 'status';
+
+const CSS_BLUE = 'var(--blue)';
+const CSS_GREEN = 'var(--green)';
+const CSS_AMBER = 'var(--amber)';
+const CSS_MAGENTA = 'var(--magenta)';
+const CSS_RED = 'var(--red)';
+const CSS_INK = 'var(--ink)';
+
+const BRAND_PALETTE: readonly string[] = [
+  '#1e30c4',
+  '#10b981',
+  '#ec4899',
+  '#f59e0b',
+  '#6366f1',
+  '#0284c7',
+  '#8b5cf6',
+  '#ea3b24'
+];
+
+// ============================================================================
+// VIEW MODEL INTERFACES (Module level to avoid inner declaration smells)
+// ============================================================================
 export interface StockMovementRowViewModel {
   readonly id: string;
   readonly productName: string;
@@ -118,6 +150,47 @@ export interface VelocityMetric {
   readonly icon: string;
 }
 
+export interface RawBranchBar {
+  readonly id: string | number;
+  readonly name: string;
+  readonly value: number;
+  readonly warehouseCount: number;
+  readonly skuCount: number;
+}
+
+export interface RawSlice {
+  readonly id: string;
+  readonly label: string;
+  readonly value: number;
+  readonly color: string;
+}
+
+// Pure helper function for category normalization
+function normalizeCategoryLabel(raw: string): string {
+  const u = raw.toUpperCase().replace(/\s+/g, '_');
+  if (u.includes('PRINTING_SUPPLIES') || u === 'PRINTING_PRESS') {
+    return 'Printing Supplies';
+  }
+  if (u.includes('GARMENT')) {
+    return 'Garment Materials';
+  }
+  if (u.includes('BRANDING') || u.includes('PROMO')) {
+    return 'Branding & Promotion';
+  }
+  if (u.includes('EQUIPMENT')) {
+    return 'Printing Equipment';
+  }
+  if (u.includes('SERVICE')) {
+    return 'Commercial Printing';
+  }
+  return raw
+    .replaceAll('_', ' ')
+    .split(' ')
+    .filter(Boolean)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ');
+}
+
 @Component({
   selector: 'aser-admin-dashboard',
   standalone: true,
@@ -135,13 +208,13 @@ export interface VelocityMetric {
 })
 export class DashboardComponent implements OnInit {
   readonly state = inject(AserStateService);
-  isReceiveModalOpen = signal(false);
-  isTransferModalOpen = signal(false);
+  readonly isReceiveModalOpen = signal(false);
+  readonly isTransferModalOpen = signal(false);
 
   // Chart Metric Toggles
-  readonly lineChartMetric = signal<'revenue' | 'volume'>('revenue');
-  readonly barChartMetric = signal<'valuation' | 'units'>('valuation');
-  readonly pieChartMode = signal<'category' | 'status'>('category');
+  readonly lineChartMetric = signal<'revenue' | 'volume'>(METRIC_REVENUE);
+  readonly barChartMetric = signal<'valuation' | 'units'>(METRIC_VALUATION);
+  readonly pieChartMode = signal<'category' | 'status'>(MODE_CATEGORY);
 
   // Interactive Hover Tooltip Signals
   readonly activeLinePoint = signal<LineChartPoint | null>(null);
@@ -156,29 +229,33 @@ export class DashboardComponent implements OnInit {
 
   // Strongly-typed reactive computed View Models
   readonly userGreetingName = computed<string>(() => this.state.currentUser()?.fullName || this.state.currentRole());
-  readonly isAllBranchesScope = computed<boolean>(() => this.state.selectedBranchFilter() === 'ALL');
+  readonly isAllBranchesScope = computed<boolean>(() => this.state.selectedBranchFilter() === SCOPE_ALL);
   readonly activeScopeName = computed<string>(() => {
     const filter = this.state.selectedBranchFilter();
-    if (filter === 'ALL') return '';
+    if (filter === SCOPE_ALL) {
+      return '';
+    }
     return this.state.branches().find(b => b.id === filter)?.name || filter;
   });
+
   readonly connectedBranchesCount = computed<number>(() => {
     if (!this.isAllBranchesScope()) {
       return 1;
     }
     return this.state.branches().length;
   });
+
   readonly totalValuation = computed<number>(() => this.state.totalValuation());
   readonly activeLocationsCount = computed<number>(() => this.state.filteredInventory().length);
   readonly lowStockCount = computed<number>(() => this.state.lowStockCount());
   readonly pendingTransfersCount = computed<number>(() => this.state.pendingTransfersCount());
-  readonly lowStockColor = computed<string>(() => this.lowStockCount() > 0 ? 'var(--red)' : 'var(--ink)');
+  readonly lowStockColor = computed<string>(() => this.lowStockCount() > 0 ? CSS_RED : CSS_INK);
 
   // Master Branch Summaries (computed first for use in KPI micro-charts and branch comparisons)
   readonly branchSummaries = computed<readonly BranchSummaryViewModel[]>(() => {
     const filter = this.state.selectedBranchFilter();
     const summaries = this.state.stockSummaryReport()?.branchSummaries || [];
-    const filtered = filter === 'ALL'
+    const filtered = filter === SCOPE_ALL
       ? summaries
       : summaries.filter(s => {
           const bIdStr = typeof s.branchId === 'number' ? `BR-0${s.branchId}` : String(s.branchId);
@@ -186,28 +263,7 @@ export class DashboardComponent implements OnInit {
         });
 
     if (filtered.length === 0) {
-      const branches = this.state.branches();
-      const items = this.state.filteredInventory();
-      const targetBranches = filter === 'ALL'
-        ? branches
-        : branches.filter(b => b.id === filter);
-
-      if (targetBranches.length > 0) {
-        return targetBranches.map(b => {
-          const branchItems = items.filter(i => i.branchId === b.id || i.branchName === b.name);
-          const distinctProducts = new Set(branchItems.map(i => i.productId)).size;
-          const valuation = branchItems.reduce((sum, i) => sum + (i.totalValuation || 0), 0);
-          const units = branchItems.reduce((sum, i) => sum + (i.onHandQty || 0), 0);
-          return {
-            branchId: b.id,
-            branchName: b.name,
-            warehouseCount: b.warehouses?.length || 1,
-            totalProducts: distinctProducts,
-            totalUnitsOnHand: units,
-            totalValuationEtb: valuation
-          };
-        });
-      }
+      return this.synthesizeBranchSummaries(filter);
     }
 
     return filtered.map(s => ({
@@ -233,7 +289,7 @@ export class DashboardComponent implements OnInit {
       const maxVal = Math.max(...summaries.map(s => s.totalValuationEtb), 1);
       bars = summaries.map(s => Math.max(12, Math.min(100, Math.round((s.totalValuationEtb / maxVal) * 100))));
       while (bars.length < 5) {
-        bars.push(Math.max(10, Math.round(bars[bars.length - 1] * 0.75 || 25)));
+        bars.push(Math.max(10, Math.round((bars.at(-1) || 25) * 0.75)));
       }
     } else {
       bars = [20, 35, 50, 65, 80];
@@ -251,7 +307,7 @@ export class DashboardComponent implements OnInit {
       bars: bars.slice(0, 7),
       progressPercentage,
       progressLabel,
-      color: 'var(--blue)'
+      color: CSS_BLUE
     };
   });
 
@@ -267,20 +323,21 @@ export class DashboardComponent implements OnInit {
       const maxProducts = Math.max(...summaries.map(s => s.totalProducts), 1);
       bars = summaries.map(s => Math.max(14, Math.round((s.totalProducts / maxProducts) * 100)));
       while (bars.length < 5) {
-        bars.push(Math.max(12, Math.round(bars[bars.length - 1] * 0.8 || 30)));
+        bars.push(Math.max(12, Math.round((bars.at(-1) || 30) * 0.8)));
       }
     } else {
       bars = [25, 45, 60, 75, 90];
     }
 
     const progressPercentage = Math.min(100, Math.max(0, Math.round((stockedProductsCount / totalCatalogProducts) * 100)));
-    const progressLabel = `${stockedProductsCount} of ${this.state.products().length || stockedProductsCount} catalog items stocked`;
+    const totalCatalogCount = this.state.products().length || stockedProductsCount;
+    const progressLabel = `${stockedProductsCount} of ${totalCatalogCount} catalog items stocked`;
 
     return {
       bars: bars.slice(0, 7),
       progressPercentage,
       progressLabel,
-      color: 'var(--green)'
+      color: CSS_GREEN
     };
   });
 
@@ -294,12 +351,12 @@ export class DashboardComponent implements OnInit {
         bars: [100, 100, 100, 100, 100],
         progressPercentage: 100,
         progressLabel: '100% of items above safety stock',
-        color: 'var(--green)'
+        color: CSS_GREEN
       };
     }
 
     const lowStockItems = items.filter(i => (i.onHandQty || 0) <= (i.reorderPoint || 0));
-    let bars = lowStockItems.slice(0, 7).map(i => {
+    const bars = lowStockItems.slice(0, 7).map(i => {
       const rp = Math.max(i.reorderPoint || 1, 1);
       return Math.max(10, Math.min(100, Math.round(((i.onHandQty || 0) / rp) * 100)));
     });
@@ -312,7 +369,7 @@ export class DashboardComponent implements OnInit {
       bars: bars.slice(0, 7),
       progressPercentage: Math.max(8, lowStockPct),
       progressLabel: `${alerts} items below safety stock (${lowStockPct}%)`,
-      color: 'var(--amber)'
+      color: CSS_AMBER
     };
   });
 
@@ -335,15 +392,18 @@ export class DashboardComponent implements OnInit {
       : [20, 30, 40, 50, 60];
 
     const progressPercentage = total > 0 ? Math.min(100, Math.round((pending / total) * 100)) : 0;
-    const progressLabel = pending > 0
-      ? `${pending} pending of ${total} total transfers (${progressPercentage}%)`
-      : (total > 0 ? `All ${total} transfers completed` : 'No transfers pending');
+    let progressLabel = 'No transfers pending';
+    if (pending > 0) {
+      progressLabel = `${pending} pending of ${total} total transfers (${progressPercentage}%)`;
+    } else if (total > 0) {
+      progressLabel = `All ${total} transfers completed`;
+    }
 
     return {
       bars,
       progressPercentage: pending > 0 ? Math.max(10, progressPercentage) : 100,
       progressLabel,
-      color: 'var(--magenta)'
+      color: CSS_MAGENTA
     };
   });
 
@@ -357,7 +417,7 @@ export class DashboardComponent implements OnInit {
         productName: mov.productName,
         quantityDelta: mov.quantityDelta,
         formattedDelta,
-        deltaColor: mov.quantityDelta > 0 ? 'var(--green)' : 'var(--red)',
+        deltaColor: mov.quantityDelta > 0 ? CSS_GREEN : CSS_RED,
         branchName: mov.branchName,
         warehouseName: mov.warehouseName,
         notes: mov.notes || 'Routine transaction',
@@ -373,20 +433,25 @@ export class DashboardComponent implements OnInit {
     const filter = this.state.selectedBranchFilter();
     const branch = this.state.branches().find(b => b.id === filter);
     const orders = this.state.orders().filter(o => {
-      if (filter === 'ALL') return true;
+      if (filter === SCOPE_ALL) {
+        return true;
+      }
       return !o.pickupBranchName || (branch && o.pickupBranchName.toLowerCase().includes(branch.name.toLowerCase()));
     });
-    return orders.slice(0, 4).map(order => ({
-      id: order.id,
-      orderNumber: order.orderNumber,
-      customerName: order.customerName,
-      itemCount: order.items?.length || 0,
-      totalAmount: order.totalAmount,
-      isPaid: order.paymentStatus === 'PAID',
-      isPending: order.paymentStatus === 'PENDING',
-      paymentStatusKey: order.paymentStatus === 'PAID' ? 'ORDERS.PAID' : 'ORDERS.PENDING',
-      paymentStatusDefault: order.paymentStatus === 'PAID' ? 'Paid ✓' : 'Payment Pending'
-    }));
+    return orders.slice(0, 4).map(order => {
+      const isPaid = order.paymentStatus === 'PAID';
+      return {
+        id: order.id,
+        orderNumber: order.orderNumber,
+        customerName: order.customerName,
+        itemCount: order.items?.length || 0,
+        totalAmount: order.totalAmount,
+        isPaid,
+        isPending: order.paymentStatus === 'PENDING',
+        paymentStatusKey: isPaid ? 'ORDERS.PAID' : 'ORDERS.PENDING',
+        paymentStatusDefault: isPaid ? 'Paid ✓' : 'Payment Pending'
+      };
+    });
   });
 
   // ==========================================
@@ -398,85 +463,26 @@ export class DashboardComponent implements OnInit {
     const branch = this.state.branches().find(b => b.id === filter);
 
     const orders = this.state.orders().filter(o => {
-      if (filter === 'ALL') return true;
+      if (filter === SCOPE_ALL) {
+        return true;
+      }
       return !o.pickupBranchName || (branch && o.pickupBranchName.toLowerCase().includes(branch.name.toLowerCase()));
     });
 
     const quotations = this.state.quotations().filter(q => {
-      if (filter === 'ALL') return true;
+      if (filter === SCOPE_ALL) {
+        return true;
+      }
       return !q.branchPreference || (branch && q.branchPreference.toLowerCase().includes(branch.name.toLowerCase()));
     });
 
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    let anchorDate = today;
-    const orderDates = orders
-      .filter(o => o.createdAt)
-      .map(o => new Date(o.createdAt))
-      .filter(d => !isNaN(d.getTime()));
-
-    const quoteDates = quotations
-      .filter(q => q.createdAt)
-      .map(q => new Date(q.createdAt))
-      .filter(d => !isNaN(d.getTime()));
-
-    const allDates = [...orderDates, ...quoteDates];
-    if (allDates.length > 0) {
-      const maxTime = Math.max(...allDates.map(d => d.getTime()));
-      const maxDate = new Date(maxTime);
-      maxDate.setHours(0, 0, 0, 0);
-      if (maxDate > today) {
-        anchorDate = maxDate;
-      }
-    }
-
-    const timelineDays: { date: Date; label: string }[] = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(anchorDate);
-      d.setDate(anchorDate.getDate() - i);
-      timelineDays.push({
-        date: d,
-        label: `${dayNames[d.getDay()]} ${d.getDate()}`
-      });
-    }
-
-    const rawValues: number[] = timelineDays.map(slot => {
-      const slotStart = new Date(slot.date);
-      slotStart.setHours(0, 0, 0, 0);
-      const slotEnd = new Date(slot.date);
-      slotEnd.setHours(23, 59, 59, 999);
-
-      const dayOrders = orders.filter(o => {
-        if (!o.createdAt) return false;
-        const oDate = new Date(o.createdAt);
-        return oDate >= slotStart && oDate <= slotEnd;
-      });
-
-      const dayQuotations = quotations.filter(q => {
-        if (!q.createdAt) return false;
-        const qDate = new Date(q.createdAt);
-        return qDate >= slotStart && qDate <= slotEnd;
-      });
-
-      if (metric === 'revenue') {
-        const orderRev = dayOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
-        // Add net revenue from issued quotations: quotedPrice - estimatedCost
-        const quoteNetRev = dayQuotations.reduce((sum, q) => {
-          if (!q.quotedPrice) return sum;
-          const net = Math.max(0, (q.quotedPrice || 0) - (q.estimatedCost || 0));
-          return sum + net;
-        }, 0);
-        return orderRev + quoteNetRev;
-      } else {
-        return dayOrders.length + dayQuotations.filter(q => !!q.quotedPrice).length;
-      }
-    });
+    const timelineDays = this.buildTimelineDays(orders, quotations);
+    const rawValues = timelineDays.map(slot => this.calculateDailyMetric(slot.date, orders, quotations, metric));
 
     const totalInPeriod = rawValues.reduce((sum, v) => sum + v, 0);
     const maxValFound = Math.max(...rawValues, 0);
-    const maxValue = maxValFound > 0 ? maxValFound : (metric === 'revenue' ? 5000 : 10);
+    const defaultMax = metric === METRIC_REVENUE ? 5000 : 10;
+    const maxValue = maxValFound > 0 ? maxValFound : defaultMax;
 
     const chartLeft = 55;
     const chartRight = 550;
@@ -486,48 +492,22 @@ export class DashboardComponent implements OnInit {
     const chartHeight = chartBottom - chartTop;
 
     const points: LineChartPoint[] = timelineDays.map((slot, idx) => {
-      const val = rawValues[idx];
+      const val = rawValues[idx] || 0;
       const x = chartLeft + (idx / (timelineDays.length - 1)) * chartWidth;
       const y = maxValFound > 0
         ? chartBottom - (val / maxValue) * chartHeight
         : chartBottom;
-      const formattedValue = metric === 'revenue'
+      const formattedValue = metric === METRIC_REVENUE
         ? `ETB ${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
         : `${val} Orders`;
       return { label: slot.label, value: val, formattedValue, x, y };
     });
 
-    let linePath = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
-    for (let i = 1; i < points.length; i++) {
-      const p0 = points[i - 1];
-      const p1 = points[i];
-      const dx = (p1.x - p0.x) * 0.45;
-      const cp1x = p0.x + dx;
-      const cp1y = p0.y;
-      const cp2x = p1.x - dx;
-      const cp2y = p1.y;
-      linePath += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}`;
-    }
+    const linePath = this.buildSmoothLinePath(points);
+    const areaPath = this.buildAreaPath(linePath, points, chartBottom);
+    const yAxisLabels = this.buildLineChartYLabels(metric, maxValue, chartTop, chartHeight, chartBottom);
 
-    const lastPoint = points[points.length - 1];
-    const areaPath = `${linePath} L ${lastPoint.x.toFixed(1)} ${chartBottom} L ${points[0].x.toFixed(1)} ${chartBottom} Z`;
-
-    const yAxisLabels = [
-      {
-        value: metric === 'revenue' ? `ETB ${Math.round(maxValue / 1000)}k` : `${Math.round(maxValue)}`,
-        y: chartTop + 4
-      },
-      {
-        value: metric === 'revenue' ? `ETB ${Math.round((maxValue * 0.5) / 1000)}k` : `${Math.round(maxValue * 0.5)}`,
-        y: chartTop + chartHeight * 0.5 + 4
-      },
-      {
-        value: '0',
-        y: chartBottom + 4
-      }
-    ];
-
-    const totalFormatted = metric === 'revenue'
+    const totalFormatted = metric === METRIC_REVENUE
       ? `ETB ${totalInPeriod.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
       : `${totalInPeriod} Orders`;
 
@@ -549,42 +529,7 @@ export class DashboardComponent implements OnInit {
     const summaries = this.branchSummaries();
     const branches = this.state.branches();
 
-    interface RawBranchBar {
-      id: string | number;
-      name: string;
-      value: number;
-      warehouseCount: number;
-      skuCount: number;
-    }
-
-    let rawList: RawBranchBar[] = [];
-
-    if (summaries.length > 0) {
-      rawList = summaries.map(s => ({
-        id: s.branchId,
-        name: s.branchName,
-        value: metric === 'valuation' ? s.totalValuationEtb : s.totalUnitsOnHand,
-        warehouseCount: s.warehouseCount || 1,
-        skuCount: s.totalProducts || 0
-      }));
-    } else if (branches.length > 0) {
-      const items = this.state.filteredInventory();
-      rawList = branches.map(b => {
-        const branchItems = items.filter(i => i.branchId === b.id || i.branchName === b.name);
-        const val = branchItems.reduce((acc, curr) => acc + (curr.totalValuation || 0), 0);
-        const units = branchItems.reduce((acc, curr) => acc + (curr.onHandQty || 0), 0);
-        return {
-          id: b.id,
-          name: b.name,
-          value: metric === 'valuation' ? val : units,
-          warehouseCount: b.warehouses?.length || 1,
-          skuCount: branchItems.length
-        };
-      });
-    }
-
-    // Aser Design System branding palette
-    const branchColors = ['#1e30c4', '#10b981', '#ec4899', '#f59e0b', '#6366f1', '#0284c7'];
+    const rawList: RawBranchBar[] = this.buildRawBranchBars(summaries, branches, metric);
     const totalVal = rawList.reduce((sum, item) => sum + item.value, 0);
     const maxValue = Math.max(...rawList.map(i => i.value), 1);
 
@@ -604,8 +549,14 @@ export class DashboardComponent implements OnInit {
       const height = maxValue > 0 ? Math.max((item.value / maxValue) * chartHeight, 4) : 4;
       const y = chartBottom - height;
       const percentage = totalVal > 0 ? Math.round((item.value / totalVal) * 100) : 0;
-      const relativePercentage = maxValue > 0 ? Math.max(item.value > 0 ? 5 : 0, Math.round((item.value / maxValue) * 100)) : 0;
-      const formattedValue = metric === 'valuation'
+
+      let relativePercentage = 0;
+      if (maxValue > 0) {
+        const floor = item.value > 0 ? 5 : 0;
+        relativePercentage = Math.max(floor, Math.round((item.value / maxValue) * 100));
+      }
+
+      const formattedValue = metric === METRIC_VALUATION
         ? `ETB ${item.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
         : `${item.value.toLocaleString()} units`;
 
@@ -613,8 +564,7 @@ export class DashboardComponent implements OnInit {
         .replace('Distribution Depot', 'Depot')
         .replace('Main Industrial Plant', 'HQ Plant')
         .replace('Central Logistics Depot', 'Depot')
-        .replace('Regional Depot', 'Depot')
-        .replace('Showroom', 'Showroom');
+        .replace('Regional Depot', 'Depot');
 
       return {
         id: item.id,
@@ -628,7 +578,7 @@ export class DashboardComponent implements OnInit {
         y,
         width: barWidth,
         height,
-        color: branchColors[idx % branchColors.length],
+        color: BRAND_PALETTE[idx % BRAND_PALETTE.length] || BRAND_PALETTE[0],
         warehouseCount: item.warehouseCount,
         skuCount: item.skuCount
       };
@@ -636,11 +586,11 @@ export class DashboardComponent implements OnInit {
 
     const yAxisLabels = [
       {
-        value: metric === 'valuation' ? `ETB ${Math.round(maxValue / 1000)}k` : `${Math.round(maxValue)}`,
+        value: metric === METRIC_VALUATION ? `ETB ${Math.round(maxValue / 1000)}k` : `${Math.round(maxValue)}`,
         y: chartTop + 4
       },
       {
-        value: metric === 'valuation' ? `ETB ${Math.round((maxValue * 0.5) / 1000)}k` : `${Math.round(maxValue * 0.5)}`,
+        value: metric === METRIC_VALUATION ? `ETB ${Math.round((maxValue * 0.5) / 1000)}k` : `${Math.round(maxValue * 0.5)}`,
         y: chartTop + chartHeight * 0.5 + 4
       },
       {
@@ -649,7 +599,7 @@ export class DashboardComponent implements OnInit {
       }
     ];
 
-    const totalFormatted = metric === 'valuation'
+    const totalFormatted = metric === METRIC_VALUATION
       ? `ETB ${totalVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
       : `${totalVal.toLocaleString()} Units`;
 
@@ -662,147 +612,36 @@ export class DashboardComponent implements OnInit {
   });
 
   // ==========================================
-  // 3. PIE / DONUT CHART: CATEGORY & ORDER DISTRIBUTION (Real Product & Order Data)
+  // 3. PIE / DONUT CHART: CATEGORY & ORDER DISTRIBUTION
   // ==========================================
   readonly pieChartData = computed<PieChartViewModel>(() => {
     const mode = this.pieChartMode();
-    const brandColors = ['#1e30c4', '#10b981', '#ec4899', '#f59e0b', '#6366f1', '#0284c7', '#8b5cf6', '#ea3b24'];
+    const rawSlices = mode === MODE_CATEGORY
+      ? this.buildCategorySlices()
+      : this.buildStatusSlices();
 
-    interface RawSlice {
-      id: string;
-      label: string;
-      value: number;
-      color: string;
-    }
-
-    let rawSlices: RawSlice[] = [];
-    let totalLabel = 'Total Valuation';
-
-    if (mode === 'category') {
-      totalLabel = 'Inventory Valuation';
-      const items = this.state.filteredInventory();
-      const catMap = new Map<string, { label: string; value: number }>();
-
-      const cleanCategoryName = (raw: string): string => {
-        const u = raw.toUpperCase().replace(/\s+/g, '_');
-        if (u.includes('PRINTING_SUPPLIES') || u === 'PRINTING_PRESS') return 'Printing Supplies';
-        if (u.includes('GARMENT')) return 'Garment Materials';
-        if (u.includes('BRANDING') || u.includes('PROMO')) return 'Branding & Promotion';
-        if (u.includes('EQUIPMENT')) return 'Printing Equipment';
-        if (u.includes('SERVICE')) return 'Commercial Printing';
-        return raw.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-      };
-
-      if (items.length > 0) {
-        for (const item of items) {
-          const rawCat = item.category || 'Printing Supplies';
-          const label = cleanCategoryName(rawCat);
-          const current = catMap.get(label) || { label, value: 0 };
-          current.value += (item.totalValuation || 0);
-          catMap.set(label, current);
-        }
-      } else {
-        const products = this.state.products();
-        for (const p of products) {
-          const rawCat = p.category || 'Printing Supplies';
-          const label = cleanCategoryName(rawCat);
-          const current = catMap.get(label) || { label, value: 0 };
-          current.value += (p.unitPrice || p.baseCost || 0);
-          catMap.set(label, current);
-        }
-      }
-
-      let colorIdx = 0;
-      rawSlices = Array.from(catMap.entries()).map(([id, c]) => ({
-        id,
-        label: c.label,
-        value: c.value,
-        color: brandColors[colorIdx++ % brandColors.length]
-      }));
-    } else {
-      totalLabel = 'Total Orders';
-      const orders = this.state.orders();
-      const statusDefs: { id: string; label: string; color: string }[] = [
-        { id: 'DELIVERED', label: 'Delivered', color: '#10b981' },
-        { id: 'READY_FOR_DISPATCH', label: 'Ready for Dispatch', color: '#1e30c4' },
-        { id: 'PROCESSING', label: 'Processing', color: '#f59e0b' },
-        { id: 'PENDING_PAYMENT', label: 'Pending Payment', color: '#ec4899' },
-        { id: 'CANCELLED', label: 'Cancelled', color: '#ea3b24' }
-      ];
-
-      const statusCounts = new Map<string, number>();
-      statusDefs.forEach(s => statusCounts.set(s.id, 0));
-
-      for (const o of orders) {
-        const st = (o.status || 'PENDING_PAYMENT').toUpperCase();
-        statusCounts.set(st, (statusCounts.get(st) || 0) + 1);
-      }
-
-      rawSlices = statusDefs.map(s => ({
-        id: s.id,
-        label: s.label,
-        value: statusCounts.get(s.id) || 0,
-        color: s.color
-      }));
-    }
-
+    const totalLabel = mode === MODE_CATEGORY ? 'Inventory Valuation' : 'Total Orders';
     const totalValue = rawSlices.reduce((acc, curr) => acc + curr.value, 0);
+
     const cx = 140;
     const cy = 140;
-    const R = 105;
-    const r = 65;
+    const outerRadius = 105;
+    const innerRadius = 65;
 
-    let currentAngle = 0;
-    const slices: PieChartSlice[] = totalValue > 0 ? rawSlices.map(item => {
-      const fraction = item.value / totalValue;
-      const angleSpan = fraction * 2 * Math.PI;
-      const safeSpan = Math.min(angleSpan, 2 * Math.PI - 0.001);
+    const slices = totalValue > 0
+      ? this.buildDonutSlices(rawSlices, totalValue, mode, cx, cy, outerRadius, innerRadius)
+      : this.buildEmptySlices(rawSlices, mode);
 
-      const theta1 = currentAngle - Math.PI / 2;
-      const theta2 = currentAngle + safeSpan - Math.PI / 2;
-      currentAngle += angleSpan;
-
-      const x1 = cx + R * Math.cos(theta1);
-      const y1 = cy + R * Math.sin(theta1);
-      const x2 = cx + R * Math.cos(theta2);
-      const y2 = cy + R * Math.sin(theta2);
-      const x3 = cx + r * Math.cos(theta2);
-      const y3 = cy + r * Math.sin(theta2);
-      const x4 = cx + r * Math.cos(theta1);
-      const y4 = cy + r * Math.sin(theta1);
-
-      const largeArc = safeSpan > Math.PI ? 1 : 0;
-      const pathData = `M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${R} ${R} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} L ${x3.toFixed(2)} ${y3.toFixed(2)} A ${r} ${r} 0 ${largeArc} 0 ${x4.toFixed(2)} ${y4.toFixed(2)} Z`;
-      const percentage = Math.round(fraction * 100);
-
-      const formattedValue = mode === 'category'
-        ? `ETB ${item.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-        : `${item.value} Orders`;
-
-      return {
-        id: item.id,
-        label: item.label,
-        value: item.value,
-        formattedValue,
-        percentage,
-        color: item.color,
-        pathData
-      };
-    }) : rawSlices.map(item => ({
-      id: item.id,
-      label: item.label,
-      value: 0,
-      formattedValue: mode === 'category' ? 'ETB 0.00' : '0 Orders',
-      percentage: 0,
-      color: item.color,
-      pathData: ''
-    }));
-
-    const totalFormatted = mode === 'category'
-      ? (totalValue >= 1000000
-          ? `ETB ${(totalValue / 1000000).toFixed(2)}M`
-          : `ETB ${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`)
-      : `${totalValue} Orders`;
+    let totalFormatted: string;
+    if (mode === MODE_CATEGORY) {
+      if (totalValue >= 1_000_000) {
+        totalFormatted = `ETB ${(totalValue / 1_000_000).toFixed(2)}M`;
+      } else {
+        totalFormatted = `ETB ${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+    } else {
+      totalFormatted = `${totalValue} Orders`;
+    }
 
     return {
       slices,
@@ -818,11 +657,16 @@ export class DashboardComponent implements OnInit {
   readonly velocityMetrics = computed<readonly VelocityMetric[]>(() => {
     const movements = this.state.stockMovements();
     const receipts = movements
-      .filter(m => m.type === 'RECEIPT' || (m.type as string) === 'OPENING_BALANCE' || (m.type as string) === 'RETURN_RESTOCK')
+      .filter(m => {
+        const typeStr: string = m.type;
+        return typeStr === 'RECEIPT' || typeStr === 'OPENING_BALANCE' || typeStr === 'RETURN_RESTOCK';
+      })
       .reduce((acc, m) => acc + Math.abs(m.quantityDelta || 0), 0);
+
     const transfers = movements
       .filter(m => m.type === 'TRANSFER_OUT' || m.type === 'TRANSFER_IN')
       .reduce((acc, m) => acc + Math.abs(m.quantityDelta || 0), 0);
+
     const dispatches = movements
       .filter(m => m.type === 'ISSUE')
       .reduce((acc, m) => acc + Math.abs(m.quantityDelta || 0), 0);
@@ -835,7 +679,7 @@ export class DashboardComponent implements OnInit {
         count: receipts,
         formattedUnits: `${receipts.toLocaleString()} pcs`,
         percentage: totalFlow > 0 ? Math.round((receipts / totalFlow) * 100) : 0,
-        color: '#10b981', // Aser Green
+        color: '#10b981',
         icon: 'lucide:arrow-down'
       },
       {
@@ -843,7 +687,7 @@ export class DashboardComponent implements OnInit {
         count: transfers,
         formattedUnits: `${transfers.toLocaleString()} pcs`,
         percentage: totalFlow > 0 ? Math.round((transfers / totalFlow) * 100) : 0,
-        color: '#1e30c4', // Aser Blue
+        color: '#1e30c4',
         icon: 'lucide:arrow-left-right-arrows'
       },
       {
@@ -851,7 +695,7 @@ export class DashboardComponent implements OnInit {
         count: dispatches,
         formattedUnits: `${dispatches.toLocaleString()} pcs`,
         percentage: totalFlow > 0 ? Math.round((dispatches / totalFlow) * 100) : 0,
-        color: '#ec4899', // Aser Magenta
+        color: '#ec4899',
         icon: 'lucide:truck'
       }
     ];
@@ -887,26 +731,36 @@ export class DashboardComponent implements OnInit {
     this.isTransferModalOpen.set(false);
   }
 
-  get greetingKey(): string {
-    const hour = new Date().getHours();
+  private getGreetingPeriod(hour: number = new Date().getHours()): 'morning' | 'afternoon' | 'evening' {
     if (hour >= 12 && hour < 18) {
-      return 'DASHBOARD.GOOD_AFTERNOON';
-    } else if (hour >= 18 || hour < 5) {
-      return 'DASHBOARD.GOOD_EVENING';
-    } else {
-      return 'DASHBOARD.GOOD_MORNING';
+      return 'afternoon';
     }
+    if (hour >= 18 || hour < 5) {
+      return 'evening';
+    }
+    return 'morning';
+  }
+
+  get greetingKey(): string {
+    const period = this.getGreetingPeriod();
+    if (period === 'afternoon') {
+      return 'DASHBOARD.GOOD_AFTERNOON';
+    }
+    if (period === 'evening') {
+      return 'DASHBOARD.GOOD_EVENING';
+    }
+    return 'DASHBOARD.GOOD_MORNING';
   }
 
   get greetingDefault(): string {
-    const hour = new Date().getHours();
-    if (hour >= 12 && hour < 18) {
+    const period = this.getGreetingPeriod();
+    if (period === 'afternoon') {
       return 'Good afternoon';
-    } else if (hour >= 18 || hour < 5) {
-      return 'Good evening';
-    } else {
-      return 'Good morning';
     }
+    if (period === 'evening') {
+      return 'Good evening';
+    }
+    return 'Good morning';
   }
 
   private getMovementVisual(type?: string): { background: string; color: string; icon: string } {
@@ -914,21 +768,327 @@ export class DashboardComponent implements OnInit {
       case 'RECEIPT':
         return {
           background: 'var(--green-soft)',
-          color: 'var(--green)',
+          color: CSS_GREEN,
           icon: 'lucide:arrow-down'
         };
       case 'TRANSFER_OUT':
         return {
           background: 'var(--blue-soft)',
-          color: 'var(--blue)',
+          color: CSS_BLUE,
           icon: 'lucide:arrow-left-right-arrows'
         };
       default:
         return {
           background: 'var(--amber-soft)',
-          color: 'var(--amber)',
+          color: CSS_AMBER,
           icon: 'lucide:arrow-up'
         };
     }
+  }
+
+  // ============================================================================
+  // PRIVATE DECOMPOSITION HELPERS (Lowers Cognitive Complexity & Duplication)
+  // ============================================================================
+  private synthesizeBranchSummaries(filter: string): readonly BranchSummaryViewModel[] {
+    const branches = this.state.branches();
+    const items = this.state.filteredInventory();
+    const targetBranches = filter === SCOPE_ALL
+      ? branches
+      : branches.filter(b => b.id === filter);
+
+    if (targetBranches.length === 0) {
+      return [];
+    }
+
+    return targetBranches.map(b => {
+      const branchItems = items.filter(i => i.branchId === b.id || i.branchName === b.name);
+      const distinctProducts = new Set(branchItems.map(i => i.productId)).size;
+      const valuation = branchItems.reduce((sum, i) => sum + (i.totalValuation || 0), 0);
+      const units = branchItems.reduce((sum, i) => sum + (i.onHandQty || 0), 0);
+      return {
+        branchId: b.id,
+        branchName: b.name,
+        warehouseCount: b.warehouses?.length || 1,
+        totalProducts: distinctProducts,
+        totalUnitsOnHand: units,
+        totalValuationEtb: valuation
+      };
+    });
+  }
+
+  private buildTimelineDays(
+    orders: readonly { createdAt?: string }[],
+    quotations: readonly { createdAt?: string }[]
+  ): { date: Date; label: string }[] {
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let anchorDate = today;
+    const orderDates = orders
+      .map(o => (o.createdAt ? new Date(o.createdAt) : null))
+      .filter((d): d is Date => d !== null && !Number.isNaN(d.getTime()));
+
+    const quoteDates = quotations
+      .map(q => (q.createdAt ? new Date(q.createdAt) : null))
+      .filter((d): d is Date => d !== null && !Number.isNaN(d.getTime()));
+
+    const allDates = [...orderDates, ...quoteDates];
+    if (allDates.length > 0) {
+      const maxTime = allDates.reduce((max, d) => Math.max(max, d.getTime()), 0);
+      const maxDate = new Date(maxTime);
+      maxDate.setHours(0, 0, 0, 0);
+      if (maxDate > today) {
+        anchorDate = maxDate;
+      }
+    }
+
+    const timelineDays: { date: Date; label: string }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(anchorDate);
+      d.setDate(anchorDate.getDate() - i);
+      timelineDays.push({
+        date: d,
+        label: `${dayNames[d.getDay()]} ${d.getDate()}`
+      });
+    }
+    return timelineDays;
+  }
+
+  private calculateDailyMetric(
+    slotDate: Date,
+    orders: readonly { createdAt?: string; totalAmount?: number }[],
+    quotations: readonly { createdAt?: string; quotedPrice?: number; estimatedCost?: number }[],
+    metric: 'revenue' | 'volume'
+  ): number {
+    const slotStart = new Date(slotDate);
+    slotStart.setHours(0, 0, 0, 0);
+    const slotEnd = new Date(slotDate);
+    slotEnd.setHours(23, 59, 59, 999);
+
+    const dayOrders = orders.filter(o => {
+      if (!o.createdAt) return false;
+      const oDate = new Date(o.createdAt);
+      return oDate >= slotStart && oDate <= slotEnd;
+    });
+
+    const dayQuotations = quotations.filter(q => {
+      if (!q.createdAt) return false;
+      const qDate = new Date(q.createdAt);
+      return qDate >= slotStart && qDate <= slotEnd;
+    });
+
+    if (metric === METRIC_REVENUE) {
+      const orderRev = dayOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+      const quoteNetRev = dayQuotations.reduce((sum, q) => {
+        if (!q.quotedPrice) return sum;
+        const net = Math.max(0, (q.quotedPrice || 0) - (q.estimatedCost || 0));
+        return sum + net;
+      }, 0);
+      return orderRev + quoteNetRev;
+    }
+
+    return dayOrders.length + dayQuotations.filter(q => !!q.quotedPrice).length;
+  }
+
+  private buildSmoothLinePath(points: readonly LineChartPoint[]): string {
+    if (points.length === 0) {
+      return '';
+    }
+    let linePath = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+    for (let i = 1; i < points.length; i++) {
+      const p0 = points[i - 1];
+      const p1 = points[i];
+      const dx = (p1.x - p0.x) * 0.45;
+      const cp1x = p0.x + dx;
+      const cp1y = p0.y;
+      const cp2x = p1.x - dx;
+      const cp2y = p1.y;
+      linePath += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}`;
+    }
+    return linePath;
+  }
+
+  private buildAreaPath(linePath: string, points: readonly LineChartPoint[], chartBottom: number): string {
+    const lastPoint = points.at(-1);
+    if (!lastPoint || points.length === 0) {
+      return '';
+    }
+    return `${linePath} L ${lastPoint.x.toFixed(1)} ${chartBottom} L ${points[0].x.toFixed(1)} ${chartBottom} Z`;
+  }
+
+  private buildLineChartYLabels(
+    metric: 'revenue' | 'volume',
+    maxValue: number,
+    chartTop: number,
+    chartHeight: number,
+    chartBottom: number
+  ): readonly { value: string; y: number }[] {
+    const topValue = metric === METRIC_REVENUE
+      ? `ETB ${Math.round(maxValue / 1000)}k`
+      : `${Math.round(maxValue)}`;
+    const midValue = metric === METRIC_REVENUE
+      ? `ETB ${Math.round((maxValue * 0.5) / 1000)}k`
+      : `${Math.round(maxValue * 0.5)}`;
+
+    return [
+      { value: topValue, y: chartTop + 4 },
+      { value: midValue, y: chartTop + chartHeight * 0.5 + 4 },
+      { value: '0', y: chartBottom + 4 }
+    ];
+  }
+
+  private buildRawBranchBars(
+    summaries: readonly BranchSummaryViewModel[],
+    branches: readonly { id: string | number; name: string; warehouses?: readonly unknown[] }[],
+    metric: 'valuation' | 'units'
+  ): RawBranchBar[] {
+    if (summaries.length > 0) {
+      return summaries.map(s => ({
+        id: s.branchId,
+        name: s.branchName,
+        value: metric === METRIC_VALUATION ? s.totalValuationEtb : s.totalUnitsOnHand,
+        warehouseCount: s.warehouseCount || 1,
+        skuCount: s.totalProducts || 0
+      }));
+    }
+
+    if (branches.length > 0) {
+      const items = this.state.filteredInventory();
+      return branches.map(b => {
+        const branchItems = items.filter(i => i.branchId === b.id || i.branchName === b.name);
+        const val = branchItems.reduce((acc, curr) => acc + (curr.totalValuation || 0), 0);
+        const units = branchItems.reduce((acc, curr) => acc + (curr.onHandQty || 0), 0);
+        return {
+          id: b.id,
+          name: b.name,
+          value: metric === METRIC_VALUATION ? val : units,
+          warehouseCount: b.warehouses?.length || 1,
+          skuCount: branchItems.length
+        };
+      });
+    }
+
+    return [];
+  }
+
+  private buildCategorySlices(): RawSlice[] {
+    const items = this.state.filteredInventory();
+    const catMap = new Map<string, { label: string; value: number }>();
+
+    if (items.length > 0) {
+      for (const item of items) {
+        const rawCat = item.category || 'Printing Supplies';
+        const label = normalizeCategoryLabel(rawCat);
+        const current = catMap.get(label) || { label, value: 0 };
+        current.value += (item.totalValuation || 0);
+        catMap.set(label, current);
+      }
+    } else {
+      const products = this.state.products();
+      for (const p of products) {
+        const rawCat = p.category || 'Printing Supplies';
+        const label = normalizeCategoryLabel(rawCat);
+        const current = catMap.get(label) || { label, value: 0 };
+        current.value += (p.unitPrice || p.baseCost || 0);
+        catMap.set(label, current);
+      }
+    }
+
+    let colorIdx = 0;
+    return Array.from(catMap.entries()).map(([id, c]) => ({
+      id,
+      label: c.label,
+      value: c.value,
+      color: BRAND_PALETTE[colorIdx++ % BRAND_PALETTE.length] || BRAND_PALETTE[0]
+    }));
+  }
+
+  private buildStatusSlices(): RawSlice[] {
+    const orders = this.state.orders();
+    const statusDefs: readonly { id: string; label: string; color: string }[] = [
+      { id: 'DELIVERED', label: 'Delivered', color: '#10b981' },
+      { id: 'READY_FOR_DISPATCH', label: 'Ready for Dispatch', color: '#1e30c4' },
+      { id: 'PROCESSING', label: 'Processing', color: '#f59e0b' },
+      { id: 'PENDING_PAYMENT', label: 'Pending Payment', color: '#ec4899' },
+      { id: 'CANCELLED', label: 'Cancelled', color: '#ea3b24' }
+    ];
+
+    const statusCounts = new Map<string, number>();
+    for (const s of statusDefs) {
+      statusCounts.set(s.id, 0);
+    }
+
+    for (const o of orders) {
+      const st = (o.status || 'PENDING_PAYMENT').toUpperCase();
+      statusCounts.set(st, (statusCounts.get(st) || 0) + 1);
+    }
+
+    return statusDefs.map(s => ({
+      id: s.id,
+      label: s.label,
+      value: statusCounts.get(s.id) || 0,
+      color: s.color
+    }));
+  }
+
+  private buildDonutSlices(
+    rawSlices: readonly RawSlice[],
+    totalValue: number,
+    mode: 'category' | 'status',
+    cx: number,
+    cy: number,
+    outerR: number,
+    innerR: number
+  ): PieChartSlice[] {
+    let currentAngle = 0;
+    return rawSlices.map(item => {
+      const fraction = item.value / totalValue;
+      const angleSpan = fraction * 2 * Math.PI;
+      const safeSpan = Math.min(angleSpan, 2 * Math.PI - 0.001);
+
+      const theta1 = currentAngle - Math.PI / 2;
+      const theta2 = currentAngle + safeSpan - Math.PI / 2;
+      currentAngle += angleSpan;
+
+      const x1 = cx + outerR * Math.cos(theta1);
+      const y1 = cy + outerR * Math.sin(theta1);
+      const x2 = cx + outerR * Math.cos(theta2);
+      const y2 = cy + outerR * Math.sin(theta2);
+      const x3 = cx + innerR * Math.cos(theta2);
+      const y3 = cy + innerR * Math.sin(theta2);
+      const x4 = cx + innerR * Math.cos(theta1);
+      const y4 = cy + innerR * Math.sin(theta1);
+
+      const largeArc = safeSpan > Math.PI ? 1 : 0;
+      const pathData = `M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${outerR} ${outerR} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)} L ${x3.toFixed(2)} ${y3.toFixed(2)} A ${innerR} ${innerR} 0 ${largeArc} 0 ${x4.toFixed(2)} ${y4.toFixed(2)} Z`;
+      const percentage = Math.round(fraction * 100);
+
+      const formattedValue = mode === MODE_CATEGORY
+        ? `ETB ${item.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        : `${item.value} Orders`;
+
+      return {
+        id: item.id,
+        label: item.label,
+        value: item.value,
+        formattedValue,
+        percentage,
+        color: item.color,
+        pathData
+      };
+    });
+  }
+
+  private buildEmptySlices(rawSlices: readonly RawSlice[], mode: 'category' | 'status'): PieChartSlice[] {
+    return rawSlices.map(item => ({
+      id: item.id,
+      label: item.label,
+      value: 0,
+      formattedValue: mode === MODE_CATEGORY ? 'ETB 0.00' : '0 Orders',
+      percentage: 0,
+      color: item.color,
+      pathData: ''
+    }));
   }
 }
