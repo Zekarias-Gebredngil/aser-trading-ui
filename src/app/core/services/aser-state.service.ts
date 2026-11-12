@@ -522,7 +522,7 @@ export class AserStateService {
     });
   }
 
-  loginAsUser(username: string, password: string, callback?: (success: boolean) => void) {
+  loginAsUser(username: string, password: string, callback?: (success: boolean, errorMessage?: string) => void) {
     this.authApi.login({ username, password }).subscribe({
       next: (res) => {
         if (res.success && res.data) {
@@ -559,13 +559,28 @@ export class AserStateService {
           this.syncProtectedData();
           if (callback) callback(true);
         } else {
-          if (callback) callback(false);
+          const fallbackMsg = res.message || 'Invalid username or password. Please verify your credentials.';
+          if (callback) callback(false, fallbackMsg);
         }
       },
       error: (err) => {
-        const errorMsg = err?.error?.message || 'Invalid username or password. Please verify your credentials.';
+        const rawMsg =
+          (typeof err?.error === 'string' ? err.error : null) ||
+          err?.error?.detail ||
+          err?.error?.message ||
+          err?.message;
+
+        let errorMsg = 'Invalid username or password. Please verify your credentials.';
+        if (rawMsg && typeof rawMsg === 'string') {
+          if (rawMsg.toLowerCase().includes('inactive')) {
+            errorMsg = 'User account is inactive. Please contact your system administrator.';
+          } else {
+            errorMsg = rawMsg;
+          }
+        }
+
         this.toastService.error('Sign-in Failed', errorMsg);
-        if (callback) callback(false);
+        if (callback) callback(false, errorMsg);
       }
     });
   }

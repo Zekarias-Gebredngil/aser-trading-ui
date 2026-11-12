@@ -49,12 +49,12 @@ export class StaffLoginComponent implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
-    this.state.loginAsUser(this.username, this.password, (success) => {
+    this.state.loginAsUser(this.username, this.password, (success, errorMsg) => {
       this.isLoading.set(false);
       if (success) {
         this.router.navigateByUrl(this.returnUrl);
       } else {
-        this.errorMessage.set('Invalid credentials or unauthorized account.');
+        this.errorMessage.set(errorMsg || 'Invalid credentials or unauthorized account.');
       }
     });
   }
