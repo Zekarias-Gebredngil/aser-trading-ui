@@ -1,12 +1,14 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable, finalize, shareReplay, tap, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from './api-response.model';
 
 export interface AuthResponse {
   accessToken: string;
+  refreshToken?: string;
   tokenType: string;
+  expiresIn?: number;
   userId: number;
   username: string;
   email: string;
@@ -33,12 +35,17 @@ export interface UserDto {
 export class AuthApiService {
   private http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/auth`;
+  private refreshInProgress$: Observable<ApiResponse<AuthResponse>> | null = null;
 
   readonly currentUser = signal<AuthResponse | null>(this.getStoredUser());
   readonly isAuthenticated = signal<boolean>(!!this.getStoredToken());
 
-  private getStoredToken(): string | null {
+  getStoredToken(): string | null {
     return localStorage.getItem('aser_auth_token');
+  }
+
+  getStoredRefreshToken(): string | null {
+    return localStorage.getItem('aser_refresh_token');
   }
 
   private getStoredUser(): AuthResponse | null {
@@ -81,6 +88,30 @@ export class AuthApiService {
     );
   }
 
+  refreshToken(): Observable<ApiResponse<AuthResponse>> {
+    const refreshToken = this.getStoredRefreshToken();
+    if (!refreshToken) {
+      this.logout();
+      return throwError(() => new Error('No refresh token available'));
+    }
+
+    if (!this.refreshInProgress$) {
+      this.refreshInProgress$ = this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/refresh`, { refreshToken }).pipe(
+        tap(res => {
+          if (res.success && res.data) {
+            this.setSession(res.data);
+          }
+        }),
+        finalize(() => {
+          this.refreshInProgress$ = null;
+        }),
+        shareReplay(1)
+      );
+    }
+
+    return this.refreshInProgress$;
+  }
+
   getCurrentUser(): Observable<ApiResponse<UserDto>> {
     return this.http.get<ApiResponse<UserDto>>(`${this.baseUrl}/me`);
   }
@@ -90,7 +121,14 @@ export class AuthApiService {
   }
 
   logout(): void {
+    const refreshToken = this.getStoredRefreshToken();
+    if (refreshToken) {
+      this.http.post(`${this.baseUrl}/logout`, { refreshToken }).subscribe({
+        error: () => { /* ignore */ }
+      });
+    }
     localStorage.removeItem('aser_auth_token');
+    localStorage.removeItem('aser_refresh_token');
     localStorage.removeItem('aser_auth_user');
     this.currentUser.set(null);
     this.isAuthenticated.set(false);
@@ -98,6 +136,9 @@ export class AuthApiService {
 
   setSession(authData: AuthResponse): void {
     localStorage.setItem('aser_auth_token', authData.accessToken);
+    if (authData.refreshToken) {
+      localStorage.setItem('aser_refresh_token', authData.refreshToken);
+    }
     localStorage.setItem('aser_auth_user', JSON.stringify(authData));
     this.currentUser.set(authData);
     this.isAuthenticated.set(true);

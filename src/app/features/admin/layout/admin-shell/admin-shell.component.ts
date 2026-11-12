@@ -50,6 +50,13 @@ export class AdminShellComponent implements OnInit {
   readonly currentUserBranchName = computed<string>(() => this.state.currentUser()?.assignedBranchName || 'Global HQ / Consolidated');
   readonly branchFilter = computed<string>(() => this.state.selectedBranchFilter());
   readonly branchList = computed(() => this.state.branches());
+  readonly selectedBranchName = computed<string>(() => {
+    const filter = this.branchFilter();
+    if (filter === 'ALL') {
+      return '';
+    }
+    return this.branchList().find(b => b.id === filter)?.name || filter;
+  });
 
   // Permissions & Role Computeds
   readonly canViewInventory = computed<boolean>(() => this.state.hasPermission('VIEW_INVENTORY'));

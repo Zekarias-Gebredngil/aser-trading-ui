@@ -193,18 +193,24 @@
           <span class="branch-scope-name" style="color:var(--ink); font-weight:700;">{{ userAssignedBranch() }}</span>
         </div>
         } @else {
-        <div class="branch-select-pill">
+        <div class="branch-select-pill" title="Filter system view by branch">
           <aser-icon name="lucide:map-pin" [size]="14" color="var(--blue)"></aser-icon>
           <span class="branch-scope-tag">{{ 'COMMON.BRANCH' | translate:'Branch' }}:</span>
-          <div class="branch-select-wrapper">
-            <select class="branch-scope-select" [ngModel]="branchFilter()" (ngModelChange)="onBranchFilterChange($event)">
-              <option value="ALL">{{ 'DASHBOARD.ALL_BRANCHES' | translate:'All Branches' }}</option>
-              @for (b of branchList(); track b.id) {
-              <option [value]="b.id">{{ b.name }}</option>
-              }
-            </select>
-            <aser-icon name="lucide:chevron-down" [size]="12" class="branch-chevron" color="var(--muted)"></aser-icon>
-          </div>
+          <span class="branch-scope-name">
+            @if (branchFilter() === 'ALL') {
+              {{ 'DASHBOARD.ALL_BRANCHES' | translate:'All Branches' }}
+            } @else {
+              {{ selectedBranchName() }}
+            }
+          </span>
+          <aser-icon name="lucide:chevron-down" [size]="12" class="branch-chevron" color="var(--muted)"></aser-icon>
+
+          <select class="branch-scope-select" [ngModel]="branchFilter()" (ngModelChange)="onBranchFilterChange($event)" aria-label="Filter by branch">
+            <option value="ALL">{{ 'DASHBOARD.ALL_BRANCHES' | translate:'All Branches' }}</option>
+            @for (b of branchList(); track b.id) {
+            <option [value]="b.id">{{ b.name }}</option>
+            }
+          </select>
         </div>
         }
 
