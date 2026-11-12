@@ -36,7 +36,7 @@ export class StaffLoginComponent implements OnInit {
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/app';
     // If user is already authenticated with valid credentials, navigate forward
     if (this.state.isAuthenticated()) {
-      this.router.navigateByUrl(this.returnUrl);
+      void this.router.navigateByUrl(this.returnUrl);
     }
   }
 
@@ -52,7 +52,7 @@ export class StaffLoginComponent implements OnInit {
     this.state.loginAsUser(this.username, this.password, (success, errorMsg) => {
       this.isLoading.set(false);
       if (success) {
-        this.router.navigateByUrl(this.returnUrl);
+        void this.router.navigateByUrl(this.returnUrl);
       } else {
         this.errorMessage.set(errorMsg || 'Invalid credentials or unauthorized account.');
       }

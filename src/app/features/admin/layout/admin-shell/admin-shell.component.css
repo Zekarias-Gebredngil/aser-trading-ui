@@ -68,7 +68,7 @@
   border: 1px solid var(--line);
   color: var(--muted);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
   flex-shrink: 0;
 }
 
@@ -89,7 +89,7 @@
   border: 1px solid var(--line);
   color: var(--muted);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
 }
 
 .sidebar-close-btn:hover {
@@ -156,7 +156,7 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--ink-secondary);
-  transition: all 0.18s;
+  transition: background-color 0.18s, color 0.18s, box-shadow 0.18s;
   text-decoration: none;
 }
 
@@ -231,7 +231,7 @@
   border: 1px solid var(--line);
   color: var(--ink);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
   flex-shrink: 0;
 }
 
@@ -314,7 +314,7 @@
   font-weight: 600;
   color: var(--ink-secondary);
   max-width: 280px;
-  transition: all 0.2s;
+  transition: border-color 0.2s, background-color 0.2s, box-shadow 0.2s;
   cursor: pointer;
 }
 
@@ -394,7 +394,7 @@
   border: 1px solid var(--blue-border, #d7e0fc);
   border-radius: 24px;
   text-decoration: none;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(30, 48, 196, 0.05);
 }
@@ -532,7 +532,7 @@
     height: 14px;
     line-height: 12px;
     border-radius: 9px;
-    margin: 0 !important;
+    margin: 0;
   }
 
   .admin-sidebar.collapsed .admin-sidebar-footer {
@@ -569,7 +569,7 @@
     top: 0;
     bottom: 0;
     left: 0;
-    width: min(280px, 85vw) !important;
+    width: min(280px, 85vw);
     z-index: 70;
     transform: translateX(-100%);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
@@ -588,7 +588,7 @@
   }
 
   .admin-main-content {
-    margin-left: 0 !important;
+    margin-left: 0;
   }
 
   .admin-topbar {
@@ -716,6 +716,12 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .profile-dropdown-card {
+    animation: none;
+  }
+}
+
 .brand-accent-strip {
   height: 4px;
   width: 100%;
@@ -767,7 +773,8 @@
   font-size: 11px;
   font-weight: 700;
   color: #ffffff;
-  background: rgba(255, 255, 255, 0.22);
+  background: #0e185c;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   padding: 1px 6px;
   border-radius: 4px;
 }
@@ -804,7 +811,7 @@
   color: var(--ink-secondary, #334155);
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .profile-tab-btn:hover {
@@ -914,7 +921,7 @@
   outline: none;
   background: #ffffff;
   box-sizing: border-box;
-  transition: all 0.18s;
+  transition: border-color 0.18s, box-shadow 0.18s;
 }
 
 .compact-input:focus {
@@ -952,7 +959,7 @@
   border-radius: 8px;
   font-size: 12px;
   font-weight: 700;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
   cursor: pointer;
   border: none;
 }
@@ -985,7 +992,7 @@
   background: #ffffff;
   cursor: pointer;
   text-align: left;
-  transition: all 0.18s ease;
+  transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
   width: 100%;
 }
 
@@ -1042,7 +1049,7 @@
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
 
 .profile-signout-btn:hover {
