@@ -2,11 +2,11 @@ import { Injectable, computed, signal, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { ToastService } from './toast.service';
-import { AuthApiService, AuthResponse } from './api/auth-api.service';
+import { AuthApiService } from './api/auth-api.service';
 import { CatalogApiService } from './api/catalog-api.service';
 import { BranchApiService } from './api/branch-api.service';
 import { OrderApiService, BackendCreateOrderRequest } from './api/order-api.service';
-import { InventoryApiService } from './api/inventory-api.service';
+import { InventoryApiService, BackendLowStockAlertDto } from './api/inventory-api.service';
 import { TransferApiService } from './api/transfer-api.service';
 import { InquiryApiService } from './api/inquiry-api.service';
 import { UserApiService } from './api/user-api.service';
@@ -16,11 +16,10 @@ import { UnitApiService, BackendUnitDto } from './api/unit-api.service';
 import { AuditApiService, BackendAuditLogDto } from './api/audit-api.service';
 import { ProcurementApiService, BackendSupplierDto, BackendPurchaseOrderDto } from './api/procurement-api.service';
 import { MigrationApiService } from './api/migration-api.service';
-import { BackendLowStockAlertDto } from './api/inventory-api.service';
-import { Product, ProductCategory, ProductAvailability, UnitOfMeasure } from '../models/product.model';
+import { Product, ProductCategory, ProductAvailability } from '../models/product.model';
 import { Branch, StockBalance, StockMovement, StockReceiptCommand } from '../models/inventory.model';
-import { StockTransfer, TransferEvent, TransferStatus } from '../models/transfer.model';
-import { FulfillmentType, Order, OrderItem, OrderStatus, PaymentMethod, PaymentStatus } from '../models/order.model';
+import { StockTransfer, TransferStatus } from '../models/transfer.model';
+import { FulfillmentType, Order, OrderStatus, PaymentMethod, PaymentStatus } from '../models/order.model';
 import { QuotationRequest, AserServiceItem, ServiceCategory } from '../models/quote.model';
 import { EmployeeUser, StaffRole, Permission, ROLE_LABELS, ROLE_PERMISSIONS } from '../models/user.model';
 
@@ -168,7 +167,7 @@ export class AserStateService {
       return all;
     }
     const branch = this.branches().find(b => b.id === filter);
-    return all.filter(m => m.branchId === filter || (branch && m.branchName === branch.name));
+    return all.filter(m => m.branchId === filter || m.branchName === branch?.name);
   });
 
   // Filtered Low Stock Alerts by Scoped/Selected Branch
@@ -179,16 +178,18 @@ export class AserStateService {
       return all;
     }
     const branch = this.branches().find(b => b.id === filter);
-    const branchWhIds = (branch?.warehouses || []).map(w => {
-      const num = parseInt(w.id.replace('WH-0', '').replace('WH-', ''), 10);
-      return isNaN(num) ? -1 : num;
-    });
-    const branchWhNames = (branch?.warehouses || []).map(w => w.name.toLowerCase());
+    const branchWhIds = new Set(
+      (branch?.warehouses ?? []).map(w => {
+        const num = Number.parseInt(w.id.replace('WH-0', '').replace('WH-', ''), 10);
+        return Number.isNaN(num) ? -1 : num;
+      })
+    );
+    const branchWhNames = new Set((branch?.warehouses ?? []).map(w => w.name.toLowerCase()));
     return all.filter(a => {
       if (a.warehouseId !== undefined) {
-        return branchWhIds.includes(a.warehouseId);
+        return branchWhIds.has(a.warehouseId);
       }
-      return branchWhNames.includes((a.warehouseName || '').toLowerCase());
+      return branchWhNames.has((a.warehouseName ?? '').toLowerCase());
     });
   });
 
@@ -379,59 +380,126 @@ export class AserStateService {
     return url;
   }
 
+  private resolveProductCategory(categoryName?: string): ProductCategory {
+    const cName = (categoryName || '').toLowerCase();
+    if (cName.includes('garment')) {
+      return 'GARMENT_MATERIALS';
+    }
+    if (cName.includes('brand')) {
+      return 'BRANDING_PROMOTION';
+    }
+    if (cName.includes('press') || cName.includes('service')) {
+      return 'PRINTING_SERVICES';
+    }
+    if (cName.includes('equip') || cName.includes('materials & equip')) {
+      return 'EQUIPMENT';
+    }
+    return 'PRINTING_SUPPLIES';
+  }
+
+  private resolveProductAvailability(rawAvail?: string, isQuotationOnly?: boolean): ProductAvailability {
+    if (rawAvail === 'OUT_OF_STOCK') {
+      return 'OUT_OF_STOCK';
+    }
+    if (rawAvail === 'LIMITED_AVAILABILITY' || rawAvail === 'LIMITED') {
+      return 'LIMITED';
+    }
+    if (rawAvail === 'AVAILABLE_ON_REQUEST' || rawAvail === 'ON_REQUEST' || isQuotationOnly) {
+      return 'ON_REQUEST';
+    }
+    return 'IN_STOCK';
+  }
+
+  private parseProductSpecifications(specifications?: string, fallbackImage?: string): { parsedSpecs: Record<string, string>; productImages: string[] } {
+    let productImages = fallbackImage ? [fallbackImage] : [];
+    let parsedSpecs: Record<string, string> = {
+      'Specifications': specifications || 'Standard Commercial Grade'
+    };
+
+    if (specifications) {
+      try {
+        const parsed = JSON.parse(specifications);
+        if (typeof parsed === 'object' && parsed !== null) {
+          if (Array.isArray(parsed._galleryImages) && parsed._galleryImages.length > 0) {
+            productImages = parsed._galleryImages.map((img: string) => this.normalizeMediaUrl(img));
+          }
+          const cleanSpecs: Record<string, string> = {};
+          for (const [k, v] of Object.entries(parsed)) {
+            if (!k.startsWith('_')) {
+              cleanSpecs[k] = String(v);
+            }
+          }
+          if (Object.keys(cleanSpecs).length > 0) {
+            parsedSpecs = cleanSpecs;
+          }
+        }
+      } catch {
+        parsedSpecs = { 'Specifications': specifications };
+      }
+    }
+
+    return { parsedSpecs, productImages };
+  }
+
+  private resolveServiceIcon(serviceCode: string): string {
+    if (serviceCode.includes('EQUIP')) {
+      return 'lucide:wrench';
+    }
+    if (serviceCode.includes('GARMENT')) {
+      return 'lucide:shirt';
+    }
+    if (serviceCode.includes('BRAND')) {
+      return 'lucide:award';
+    }
+    return 'lucide:printer';
+  }
+
+  private resolveStockStatus(status?: string, available = 0, reorder = 10): 'In stock' | 'Low stock' | 'Out of stock' {
+    if (status === 'IN_STOCK') {
+      return 'In stock';
+    }
+    if (status === 'LOW_STOCK') {
+      return 'Low stock';
+    }
+    if (status === 'OUT_OF_STOCK') {
+      return 'Out of stock';
+    }
+    if (available <= 0) {
+      return 'Out of stock';
+    }
+    if (available <= reorder) {
+      return 'Low stock';
+    }
+    return 'In stock';
+  }
+
+  private formatBranchId(branchId?: number | null, fallback = 'BR-01'): string {
+    if (branchId === undefined || branchId === null) {
+      return fallback;
+    }
+    return branchId < 10 ? `BR-0${branchId}` : `BR-${branchId}`;
+  }
+
+  private resolveQuoteStatus(isQuoted: boolean, status?: string): 'QUOTED' | 'PENDING' | 'UNDER_REVIEW' {
+    if (isQuoted) {
+      return 'QUOTED';
+    }
+    if (status === 'NEW') {
+      return 'PENDING';
+    }
+    return 'UNDER_REVIEW';
+  }
+
   refreshPublicProducts(): void {
     this.catalogApi.getPublicProducts({ size: 100 }).subscribe({
       next: (prodRes) => {
         if (prodRes.success && prodRes.data?.content?.length) {
           const rawBranches = this.branches();
           const mappedProducts: Product[] = prodRes.data.content.map(p => {
-            let cat: ProductCategory = 'PRINTING_SUPPLIES';
-            const cName = (p.categoryName || '').toLowerCase();
-            if (cName.includes('garment')) cat = 'GARMENT_MATERIALS';
-            else if (cName.includes('brand')) cat = 'BRANDING_PROMOTION';
-            else if (cName.includes('press') || cName.includes('service')) cat = 'PRINTING_SERVICES';
-            else if (cName.includes('equip') || cName.includes('materials & equip')) cat = 'EQUIPMENT';
-
+            const cat = this.resolveProductCategory(p.categoryName);
             const finalImage = this.normalizeMediaUrl(p.imageUrl) || '/assets/images/Aser-trading.png';
-            let productImages = [finalImage];
-
-            let parsedSpecs: Record<string, string> = {
-              'Specifications': p.specifications || 'Standard Commercial Grade'
-            };
-
-            if (p.specifications) {
-              try {
-                const parsed = JSON.parse(p.specifications);
-                if (typeof parsed === 'object' && parsed !== null) {
-                  if (Array.isArray(parsed._galleryImages) && parsed._galleryImages.length > 0) {
-                    productImages = parsed._galleryImages.map((img: string) => this.normalizeMediaUrl(img));
-                  }
-                  const cleanSpecs: Record<string, string> = {};
-                  for (const [k, v] of Object.entries(parsed)) {
-                    if (!k.startsWith('_')) {
-                      cleanSpecs[k] = String(v);
-                    }
-                  }
-                  if (Object.keys(cleanSpecs).length > 0) {
-                    parsedSpecs = cleanSpecs;
-                  }
-                }
-              } catch {
-                parsedSpecs = { 'Specifications': p.specifications };
-              }
-            }
-
-            let avail: ProductAvailability = 'IN_STOCK';
-            const rawAvail = (p.availability as string) || '';
-            if (rawAvail === 'OUT_OF_STOCK') {
-              avail = 'OUT_OF_STOCK';
-            } else if (rawAvail === 'LIMITED_AVAILABILITY' || rawAvail === 'LIMITED') {
-              avail = 'LIMITED';
-            } else if (rawAvail === 'AVAILABLE_ON_REQUEST' || rawAvail === 'ON_REQUEST' || p.isQuotationOnly) {
-              avail = 'ON_REQUEST';
-            } else {
-              avail = 'IN_STOCK';
-            }
+            const { parsedSpecs, productImages } = this.parseProductSpecifications(p.specifications, finalImage);
+            const avail = this.resolveProductAvailability(p.availability as string, p.isQuotationOnly);
 
             return {
               id: `PRD-${p.id}`,
@@ -472,13 +540,7 @@ export class AserStateService {
             else if (c.includes('garment') || c.includes('textile')) cat = 'GARMENT_MATERIALS';
             else if (c.includes('equip') || c.includes('maint')) cat = 'EQUIPMENT_DISTRIBUTION';
 
-            const icon = s.serviceCode.includes('EQUIP')
-              ? 'lucide:wrench'
-              : s.serviceCode.includes('GARMENT')
-                ? 'lucide:shirt'
-                : s.serviceCode.includes('BRAND')
-                  ? 'lucide:award'
-                  : 'lucide:printer';
+            const icon = this.resolveServiceIcon(s.serviceCode);
 
             const finalImage = this.normalizeMediaUrl(s.imageUrl) || '/assets/images/Aser-trading.png';
             const finalServiceImages = [finalImage];
@@ -596,7 +658,7 @@ export class AserStateService {
     this.quotations.set([]);
     this.employees.set([]);
     this.toastService.info('Session Ended', 'You have been  signed out of the system.');
-    this.router.navigate(['/app/login']);
+    void this.router.navigate(['/app/login']);
   }
 
   syncProtectedData() {
@@ -636,16 +698,7 @@ export class AserStateService {
               const reserved = Number(b.reservedQuantity ?? 0);
               const available = Number(b.availableQuantity ?? (onHand - reserved));
               const reorder = 10;
-              let computedStatus: 'In stock' | 'Low stock' | 'Out of stock' = 'In stock';
-              if (b.status === 'IN_STOCK') {
-                computedStatus = 'In stock';
-              } else if (b.status === 'LOW_STOCK') {
-                computedStatus = 'Low stock';
-              } else if (b.status === 'OUT_OF_STOCK') {
-                computedStatus = 'Out of stock';
-              } else {
-                computedStatus = available <= 0 ? 'Out of stock' : available <= reorder ? 'Low stock' : 'In stock';
-              }
+              const computedStatus = this.resolveStockStatus(b.status, available, reorder);
 
               return {
                 id: `BAL-${b.id}`,
@@ -653,7 +706,7 @@ export class AserStateService {
                 productSku: b.productSku,
                 productName: b.productName,
                 category: b.categoryName || 'General',
-                branchId: b.branchId ? (b.branchId < 10 ? `BR-0${b.branchId}` : `BR-${b.branchId}`) : 'BR-01',
+                branchId: this.formatBranchId(b.branchId, 'BR-01'),
                 branchName: b.branchName || 'Main Branch',
                 warehouseId: `WH-${b.warehouseId}`,
                 warehouseName: b.warehouseName,
@@ -760,13 +813,15 @@ export class AserStateService {
               const fromBranchName = t.sourceBranchName || fromBranch?.name || t.sourceWarehouseName || 'Source Branch';
               const toBranchName = t.destinationBranchName || toBranch?.name || t.destinationWarehouseName || 'Destination Branch';
 
-              const fromBranchId = t.sourceBranchId
-                ? (t.sourceBranchId < 10 ? `BR-0${t.sourceBranchId}` : `BR-${t.sourceBranchId}`)
-                : (fromBranch?.id || `BR-0${t.sourceWarehouseId}`);
+              const fromBranchId = this.formatBranchId(
+                t.sourceBranchId,
+                fromBranch?.id || (t.sourceWarehouseId ? `BR-0${t.sourceWarehouseId}` : 'BR-01')
+              );
 
-              const toBranchId = t.destinationBranchId
-                ? (t.destinationBranchId < 10 ? `BR-0${t.destinationBranchId}` : `BR-${t.destinationBranchId}`)
-                : (toBranch?.id || `BR-0${t.destinationWarehouseId}`);
+              const toBranchId = this.formatBranchId(
+                t.destinationBranchId,
+                toBranch?.id || (t.destinationWarehouseId ? `BR-0${t.destinationWarehouseId}` : 'BR-02')
+              );
 
               return {
                 id: `TR-${t.id}`,
@@ -834,7 +889,7 @@ export class AserStateService {
                 quantity: q.requestedQuantity || 1,
                 unit: 'pcs',
                 deliveryPreference: 'DELIVERY',
-                status: isQuoted ? 'QUOTED' : (q.status === 'NEW' ? 'PENDING' : 'UNDER_REVIEW'),
+                status: this.resolveQuoteStatus(isQuoted, q.status),
                 quotedPrice: price,
                 estimatedCost: cost,
                 netRevenue: price ? Math.max(0, price - cost) : 0,
@@ -895,11 +950,16 @@ export class AserStateService {
   fetchReports(branchId?: number): void {
     if (!this.hasPermission('VIEW_REPORTS')) return;
 
-    const effectiveBranchId = branchId !== undefined
-      ? branchId
-      : (this.isBranchScopeLocked() && this.currentUser()?.assignedBranchId
-        ? parseInt(this.currentUser()!.assignedBranchId!.replace('BR-0', '').replace('BR-', ''), 10)
-        : undefined);
+    let effectiveBranchId = branchId;
+    if (effectiveBranchId === undefined && this.isBranchScopeLocked()) {
+      const assigned = this.currentUser()?.assignedBranchId;
+      if (assigned) {
+        const parsed = Number.parseInt(assigned.replace('BR-0', '').replace('BR-', ''), 10);
+        if (!Number.isNaN(parsed)) {
+          effectiveBranchId = parsed;
+        }
+      }
+    }
 
     this.reportApi.getSalesReport(effectiveBranchId).subscribe({
       next: (res) => {
@@ -943,15 +1003,15 @@ export class AserStateService {
     this.selectedBranchFilter.set(branchId);
     if (this.hasPermission('VIEW_REPORTS')) {
       const numId = branchId !== 'ALL'
-        ? parseInt(branchId.replace('BR-0', '').replace('BR-', ''), 10)
+        ? Number.parseInt(branchId.replace('BR-0', '').replace('BR-', ''), 10)
         : undefined;
       this.fetchReports(numId);
     }
   }
 
   quoteInquiry(inquiryId: string, amount: number, cost = 0, notes?: string) {
-    const numId = parseInt(inquiryId.replace('QT-', '').replace('INQ-', ''), 10);
-    if (!isNaN(numId) && numId > 0) {
+    const numId = Number.parseInt(inquiryId.replace('QT-', '').replace('INQ-', ''), 10);
+    if (!Number.isNaN(numId) && numId > 0) {
       this.inquiryApi.quoteInquiry(numId, {
         quotedPrice: amount,
         quotedAmount: amount,
@@ -985,8 +1045,8 @@ export class AserStateService {
   }
 
   rejectTransfer(transferId: string, reason: string) {
-    const numId = parseInt(transferId.replace('TR-00', '').replace('TR-0', '').replace('TR-', ''), 10);
-    if (!isNaN(numId) && numId > 0) {
+    const numId = Number.parseInt(transferId.replace('TR-00', '').replace('TR-0', '').replace('TR-', ''), 10);
+    if (!Number.isNaN(numId) && numId > 0) {
       this.transferApi.rejectTransfer(numId, reason).subscribe({
         next: () => {
           this.toastService.warning('Transfer Rejected', `Transfer ${transferId} has been rejected.`);
@@ -1005,8 +1065,8 @@ export class AserStateService {
   }
 
   cancelOrder(orderId: string, reason?: string) {
-    const numId = parseInt(orderId.replace('ORD-0', '').replace('ORD-', '').replace('AS-', ''), 10);
-    if (!isNaN(numId) && numId > 0) {
+    const numId = Number.parseInt(orderId.replace('ORD-0', '').replace('ORD-', '').replace('AS-', ''), 10);
+    if (!Number.isNaN(numId) && numId > 0) {
       this.orderApi.cancelOrder(numId, reason || 'Order cancelled by user').subscribe({
         next: () => {
           this.toastService.warning('Order Cancelled', `Order ${orderId} has been cancelled and stock released.`);
@@ -1117,12 +1177,12 @@ export class AserStateService {
     }
   ): void {
     const backendItems = this.cart().map(ci => ({
-      productId: parseInt(ci.product.id.replace('PRD-0', '').replace('PRD-', ''), 10) || 1,
+      productId: Number.parseInt(ci.product.id.replace('PRD-0', '').replace('PRD-', ''), 10) || 1,
       quantity: ci.quantity
     }));
 
     const collectionBranchNum = orderData.pickupBranchId
-      ? (parseInt(orderData.pickupBranchId.replace('BR-0', '').replace('BR-', ''), 10) || undefined)
+      ? (Number.parseInt(orderData.pickupBranchId.replace('BR-0', '').replace('BR-', ''), 10) || undefined)
       : undefined;
 
     const backendPayload: BackendCreateOrderRequest = {
@@ -1287,8 +1347,8 @@ export class AserStateService {
 
   // Weighted-Average Costing & Stock Receipt
   receiveStock(cmd: StockReceiptCommand) {
-    const numProductId = parseInt(cmd.productId.replace('PRD-0', '').replace('PRD-', ''), 10) || 1;
-    const numWarehouseId = parseInt(cmd.warehouseId.replace('WH-0', '').replace('WH-', ''), 10) || 1;
+    const numProductId = Number.parseInt(cmd.productId.replace('PRD-0', '').replace('PRD-', ''), 10) || 1;
+    const numWarehouseId = Number.parseInt(cmd.warehouseId.replace('WH-0', '').replace('WH-', ''), 10) || 1;
 
     this.inventoryApi.recordReceipt({
       warehouseId: numWarehouseId,
@@ -1322,8 +1382,8 @@ export class AserStateService {
     items: { productId: string; requestedQty: number }[];
     notes?: string;
   }): void {
-    const fromBranchNum = parseInt(transferData.fromBranchId.replace(/\D/g, ''), 10) || 1;
-    const toBranchNum = parseInt(transferData.toBranchId.replace(/\D/g, ''), 10) || 2;
+    const fromBranchNum = Number.parseInt(transferData.fromBranchId.replace(/\D/g, ''), 10) || 1;
+    const toBranchNum = Number.parseInt(transferData.toBranchId.replace(/\D/g, ''), 10) || 2;
 
     const fromBranch = this.branches().find(b => b.id === transferData.fromBranchId);
     const toBranch = this.branches().find(b => b.id === transferData.toBranchId);
@@ -1332,10 +1392,10 @@ export class AserStateService {
     const toWh = toBranch?.warehouses.find(w => w.isDefault) || toBranch?.warehouses[0];
 
     const fromWhId = fromWh?.id
-      ? (parseInt(fromWh.id.replace(/\D/g, ''), 10) || fromBranchNum)
+      ? (Number.parseInt(fromWh.id.replace(/\D/g, ''), 10) || fromBranchNum)
       : fromBranchNum;
     const toWhId = toWh?.id
-      ? (parseInt(toWh.id.replace(/\D/g, ''), 10) || toBranchNum)
+      ? (Number.parseInt(toWh.id.replace(/\D/g, ''), 10) || toBranchNum)
       : toBranchNum;
 
     this.transferApi.createTransfer({
@@ -1343,7 +1403,7 @@ export class AserStateService {
       destinationWarehouseId: toWhId,
       notes: transferData.notes,
       items: transferData.items.map(it => ({
-        productId: parseInt(it.productId.replace('PRD-0', '').replace('PRD-', ''), 10) || 1,
+        productId: Number.parseInt(it.productId.replace('PRD-0', '').replace('PRD-', ''), 10) || 1,
         quantity: it.requestedQty,
         requestedQuantity: it.requestedQty
       }))
@@ -1371,8 +1431,8 @@ export class AserStateService {
   }
 
   approveTransfer(transferId: string, actor: string) {
-    const numId = parseInt(transferId.replace('TR-00', '').replace('TR-0', '').replace('TR-', ''), 10);
-    if (!isNaN(numId) && numId > 0) {
+    const numId = Number.parseInt(transferId.replace('TR-00', '').replace('TR-0', '').replace('TR-', ''), 10);
+    if (!Number.isNaN(numId) && numId > 0) {
       this.transferApi.approveTransfer(numId).subscribe({
         next: () => {
           this.toastService.success('Transfer Approved', `Transfer ${transferId} approved for dispatch.`);
@@ -1387,8 +1447,8 @@ export class AserStateService {
   }
 
   dispatchTransfer(transferId: string, actor: string) {
-    const numId = parseInt(transferId.replace('TR-00', '').replace('TR-0', '').replace('TR-', ''), 10);
-    if (!isNaN(numId) && numId > 0) {
+    const numId = Number.parseInt(transferId.replace('TR-00', '').replace('TR-0', '').replace('TR-', ''), 10);
+    if (!Number.isNaN(numId) && numId > 0) {
       this.transferApi.dispatchTransfer(numId).subscribe({
         next: () => {
           this.toastService.warning('Stock Dispatched', `Transfer ${transferId} is now In-Transit.`);
@@ -1407,8 +1467,8 @@ export class AserStateService {
     const transfer = this.transfers().find(t => t.id === transferId);
     if (!transfer) return;
 
-    const numId = parseInt(transferId.replace('TR-00', '').replace('TR-0', '').replace('TR-', ''), 10);
-    if (!isNaN(numId) && numId > 0) {
+    const numId = Number.parseInt(transferId.replace('TR-00', '').replace('TR-0', '').replace('TR-', ''), 10);
+    if (!Number.isNaN(numId) && numId > 0) {
       const itemsPayload = transfer.items.map((item, idx) => ({
         transferItemId: item.id || (idx + 1),
         receivedQuantity: itemReceipts?.[item.productId] ?? item.dispatchedQty ?? item.requestedQty
@@ -1434,8 +1494,8 @@ export class AserStateService {
       return;
     }
 
-    const numId = parseInt(orderId.replace('ORD-0', '').replace('ORD-', '').replace('AS-', ''), 10);
-    if (!isNaN(numId) && numId > 0) {
+    const numId = Number.parseInt(orderId.replace('ORD-0', '').replace('ORD-', '').replace('AS-', ''), 10);
+    if (!Number.isNaN(numId) && numId > 0) {
       this.orderApi.updateOrderStatus(numId, status).subscribe({
         next: () => {
           if (paymentStatus === 'PAID') {
@@ -1524,12 +1584,15 @@ export class AserStateService {
     this.products.update(prods => prods.map(p => p.id === id ? { ...p, ...updates } : p));
     this.toastService.success('Product Updated', 'Catalog entry modified successfully.');
 
-    const numId = parseInt(id.replace('PRD-0', '').replace('PRD-', ''), 10);
-    if (!isNaN(numId) && numId > 0) {
+    const numId = Number.parseInt(id.replace('PRD-0', '').replace('PRD-', ''), 10);
+    if (!Number.isNaN(numId) && numId > 0) {
       const cleanImages = updates.images ? updates.images.filter(img => !img.startsWith('data:')) : undefined;
-      const primaryImage = updates.imageUrl && !updates.imageUrl.startsWith('data:')
-        ? updates.imageUrl
-        : (cleanImages && cleanImages.length > 0 ? cleanImages[0] : undefined);
+      let primaryImage: string | undefined;
+      if (updates.imageUrl && !updates.imageUrl.startsWith('data:')) {
+        primaryImage = updates.imageUrl;
+      } else if (cleanImages && cleanImages.length > 0) {
+        primaryImage = cleanImages[0];
+      }
 
       let specPayloadString: string | undefined;
       if (cleanImages && cleanImages.length > 0) {
@@ -1565,8 +1628,8 @@ export class AserStateService {
     this.products.update(prods => prods.filter(prod => prod.id !== id));
     this.toastService.info('Product Archived', `${p?.name} removed from active catalog.`);
 
-    const numId = parseInt(id.replace('PRD-0', '').replace('PRD-', ''), 10);
-    if (!isNaN(numId) && numId > 0) {
+    const numId = Number.parseInt(id.replace('PRD-0', '').replace('PRD-', ''), 10);
+    if (!Number.isNaN(numId) && numId > 0) {
       this.catalogApi.archiveProduct(numId).subscribe({
         error: () => console.warn('[AserState] Product archived locally')
       });
@@ -1606,8 +1669,8 @@ export class AserStateService {
   }
 
   updateBranch(id: string, updates: Omit<Partial<Branch>, 'warehouses'> & { warehouses?: { id?: number; name: string; code: string; isDefault?: boolean; isActive?: boolean }[] }) {
-    const numId = parseInt(id.replace(/\D/g, ''), 10);
-    if (!isNaN(numId) && numId > 0) {
+    const numId = Number.parseInt(id.replace(/\D/g, ''), 10);
+    if (!Number.isNaN(numId) && numId > 0) {
       this.branchApi.updateBranch(numId, {
         name: updates.name || '',
         code: (updates.code || '').toUpperCase(),
@@ -1631,7 +1694,7 @@ export class AserStateService {
   }
 
   updateWarehouse(warehouseId: string | number, payload: { branchId: number; name: string; code: string; isDefault?: boolean }) {
-    const numId = typeof warehouseId === 'number' ? warehouseId : (parseInt(warehouseId.replace(/\D/g, ''), 10) || 1);
+    const numId = typeof warehouseId === 'number' ? warehouseId : (Number.parseInt(warehouseId.replace(/\D/g, ''), 10) || 1);
     this.branchApi.updateWarehouse(numId, {
       branchId: payload.branchId,
       name: payload.name.trim(),
@@ -1662,7 +1725,7 @@ export class AserStateService {
   }
 
   addWarehouse(branchId: string, name: string, code: string) {
-    const numBranchId = parseInt(branchId.replace('BR-0', '').replace('BR-', ''), 10) || 1;
+    const numBranchId = Number.parseInt(branchId.replace('BR-0', '').replace('BR-', ''), 10) || 1;
     this.branchApi.createWarehouse({
       branchId: numBranchId,
       name,
@@ -1707,8 +1770,8 @@ export class AserStateService {
   }
 
   updateService(id: string, updates: Partial<AserServiceItem>) {
-    const numId = parseInt(id.replace('SVC-0', '').replace('SVC-', ''), 10);
-    if (!isNaN(numId) && numId > 0) {
+    const numId = Number.parseInt(id.replace('SVC-0', '').replace('SVC-', ''), 10);
+    if (!Number.isNaN(numId) && numId > 0) {
       this.catalogApi.updateAdminService(numId, {
         title: updates.title,
         category: updates.category,
@@ -1738,8 +1801,8 @@ export class AserStateService {
   }
 
   deleteService(id: string) {
-    const numId = parseInt(id.replace('SVC-0', '').replace('SVC-', ''), 10);
-    if (!isNaN(numId) && numId > 0) {
+    const numId = Number.parseInt(id.replace('SVC-0', '').replace('SVC-', ''), 10);
+    if (!Number.isNaN(numId) && numId > 0) {
       this.catalogApi.deleteAdminService(numId).subscribe({
         next: () => {
           this.toastService.info('Service Deleted', 'Removed from catalog.');
@@ -1763,7 +1826,7 @@ export class AserStateService {
     assignedBranchId?: string;
     password: string;
   }) {
-    const numBranchId = data.assignedBranchId ? parseInt(data.assignedBranchId.replace('BR-0', '').replace('BR-', ''), 10) : undefined;
+    const numBranchId = data.assignedBranchId ? Number.parseInt(data.assignedBranchId.replace('BR-0', '').replace('BR-', ''), 10) : undefined;
     this.userApi.createUser({
       username: data.username.trim().toLowerCase(),
       email: data.email.trim(),
@@ -1787,9 +1850,9 @@ export class AserStateService {
   }
 
   updateEmployee(id: string, updates: Partial<EmployeeUser>) {
-    const numId = parseInt(id.replace('USR-', ''), 10);
-    if (!isNaN(numId) && numId > 0) {
-      const numBranchId = updates.assignedBranchId ? parseInt(updates.assignedBranchId.replace('BR-0', '').replace('BR-', ''), 10) : undefined;
+    const numId = Number.parseInt(id.replace('USR-', ''), 10);
+    if (!Number.isNaN(numId) && numId > 0) {
+      const numBranchId = updates.assignedBranchId ? Number.parseInt(updates.assignedBranchId.replace('BR-0', '').replace('BR-', ''), 10) : undefined;
       this.userApi.updateUser(numId, {
         fullName: updates.fullName || '',
         email: updates.email || '',
