@@ -15,16 +15,20 @@
     </div>
 
     <div class="page-header-actions">
+      @if (canReceiveStock()) {
       <button class="btn btn-secondary" style="display:inline-flex; align-items:center; gap:8px;"
         (click)="openReceiveModal()">
         <aser-icon name="lucide:arrow-down" [size]="16"></aser-icon> {{ 'DASHBOARD.RECEIVE_STOCK' | translate:'Receive
         Inbound Stock' }}
       </button>
+      }
+      @if (canRequestTransfer()) {
       <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;"
         (click)="openTransferModal()">
         <aser-icon name="lucide:arrow-left-right-arrows" [size]="16"></aser-icon> {{ 'DASHBOARD.NEW_TRANSFER' |
         translate:'New Branch Transfer' }}
       </button>
+      }
     </div>
   </div>
 

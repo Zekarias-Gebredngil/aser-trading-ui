@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IconComponent } from '../../../../core/components/icon/icon.component';
@@ -50,6 +50,11 @@ export class OrdersComponent {
   statusFilter = 'ALL';
   branchFilter = 'ALL';
   selectedOrder = signal<Order | null>(null);
+
+  readonly canIssueQuote = computed<boolean>(() => {
+    const role = this.state.currentRole();
+    return role === 'SYSTEM_ADMINISTRATOR' || role === 'COMPANY_MANAGER' || role === 'SALES_OFFICER' || role === 'WEBSITE_MANAGER';
+  });
 
   // Pagination
   ordersPage = 1;

@@ -228,6 +228,8 @@ export class DashboardComponent implements OnInit {
   }
 
   // Strongly-typed reactive computed View Models
+  readonly canReceiveStock = computed<boolean>(() => this.state.hasPermission('RECEIVE_STOCK'));
+  readonly canRequestTransfer = computed<boolean>(() => this.state.hasPermission('REQUEST_TRANSFER'));
   readonly userGreetingName = computed<string>(() => this.state.currentUser()?.fullName || this.state.currentRole());
   readonly isAllBranchesScope = computed<boolean>(() => this.state.selectedBranchFilter() === SCOPE_ALL);
   readonly activeScopeName = computed<string>(() => {

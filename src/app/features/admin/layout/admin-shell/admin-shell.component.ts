@@ -60,17 +60,27 @@ export class AdminShellComponent implements OnInit {
 
   // Permissions & Role Computeds
   readonly canViewInventory = computed<boolean>(() => this.state.hasPermission('VIEW_INVENTORY'));
+  readonly canViewProducts = computed<boolean>(() =>
+    this.state.hasPermission('MANAGE_PRODUCTS') ||
+    this.state.hasPermission('VIEW_INVENTORY') ||
+    this.state.hasPermission('VIEW_FINANCIALS') ||
+    this.state.currentRole() === 'SYSTEM_ADMINISTRATOR'
+  );
   readonly canManageProducts = computed<boolean>(() => this.state.hasPermission('MANAGE_PRODUCTS') || this.state.currentRole() === 'SYSTEM_ADMINISTRATOR');
   readonly canManageServices = computed<boolean>(() => this.state.hasPermission('MANAGE_SERVICES') || this.state.currentRole() === 'SYSTEM_ADMINISTRATOR');
   readonly canManageTransfers = computed<boolean>(() =>
     this.state.hasPermission('REQUEST_TRANSFER') ||
     this.state.hasPermission('DISPATCH_TRANSFER') ||
-    this.state.hasPermission('APPROVE_TRANSFER')
+    this.state.hasPermission('APPROVE_TRANSFER') ||
+    this.state.hasPermission('RECEIVE_TRANSFER') ||
+    this.state.hasPermission('VIEW_FINANCIALS')
   );
   readonly canManageOrders = computed<boolean>(() => this.state.hasPermission('MANAGE_ORDERS'));
   readonly canManageAdministration = computed<boolean>(() => this.state.hasPermission('MANAGE_BRANCHES') || this.state.hasPermission('MANAGE_EMPLOYEES'));
   readonly canManageBranches = computed<boolean>(() => this.state.hasPermission('MANAGE_BRANCHES'));
   readonly canManageEmployees = computed<boolean>(() => this.state.hasPermission('MANAGE_EMPLOYEES'));
+  readonly canViewReports = computed<boolean>(() => this.state.hasPermission('VIEW_REPORTS'));
+  readonly canViewAuditLogs = computed<boolean>(() => this.state.hasPermission('VIEW_AUDIT_LOGS') || this.state.currentRole() === 'SYSTEM_ADMINISTRATOR');
   readonly isSystemAdmin = computed<boolean>(() => this.state.currentRole() === 'SYSTEM_ADMINISTRATOR');
 
   private getInitialSidebarCollapsed(): boolean {

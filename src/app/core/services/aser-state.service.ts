@@ -86,6 +86,13 @@ export class AserStateService {
     return this.currentPermissions().includes(permission);
   }
 
+  hasAnyPermission(permissions: Permission[]): boolean {
+    if (!this.isAuthenticated()) {
+      return false;
+    }
+    return permissions.some(p => this.currentPermissions().includes(p));
+  }
+
   readonly isBranchScopeLocked = computed<boolean>(() => {
     if (!this.isAuthenticated()) return true;
     return !this.hasPermission('ACCESS_ALL_BRANCHES');

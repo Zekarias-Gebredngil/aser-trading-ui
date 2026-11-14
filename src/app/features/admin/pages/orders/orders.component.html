@@ -274,7 +274,7 @@
               </span>
             </td>
             <td>
-              @if (!quote.quotedPrice && quote.status === 'PENDING') {
+              @if (canIssueQuote() && !quote.quotedPrice && quote.status === 'PENDING') {
               <button class="btn btn-primary btn-sm" style="display:inline-flex; align-items:center; gap:5px;"
                 (click)="openQuotingModal(quote)">
                 <aser-icon name="lucide:file-edit" [size]="13"></aser-icon> {{ 'ORDERS.ISSUE_QUOTE' | translate:'Issue Quote' }}

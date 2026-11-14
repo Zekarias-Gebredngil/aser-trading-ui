@@ -17,16 +17,20 @@
         <aser-icon name="lucide:file-spreadsheet" [size]="16"></aser-icon> {{ 'COMMON.EXPORT_EXCEL' | translate:'Export
         to Excel' }}
       </button>
+      @if (canAdjustStock()) {
       <button class="btn btn-secondary" style="display:inline-flex; align-items:center; gap:8px;"
         (click)="openAdjustModal()">
         <aser-icon name="lucide:sliders" [size]="16"></aser-icon> {{ 'INVENTORY.ADJUST_STOCK' | translate:'Adjust Stock'
         }}
       </button>
+      }
+      @if (canReceiveStock()) {
       <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;"
         (click)="openReceiveModal()">
         <aser-icon name="lucide:arrow-down" [size]="16"></aser-icon> {{ 'INVENTORY.RECORD_RECEIPT' | translate:'Record
         Stock Receipt' }}
       </button>
+      }
     </div>
   </div>
 

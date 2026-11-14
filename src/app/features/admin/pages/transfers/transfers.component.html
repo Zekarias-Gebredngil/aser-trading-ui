@@ -17,11 +17,13 @@
         <aser-icon name="lucide:file-spreadsheet" [size]="16"></aser-icon> {{ 'COMMON.EXPORT_EXCEL' | translate:'Export
         to Excel' }}
       </button>
+      @if (canRequestTransfer()) {
       <button class="btn btn-primary" style="display:inline-flex; align-items:center; gap:8px;"
         (click)="openNewTransferModal()">
         <aser-icon name="lucide:plus" [size]="16"></aser-icon> {{ 'TRANSFERS.REQUEST_TRANSFER' | translate:'Request New
         Transfer' }}
       </button>
+      }
     </div>
   </div>
 
@@ -95,7 +97,7 @@
                   Timeline <aser-icon name="lucide:clock" [size]="13"></aser-icon>
                 </button>
 
-                @if (row.status === 'PENDING_APPROVAL') {
+                @if (row.status === 'PENDING_APPROVAL' && canApproveTransfer()) {
                 <button type="button" class="btn btn-primary btn-sm"
                   style="display:inline-flex; align-items:center; gap:4px;"
                   (click)="approveTransfer($event, row.rawTransfer)" title="Authorized by Admin/Manager">
@@ -107,14 +109,14 @@
                   (click)="rejectTransfer($event, row.rawTransfer)" title="Reject transfer requisition">
                   {{ 'COMMON.CANCEL' | translate:'Reject' }} <aser-icon name="lucide:x" [size]="13"></aser-icon>
                 </button>
-                } @else if (row.status === 'APPROVED') {
+                } @else if (row.status === 'APPROVED' && canDispatchTransfer()) {
                 <button type="button" class="btn btn-secondary btn-sm"
                   style="display:inline-flex; align-items:center; gap:4px;"
                   (click)="dispatchTransfer($event, row.rawTransfer)" title="Deduct source stock & dispatch">
                   {{ 'TRANSFERS.DISPATCH' | translate:'Dispatch' }} <aser-icon name="lucide:truck"
                     [size]="13"></aser-icon>
                 </button>
-                } @else if (row.status === 'IN_TRANSIT') {
+                } @else if (row.status === 'IN_TRANSIT' && canReceiveTransfer()) {
                 <button type="button" class="btn btn-primary btn-sm"
                   style="display:inline-flex; align-items:center; gap:4px;"
                   (click)="receiveTransfer($event, row.rawTransfer)" title="Confirm destination warehouse receipt">

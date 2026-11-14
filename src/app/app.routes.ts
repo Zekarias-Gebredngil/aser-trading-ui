@@ -31,16 +31,16 @@ export const routes: Routes = [
   // Admin & Multi-Branch Operations Portal (Protected by Auth & Permission Guards)
   { path: 'app', component: DashboardComponent, canActivate: [authGuard] },
   { path: 'app/inventory', component: InventoryComponent, canActivate: [authGuard, permissionGuard('VIEW_INVENTORY')] },
-  { path: 'app/products', component: ProductsComponent, canActivate: [authGuard, permissionGuard('MANAGE_PRODUCTS')] },
+  { path: 'app/products', component: ProductsComponent, canActivate: [authGuard, permissionGuard(['MANAGE_PRODUCTS', 'VIEW_INVENTORY', 'VIEW_FINANCIALS'])] },
   { path: 'app/services', component: ServicesMgmtComponent, canActivate: [authGuard, permissionGuard('MANAGE_SERVICES')] },
-  { path: 'app/transfers', component: TransfersComponent, canActivate: [authGuard, permissionGuard('REQUEST_TRANSFER')] },
+  { path: 'app/transfers', component: TransfersComponent, canActivate: [authGuard, permissionGuard(['REQUEST_TRANSFER', 'APPROVE_TRANSFER', 'DISPATCH_TRANSFER', 'RECEIVE_TRANSFER', 'VIEW_FINANCIALS'])] },
   { path: 'app/orders', component: OrdersComponent, canActivate: [authGuard, permissionGuard('MANAGE_ORDERS')] },
-  { path: 'app/branches', component: BranchesMgmtComponent, canActivate: [authGuard, permissionGuard('MANAGE_BRANCHES')] },
+  { path: 'app/branches', component: BranchesMgmtComponent, canActivate: [authGuard, permissionGuard(['MANAGE_BRANCHES', 'ACCESS_ALL_BRANCHES'])] },
   { path: 'app/employees', component: EmployeesComponent, canActivate: [authGuard, permissionGuard('MANAGE_EMPLOYEES')] },
 
-  // System Administration Only (Visible strictly to SYSTEM_ADMINISTRATOR)
+  // Reports, Audit & System Administration
   { path: 'app/reports', component: ReportsComponent, canActivate: [authGuard, permissionGuard('VIEW_REPORTS')] },
-  { path: 'app/activity-log', component: ActivityLogComponent, canActivate: [authGuard, permissionGuard('SYSTEM_CONFIG')] },
+  { path: 'app/activity-log', component: ActivityLogComponent, canActivate: [authGuard, permissionGuard('VIEW_AUDIT_LOGS')] },
   { path: 'app/settings', component: SettingsComponent, canActivate: [authGuard, permissionGuard('SYSTEM_CONFIG')] },
 
   { path: '**', redirectTo: '' }

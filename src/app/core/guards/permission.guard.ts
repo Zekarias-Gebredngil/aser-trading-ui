@@ -4,7 +4,7 @@ import { AserStateService } from '../services/aser-state.service';
 import { ToastService } from '../services/toast.service';
 import { Permission } from '../models/user.model';
 
-export const permissionGuard = (requiredPermission: Permission): CanActivateFn => {
+export const permissionGuard = (requiredPermission: Permission | Permission[]): CanActivateFn => {
   return (route: ActivatedRouteSnapshot, routerState: RouterStateSnapshot) => {
     const state = inject(AserStateService);
     const router = inject(Router);
@@ -20,8 +20,9 @@ export const permissionGuard = (requiredPermission: Permission): CanActivateFn =
       return false;
     }
 
-    // 2. Must hold required authorization permission
-    if (state.hasPermission(requiredPermission)) {
+    // 2. Must hold at least one of the required authorization permissions
+    const permissions = Array.isArray(requiredPermission) ? requiredPermission : [requiredPermission];
+    if (state.hasAnyPermission(permissions)) {
       return true;
     }
 

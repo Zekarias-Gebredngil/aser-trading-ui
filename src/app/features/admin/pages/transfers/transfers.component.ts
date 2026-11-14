@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IconComponent } from '../../../../core/components/icon/icon.component';
@@ -47,6 +47,11 @@ export class TransfersComponent {
   pageSize = 10;
   selectedTransfer = signal<StockTransfer | null>(null);
   isNewTransferModalOpen = signal(false);
+
+  readonly canRequestTransfer = computed<boolean>(() => this.state.hasPermission('REQUEST_TRANSFER'));
+  readonly canApproveTransfer = computed<boolean>(() => this.state.hasPermission('APPROVE_TRANSFER'));
+  readonly canDispatchTransfer = computed<boolean>(() => this.state.hasPermission('DISPATCH_TRANSFER'));
+  readonly canReceiveTransfer = computed<boolean>(() => this.state.hasPermission('RECEIVE_TRANSFER'));
 
   get filteredTransfers(): StockTransfer[] {
     const f = this.statusFilter;

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IconComponent } from '../../../../core/components/icon/icon.component';
@@ -45,6 +45,12 @@ export class InventoryComponent {
   activeTab: 'BALANCES' | 'MOVEMENTS' | 'ALERTS' = 'BALANCES';
   isReceiveModalOpen = signal(false);
   isAdjustModalOpen = signal(false);
+
+  readonly canAdjustStock = computed<boolean>(() => {
+    const role = this.state.currentRole();
+    return role === 'SYSTEM_ADMINISTRATOR' || role === 'INVENTORY_MANAGER';
+  });
+  readonly canReceiveStock = computed<boolean>(() => this.state.hasPermission('RECEIVE_STOCK'));
 
   // Pagination
   balancesPage = 1;

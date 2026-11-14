@@ -143,6 +143,9 @@ export class EmployeesComponent {
     { key: 'RECEIVE_TRANSFER', label: 'Receive Transfer', desc: 'Physical verification and discrepancy audit' },
     { key: 'MANAGE_ORDERS', label: 'Manage Orders', desc: 'Fulfill customer orders & verify bank payments' },
     { key: 'VIEW_FINANCIALS', label: 'View Financials', desc: 'Inventory valuation, margins, and purchase costs' },
+    { key: 'VIEW_REPORTS', label: 'View Reports', desc: 'Access operational, sales and stock valuation reports' },
+    { key: 'VIEW_AUDIT_LOGS', label: 'View Audit Logs', desc: 'Review immutable system activity and change logs' },
+    { key: 'SYSTEM_CONFIG', label: 'System Configuration', desc: 'Enterprise parameters, settings and master config' },
     { key: 'ACCESS_ALL_BRANCHES', label: 'Multi-Branch Scope', desc: 'Access consolidated view across all branches' }
   ];
 
